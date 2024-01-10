@@ -1,11 +1,10 @@
-"use client";
 import Link from "next/link";
 import { Button } from "@/components/button";
 
-import { type IChecklist } from "@/lib/types";
+import { getChecklists } from "./checklist.model";
 
-export const ChecklistList: React.FC<{}> = () => {
-  const checklists: IChecklist[] = [];
+export const ChecklistList: React.FC<{}> = async () => {
+  const checklists = await getChecklists();
 
   return (
     <section className="space-y-3">

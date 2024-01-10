@@ -9,6 +9,7 @@ import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { X } from "@/components/x";
+import { createChecklist, deleteChecklistById } from "./checklist.model";
 
 export const ChecklistForm: React.FC<{
   checklist: Omit<IChecklist, "sections">;
@@ -48,11 +49,29 @@ export const ChecklistForm: React.FC<{
   const sectionsArray = Object.values(sections);
 
   return (
-    <form className="space-y-4">
+    <form
+      className="space-y-4"
+      action={() => {
+        createChecklist({
+          ...checklist,
+          sections: Object.values(sections).map((section) => {
+            return {
+              ...section,
+              items: Object.values(itemsBySectionId[section.id]),
+            };
+          }),
+        });
+      }}
+    >
       <div className="flex space-x-1">
         <h1 className="text-3xl">Checklist</h1>
 
-        <Button type="button" onClick={() => {}}>
+        <Button
+          type="button"
+          onClick={() => {
+            deleteChecklistById(checklist.id);
+          }}
+        >
           <X />
         </Button>
       </div>
