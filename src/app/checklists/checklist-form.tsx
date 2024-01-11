@@ -1,4 +1,7 @@
-import { useMemo } from "react";
+"use client";
+
+import { useMemo, useReducer } from "react";
+import { useRouter } from "next/navigation";
 
 import type {
   IChecklist,
@@ -9,58 +12,200 @@ import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { X } from "@/components/x";
-import { createChecklist, deleteChecklistById } from "./checklist.model";
+import { deleteChecklistById, onChecklistSave } from "./checklist.model";
+import { checklistItem, checklistSection } from "@/factories/checklist.factory";
+import { id } from "@/factories/id.factory";
 
-export const ChecklistForm: React.FC<{
-  checklist: Omit<IChecklist, "sections">;
-  sections: { [checklistId: string]: Omit<IChecklistSection, "items"> };
-  items: { [itemId: string]: IChecklistItem };
-  onCreateSection: () => void;
-  onUpdateSection: (params: { id: string; name: string }) => void;
-  onDeleteSection: (params: { id: string }) => void;
-  onCreateItem: (params: { sectionId: string }) => void;
-  onUpdateItem: (params: { id: string; name: string }) => void;
-  onDeleteItem: (params: { id: string }) => void;
-  onUpdateChecklist: (params: { name: string }) => void;
-}> = ({
-  checklist,
-  sections,
-  items,
-  onCreateSection,
-  onCreateItem,
-  onUpdateSection,
-  onUpdateItem,
-  onDeleteSection,
-  onDeleteItem,
-  onUpdateChecklist,
+interface State {
+  checklist: Omit<IChecklist, "items" | "sections">;
+  sections: Record<string /* sectionId */, Omit<IChecklistSection, "items">>;
+  items: Record<string /* itemId */, IChecklistItem>;
+}
+
+type Action =
+  | { type: "UPDATE_CHECKLIST"; name: string }
+  | { type: "CREATE_SECTION" }
+  | { type: "CREATE_ITEM"; sectionId: string }
+  | { type: "UPDATE_SECTION"; id: string; name: string }
+  | { type: "UPDATE_ITEM"; id: string; name: string }
+  | { type: "DELETE_SECTION"; id: string }
+  | { type: "DELETE_ITEM"; id: string };
+
+interface ChecklistFormProps {
+  variant: "new" | "edit";
+  initialChecklist: IChecklist;
+}
+
+const checklistToState = (checklist: IChecklist): State => {
+  const sections: State["sections"] = {};
+  const items: State["items"] = {};
+
+  checklist.sections.forEach((section) => {
+    sections[section.id] = section;
+
+    section.items.forEach((item) => {
+      items[item.id] = item;
+    });
+  });
+
+  return { checklist, sections, items };
+};
+
+export const ChecklistForm: React.FC<ChecklistFormProps> = ({
+  initialChecklist,
+  variant,
 }) => {
+  const router = useRouter();
+
+  const [state, dispatch] = useReducer((state: State, action: Action) => {
+    if (action.type === "CREATE_SECTION") {
+      const sectionId = id();
+      const itemId = id();
+
+      return {
+        ...state,
+        sections: {
+          ...state.sections,
+          [sectionId]: checklistSection({
+            checklistId: state.checklist.id,
+            id: sectionId,
+            name: "",
+          }),
+        },
+        items: {
+          ...state.items,
+          [itemId]: checklistItem({
+            id: itemId,
+            checklistSectionId: sectionId,
+            name: "",
+          }),
+        },
+      } satisfies State;
+    }
+
+    if (action.type === "CREATE_ITEM") {
+      const itemId = id();
+
+      return {
+        ...state,
+        items: {
+          ...state.items,
+          [itemId]: checklistItem({
+            id: itemId,
+            checklistSectionId: action.sectionId,
+            name: "",
+          }),
+        },
+      } satisfies State;
+    }
+
+    if (action.type === "UPDATE_CHECKLIST") {
+      return {
+        ...state,
+        checklist: { ...state.checklist, name: action.name },
+      };
+    }
+
+    if (action.type === "UPDATE_SECTION") {
+      const existingSection = state.sections[action.id];
+
+      if (existingSection) {
+        return {
+          ...state,
+          sections: {
+            ...state.sections,
+            [action.id]: { ...existingSection, name: action.name },
+          },
+        } satisfies State;
+      }
+
+      return state;
+    }
+
+    if (action.type === "UPDATE_ITEM") {
+      const existingItem = state.items[action.id];
+
+      if (existingItem) {
+        return {
+          ...state,
+          items: {
+            ...state.items,
+            [action.id]: {
+              ...existingItem,
+              name: action.name,
+            },
+          },
+        } satisfies State;
+      }
+
+      return state;
+    }
+
+    if (action.type === "DELETE_SECTION") {
+      const items: Record<string, IChecklistItem> = {};
+
+      Object.values(state.items).forEach((item) => {
+        if (item.checklistSectionId !== action.id) {
+          items[item.id] = item;
+        }
+      });
+
+      const sections = { ...state.sections };
+      delete sections[action.id];
+
+      return {
+        ...state,
+        sections,
+        items,
+      } satisfies State;
+    }
+
+    if (action.type === "DELETE_ITEM") {
+      const items = { ...state.items };
+      delete items[action.id];
+
+      return {
+        ...state,
+        items,
+      } satisfies State;
+    }
+
+    return state;
+  }, checklistToState(initialChecklist));
+
   const itemsBySectionId = useMemo(() => {
     const bySectionId: Record<string /* sectionId */, IChecklistItem[]> = {};
 
-    Object.values(items).forEach((item) => {
+    Object.values(state.items).forEach((item) => {
       const existingItems = bySectionId[item.checklistSectionId];
 
       bySectionId[item.checklistSectionId] = [...(existingItems || []), item];
     });
 
     return bySectionId;
-  }, [items]);
+  }, [state.items]);
 
-  const sectionsArray = Object.values(sections);
+  const sectionsArray = Object.values(state.sections);
 
   return (
     <form
       className="space-y-4"
-      action={() => {
-        createChecklist({
-          ...checklist,
-          sections: Object.values(sections).map((section) => {
+      action={async () => {
+        const checklist = {
+          ...state.checklist,
+          sections: Object.values(state.sections).map((section) => {
             return {
               ...section,
               items: Object.values(itemsBySectionId[section.id]),
             };
           }),
-        });
+        };
+
+        await onChecklistSave({ variant, checklist });
+
+        const checklistIdPath = `/checklists/${checklist.id}`;
+
+        router.push(checklistIdPath);
       }}
     >
       <div className="flex space-x-1">
@@ -69,7 +214,7 @@ export const ChecklistForm: React.FC<{
         <Button
           type="button"
           onClick={() => {
-            deleteChecklistById(checklist.id);
+            deleteChecklistById(state.checklist.id);
           }}
         >
           <X />
@@ -80,9 +225,9 @@ export const ChecklistForm: React.FC<{
         <Input
           required
           type="text"
-          value={checklist.name}
+          value={state.checklist.name}
           onChange={(e) => {
-            onUpdateChecklist({ name: e.target.value });
+            dispatch({ type: "UPDATE_CHECKLIST", name: e.target.value });
           }}
         />
       </Label>
@@ -102,7 +247,9 @@ export const ChecklistForm: React.FC<{
               <Button
                 type="button"
                 aria-label="Delete section"
-                onClick={() => onDeleteSection({ id: section.id })}
+                onClick={() => {
+                  dispatch({ type: "DELETE_SECTION", id: section.id });
+                }}
               >
                 <X />
               </Button>
@@ -114,7 +261,8 @@ export const ChecklistForm: React.FC<{
                 type="text"
                 value={section.name}
                 onChange={(e) => {
-                  onUpdateSection({
+                  dispatch({
+                    type: "UPDATE_SECTION",
                     id: section.id,
                     name: e.target.value,
                   });
@@ -143,7 +291,8 @@ export const ChecklistForm: React.FC<{
                             type="text"
                             value={item.name}
                             onChange={(e) => {
-                              onUpdateItem({
+                              dispatch({
+                                type: "UPDATE_ITEM",
                                 id: item.id,
                                 name: e.target.value,
                               });
@@ -156,7 +305,7 @@ export const ChecklistForm: React.FC<{
                             type="button"
                             variant="outline"
                             onClick={() => {
-                              onDeleteItem({ id: item.id });
+                              dispatch({ type: "DELETE_ITEM", id: item.id });
                             }}
                             aria-label="Delete item"
                           >
@@ -171,7 +320,7 @@ export const ChecklistForm: React.FC<{
                 <div className="flex justify-end w-full">
                   <Button
                     onClick={() => {
-                      onCreateItem({ sectionId: section.id });
+                      dispatch({ type: "CREATE_ITEM", sectionId: section.id });
                     }}
                     type="button"
                     variant="outline"
@@ -186,7 +335,12 @@ export const ChecklistForm: React.FC<{
       })}
 
       <div className="w-full flex justify-between">
-        <Button type="button" onClick={onCreateSection}>
+        <Button
+          type="button"
+          onClick={() => {
+            dispatch({ type: "CREATE_SECTION" });
+          }}
+        >
           Create section
         </Button>
 

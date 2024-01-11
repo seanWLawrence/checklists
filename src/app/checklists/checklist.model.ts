@@ -2,6 +2,7 @@
 import { put, del, list, ListBlobResultBlob } from "@vercel/blob";
 
 import { IChecklist } from "@/lib/types";
+import { revalidatePath } from "next/cache";
 
 const getChecklistUrlById = async (id: string): Promise<string> => {
   const checklists = await list({ prefix: `checklists/${id}.json` });
@@ -61,14 +62,38 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
 
 export const createChecklist = async (checklist: IChecklist): Promise<void> => {
   // TODO add user id once we support login
-  const res = await put(
-    `checklists/${checklist.id}.json`,
-    JSON.stringify(checklist),
-    {
-      // TODO switch to private once it's supported
-      access: "public",
-      contentType: "application/json",
-      addRandomSuffix: false,
-    },
-  );
+  await put(`checklists/${checklist.id}.json`, JSON.stringify(checklist), {
+    // TODO switch to private once it's supported
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+  });
+};
+
+export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
+  // TODO add user id once we support login
+  await put(`checklists/${checklist.id}.json`, JSON.stringify(checklist), {
+    // TODO switch to private once it's supported
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+  });
+};
+
+export const onChecklistSave = async ({
+  variant,
+  checklist,
+}: {
+  variant: "new" | "edit";
+  checklist: IChecklist;
+}): Promise<void> => {
+  if (variant === "new") {
+    await createChecklist(checklist);
+  } else {
+    await updateChecklist(checklist);
+  }
+  const checklistIdPath = `/checklists/${checklist.id}`;
+
+  revalidatePath(checklistIdPath);
+  revalidatePath("/checklists");
 };

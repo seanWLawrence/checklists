@@ -1,7 +1,7 @@
+import Link from "next/link";
 import { getChecklistById } from "@/app/checklists/checklist.model";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
-import Link from "next/link";
 
 const Checklist: React.FC<{ params: { id: string } }> = async ({
   params: { id },
