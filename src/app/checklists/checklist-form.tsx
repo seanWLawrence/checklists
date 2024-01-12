@@ -15,7 +15,6 @@ import { X } from "@/components/x";
 import { deleteChecklistById, onChecklistSave } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
-import { revalidatePath } from "next/cache";
 
 interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
@@ -189,26 +188,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   const sectionsArray = Object.values(state.sections);
 
   return (
-    <form
-      className="space-y-4 max-w-prose"
-      action={async () => {
-        const checklist = {
-          ...state.checklist,
-          sections: Object.values(state.sections).map((section) => {
-            return {
-              ...section,
-              items: Object.values(itemsBySectionId[section.id] ?? {}),
-            };
-          }),
-        };
-
-        await onChecklistSave({ variant, checklist });
-
-        const checklistIdPath = `/checklists/${checklist.id}`;
-
-        router.push(checklistIdPath);
-      }}
-    >
+    <form className="space-y-4 max-w-prose">
       <div className="flex space-x-1">
         <h1 className="text-3xl">Checklist</h1>
 
@@ -216,9 +196,13 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
           <Button
             type="button"
             onClick={async () => {
-              await deleteChecklistById(state.checklist.id);
+              const confirmed = window.confirm("Delete?");
 
-              router.push("/checklists");
+              if (confirmed) {
+                await deleteChecklistById(state.checklist.id);
+
+                router.push("/checklists");
+              }
             }}
           >
             <X />
@@ -349,9 +333,68 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
           Create section
         </Button>
 
-        <Button type="submit" variant="primary">
-          Save
-        </Button>
+        <div className="space-x-2">
+          {variant === "edit" && (
+            <Button
+              type="submit"
+              variant="outline"
+              formAction={async () => {
+                const name = window.prompt("New name?");
+
+                if (name) {
+                  const checklistId = id();
+
+                  const checklist: IChecklist = {
+                    ...state.checklist,
+                    id: checklistId,
+                    name,
+                    sections: Object.values(state.sections).map((section) => {
+                      return {
+                        ...section,
+                        checklistId,
+                        items: Object.values(
+                          itemsBySectionId[section.id] ?? {},
+                        ),
+                      };
+                    }),
+                  };
+
+                  await onChecklistSave({ variant, checklist });
+
+                  const checklistIdPath = `/checklists/${checklist.id}`;
+
+                  router.push(checklistIdPath);
+                }
+              }}
+            >
+              Duplicate
+            </Button>
+          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            formAction={async () => {
+              const checklist: IChecklist = {
+                ...state.checklist,
+                sections: Object.values(state.sections).map((section) => {
+                  return {
+                    ...section,
+                    items: Object.values(itemsBySectionId[section.id] ?? {}),
+                  };
+                }),
+              };
+
+              await onChecklistSave({ variant, checklist });
+
+              const checklistIdPath = `/checklists/${checklist.id}`;
+
+              router.push(checklistIdPath);
+            }}
+          >
+            Save
+          </Button>
+        </div>
       </div>
     </form>
   );
