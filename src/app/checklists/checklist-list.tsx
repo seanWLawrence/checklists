@@ -22,12 +22,6 @@ export const ChecklistList: React.FC<{}> = async () => {
           );
         })}
       </div>
-
-      <div>
-        <Button variant="outline">
-          <Link href={"/checklists/new"}>Create checklist</Link>
-        </Button>
-      </div>
     </section>
   );
 };
