@@ -14,14 +14,17 @@ const initialItemId = id();
 
 const initialChecklist = checklist({
   id: initialChecklistId,
+  name: "",
   sections: [
     checklistSection({
       id: initialSectionId,
       checklistId: initialChecklistId,
+      name: "",
       items: [
         checklistItem({
           id: initialItemId,
           checklistSectionId: initialSectionId,
+          name: "",
         }),
       ],
     }),

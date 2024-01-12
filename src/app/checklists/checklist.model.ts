@@ -1,13 +1,14 @@
 "use server";
-import { put, del, list, ListBlobResultBlob } from "@vercel/blob";
+import { put, del, list } from "@vercel/blob";
+import { revalidatePath } from "next/cache";
 
 import { IChecklist } from "@/lib/types";
-import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 const getChecklistUrlById = async (id: string): Promise<string> => {
   const checklists = await list({ prefix: `checklists/${id}.json` });
 
-  const url = checklists.blobs[0].url ?? null;
+  const url = checklists.blobs?.[0]?.url ?? null;
 
   return url;
 };
@@ -21,7 +22,6 @@ export const getChecklistById = async (
     return fetch(url, { method: "GET" })
       .then(async (res) => res.json())
       .then((json) => {
-        console.log(json);
         return json;
       });
   }
@@ -43,7 +43,6 @@ export const getChecklists = async (): Promise<IChecklist[] | null> => {
       fetch(url, { method: "GET" })
         .then(async (res) => res.json())
         .then((json) => {
-          console.log(json);
           return json;
         }),
     ),
@@ -57,6 +56,8 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
 
   if (url) {
     await del(url);
+
+    revalidatePath("/checklists");
   }
 };
 
@@ -67,6 +68,7 @@ export const createChecklist = async (checklist: IChecklist): Promise<void> => {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    cacheControlMaxAge: 0,
   });
 };
 
@@ -77,6 +79,7 @@ export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    cacheControlMaxAge: 0,
   });
 };
 
@@ -95,5 +98,70 @@ export const onChecklistSave = async ({
   const checklistIdPath = `/checklists/${checklist.id}`;
 
   revalidatePath(checklistIdPath);
+  revalidatePath(`${checklistIdPath}/edit`);
   revalidatePath("/checklists");
+};
+
+export const onChecklistUpdate = async ({
+  checklist,
+  formData,
+}: {
+  checklist: IChecklist;
+  formData: FormData;
+}) => {
+  const sections = checklist.sections.map((section) => {
+    return {
+      ...section,
+      items: section.items.map((item) => {
+        const completed = formData.get(`item__${item.id}`);
+
+        return { ...item, completed: !!completed };
+      }),
+    };
+  });
+
+  await updateChecklist({ ...checklist, sections });
+
+  const checklistIdRoute = `/checklists/${checklist.id}`;
+  revalidatePath(checklistIdRoute);
+  revalidatePath(`${checklistIdRoute}/edit`);
+};
+
+export const onCheckboxesSave = async (formData: FormData) => {
+  const checklist: IChecklist | null = JSON.parse(
+    (formData.get("checklist") as string) ?? "",
+  );
+
+  if (checklist) {
+    await onChecklistUpdate({ checklist, formData });
+
+    const checklistIdRoute = `/checklists/${checklist.id}`;
+    revalidatePath(checklistIdRoute);
+  }
+
+  redirect("/checklists");
+};
+
+export const onCheckboxesReset = async (formData: FormData) => {
+  const checklist: IChecklist | null = JSON.parse(
+    (formData.get("checklist") as string) ?? "",
+  );
+
+  if (checklist) {
+    const sections = checklist.sections.map((section) => {
+      return {
+        ...section,
+        items: section.items.map((item) => {
+          return { ...item, completed: false };
+        }),
+      };
+    });
+
+    await updateChecklist({ ...checklist, sections });
+
+    const checklistIdRoute = `/checklists/${checklist.id}`;
+    revalidatePath(checklistIdRoute);
+  }
+
+  redirect("/checklists");
 };

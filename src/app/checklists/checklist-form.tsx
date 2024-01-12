@@ -15,6 +15,7 @@ import { X } from "@/components/x";
 import { deleteChecklistById, onChecklistSave } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
+import { revalidatePath } from "next/cache";
 
 interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
@@ -189,14 +190,14 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
   return (
     <form
-      className="space-y-4"
+      className="space-y-4 max-w-prose"
       action={async () => {
         const checklist = {
           ...state.checklist,
           sections: Object.values(state.sections).map((section) => {
             return {
               ...section,
-              items: Object.values(itemsBySectionId[section.id]),
+              items: Object.values(itemsBySectionId[section.id] ?? {}),
             };
           }),
         };
@@ -211,14 +212,18 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       <div className="flex space-x-1">
         <h1 className="text-3xl">Checklist</h1>
 
-        <Button
-          type="button"
-          onClick={() => {
-            deleteChecklistById(state.checklist.id);
-          }}
-        >
-          <X />
-        </Button>
+        {variant === "edit" && (
+          <Button
+            type="button"
+            onClick={async () => {
+              await deleteChecklistById(state.checklist.id);
+
+              router.push("/checklists");
+            }}
+          >
+            <X />
+          </Button>
+        )}
       </div>
 
       <Label label="Checklist name">

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useId, useReducer } from "react";
+import { useId, useReducer, useRef } from "react";
 import { X } from "./x";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +23,14 @@ export const Checkbox: React.FC<
   );
 
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onChange = () => {
     dispatch({ type: "TOGGLE" });
+
+    if (inputRef.current && state.checked) {
+      inputRef.current.checked = state.checked;
+    }
   };
 
   return (
@@ -34,8 +39,8 @@ export const Checkbox: React.FC<
         type="checkbox"
         className="hidden"
         {...rest}
-        checked={state.checked}
         id={id}
+        ref={inputRef}
       />
 
       <label
