@@ -194,8 +194,8 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
         {variant === "edit" && (
           <Button
-            type="button"
-            onClick={async () => {
+            type="submit"
+            formAction={async () => {
               const confirmed = window.confirm("Delete?");
 
               if (confirmed) {
