@@ -1,6 +1,6 @@
 "use client";
 import { useId, useReducer, useRef } from "react";
-import { X } from "./x";
+import { XIcon } from "@/components/icons/x-icon";
 import { cn } from "@/lib/utils";
 
 interface State {
@@ -52,7 +52,7 @@ export const Checkbox: React.FC<
           type="button"
           className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center"
         >
-          {state.checked && <X />}
+          {state.checked && <XIcon />}
         </button>
 
         <span

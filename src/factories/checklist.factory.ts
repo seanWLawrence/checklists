@@ -9,6 +9,7 @@ export const checklistItem = (
     id: id(),
     checklistSectionId: id(),
     name: "some checklist item name",
+    note: "some checklist item note",
     completed: false,
     ...(overrides ?? {}),
   };

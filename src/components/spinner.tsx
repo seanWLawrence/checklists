@@ -1,12 +1,15 @@
 import { cn } from "@/lib/utils";
 
-export const Spinner: React.FC<{ className?: string }> = ({ className }) => {
+export const Spinner: React.FC<{} & React.HTMLAttributes<SVGElement>> = ({
+  ...rest
+}) => {
   return (
     <svg
-      className={cn("animate-spin h-4 w-4 text-white", className)}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
+      {...rest}
+      className={cn("animate-spin h-4 w-4 text-white", rest.className)}
     >
       <circle
         className="opacity-25"

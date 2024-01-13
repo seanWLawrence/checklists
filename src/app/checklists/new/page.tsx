@@ -20,13 +20,7 @@ const initialChecklist = checklist({
       id: initialSectionId,
       checklistId: initialChecklistId,
       name: "",
-      items: [
-        checklistItem({
-          id: initialItemId,
-          checklistSectionId: initialSectionId,
-          name: "",
-        }),
-      ],
+      items: [],
     }),
   ],
 });

@@ -42,15 +42,19 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
                 <legend className="text-2xl">{name}</legend>
 
                 <ul className="space-y-2">
-                  {items.map(({ id, name, completed }) => {
+                  {items.map(({ id, name, completed, note }) => {
                     return (
-                      <li key={id} className="ml-5">
+                      <li key={id} className="ml-5 flex flex-col space-y-1">
                         <Checkbox
                           defaultChecked={completed}
                           name={`item__${id}`}
                         >
                           {name}
                         </Checkbox>
+
+                        {note && (
+                          <p className="text-xs text-zinc-500 ml-8">{note}</p>
+                        )}
                       </li>
                     );
                   })}

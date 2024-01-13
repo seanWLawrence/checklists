@@ -11,15 +11,19 @@ import type {
 import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
-import { X } from "@/components/x";
+import { TrashIcon } from "@/components/icons/trash-icon";
 import { deleteChecklistById, onChecklistSave } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
+import { Accordion } from "@/components/accordion";
+import { ExpandIcon } from "@/components/icons/expand-icon";
+import { cn } from "@/lib/utils";
 
 interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
   sections: Record<string /* sectionId */, Omit<IChecklistSection, "items">>;
   items: Record<string /* itemId */, IChecklistItem>;
+  expandedForNotes: boolean;
 }
 
 type Action =
@@ -27,16 +31,24 @@ type Action =
   | { type: "CREATE_SECTION" }
   | { type: "CREATE_ITEM"; sectionId: string }
   | { type: "UPDATE_SECTION"; id: string; name: string }
-  | { type: "UPDATE_ITEM"; id: string; name: string }
+  | {
+      type: "UPDATE_ITEM";
+      id: string;
+      value: string;
+      property: "name" | "note";
+    }
   | { type: "DELETE_SECTION"; id: string }
-  | { type: "DELETE_ITEM"; id: string };
+  | { type: "DELETE_ITEM"; id: string }
+  | { type: "TOGGLE_EXPANDED_FOR_NOTES" };
 
 interface ChecklistFormProps {
   variant: "new" | "edit";
   initialChecklist: IChecklist;
 }
 
-const checklistToState = (checklist: IChecklist): State => {
+const checklistToState = (
+  checklist: IChecklist,
+): Omit<State, "expandedForNotes"> => {
   const sections: State["sections"] = {};
   const items: State["items"] = {};
 
@@ -57,121 +69,120 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 }) => {
   const router = useRouter();
 
-  const [state, dispatch] = useReducer((state: State, action: Action) => {
-    if (action.type === "CREATE_SECTION") {
-      const sectionId = id();
-      const itemId = id();
+  const [state, dispatch] = useReducer(
+    (state: State, action: Action) => {
+      if (action.type === "CREATE_SECTION") {
+        const sectionId = id();
 
-      return {
-        ...state,
-        sections: {
-          ...state.sections,
-          [sectionId]: checklistSection({
-            checklistId: state.checklist.id,
-            id: sectionId,
-            name: "",
-          }),
-        },
-        items: {
-          ...state.items,
-          [itemId]: checklistItem({
-            id: itemId,
-            checklistSectionId: sectionId,
-            name: "",
-          }),
-        },
-      } satisfies State;
-    }
-
-    if (action.type === "CREATE_ITEM") {
-      const itemId = id();
-
-      return {
-        ...state,
-        items: {
-          ...state.items,
-          [itemId]: checklistItem({
-            id: itemId,
-            checklistSectionId: action.sectionId,
-            name: "",
-          }),
-        },
-      } satisfies State;
-    }
-
-    if (action.type === "UPDATE_CHECKLIST") {
-      return {
-        ...state,
-        checklist: { ...state.checklist, name: action.name },
-      };
-    }
-
-    if (action.type === "UPDATE_SECTION") {
-      const existingSection = state.sections[action.id];
-
-      if (existingSection) {
         return {
           ...state,
           sections: {
             ...state.sections,
-            [action.id]: { ...existingSection, name: action.name },
+            [sectionId]: checklistSection({
+              checklistId: state.checklist.id,
+              id: sectionId,
+              name: "",
+            }),
           },
         } satisfies State;
       }
 
-      return state;
-    }
+      if (action.type === "CREATE_ITEM") {
+        const itemId = id();
 
-    if (action.type === "UPDATE_ITEM") {
-      const existingItem = state.items[action.id];
-
-      if (existingItem) {
         return {
           ...state,
           items: {
             ...state.items,
-            [action.id]: {
-              ...existingItem,
-              name: action.name,
-            },
+            [itemId]: checklistItem({
+              id: itemId,
+              checklistSectionId: action.sectionId,
+              name: "",
+              note: "",
+            }),
           },
         } satisfies State;
       }
 
-      return state;
-    }
+      if (action.type === "UPDATE_CHECKLIST") {
+        return {
+          ...state,
+          checklist: { ...state.checklist, name: action.name },
+        };
+      }
 
-    if (action.type === "DELETE_SECTION") {
-      const items: Record<string, IChecklistItem> = {};
+      if (action.type === "UPDATE_SECTION") {
+        const existingSection = state.sections[action.id];
 
-      Object.values(state.items).forEach((item) => {
-        if (item.checklistSectionId !== action.id) {
-          items[item.id] = item;
+        if (existingSection) {
+          return {
+            ...state,
+            sections: {
+              ...state.sections,
+              [action.id]: { ...existingSection, name: action.name },
+            },
+          } satisfies State;
         }
-      });
 
-      const sections = { ...state.sections };
-      delete sections[action.id];
+        return state;
+      }
 
-      return {
-        ...state,
-        sections,
-        items,
-      } satisfies State;
-    }
+      if (action.type === "UPDATE_ITEM") {
+        const existingItem = state.items[action.id];
 
-    if (action.type === "DELETE_ITEM") {
-      const items = { ...state.items };
-      delete items[action.id];
+        if (existingItem) {
+          return {
+            ...state,
+            items: {
+              ...state.items,
+              [action.id]: {
+                ...existingItem,
+                [action.property]: action.value,
+              },
+            },
+          } satisfies State;
+        }
 
-      return {
-        ...state,
-        items,
-      } satisfies State;
-    }
+        return state;
+      }
 
-    return state;
-  }, checklistToState(initialChecklist));
+      if (action.type === "DELETE_SECTION") {
+        const items: Record<string, IChecklistItem> = {};
+
+        Object.values(state.items).forEach((item) => {
+          if (item.checklistSectionId !== action.id) {
+            items[item.id] = item;
+          }
+        });
+
+        const sections = { ...state.sections };
+        delete sections[action.id];
+
+        return {
+          ...state,
+          sections,
+          items,
+        } satisfies State;
+      }
+
+      if (action.type === "DELETE_ITEM") {
+        const items = { ...state.items };
+        delete items[action.id];
+
+        return {
+          ...state,
+          items,
+        } satisfies State;
+      }
+
+      if (action.type === "TOGGLE_EXPANDED_FOR_NOTES") {
+        return { ...state, expandedForNotes: !state.expandedForNotes };
+      }
+
+      return state;
+    },
+    { ...checklistToState(initialChecklist), expandedForNotes: false },
+  );
 
   const itemsBySectionId = useMemo(() => {
     const bySectionId: Record<string /* sectionId */, IChecklistItem[]> = {};
@@ -195,6 +206,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         {variant === "edit" && (
           <Button
             type="submit"
+            variant="ghost"
             formAction={async () => {
               const confirmed = window.confirm("Delete?");
 
@@ -205,7 +217,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
               }
             }}
           >
-            <X />
+            <TrashIcon />
           </Button>
         )}
       </div>
@@ -231,16 +243,17 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             key={section.id}
             className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48"
           >
-            <legend className="text-2xl">
-              Section: {section.name || "(blank)"}{" "}
+            <legend className="flex text-2xl">
+              <span>Section: {section.name || "(blank)"}</span>
               <Button
                 type="button"
+                variant="ghost"
                 aria-label="Delete section"
                 onClick={() => {
                   dispatch({ type: "DELETE_SECTION", id: section.id });
                 }}
               >
-                <X />
+                <TrashIcon />
               </Button>
             </legend>
 
@@ -262,43 +275,83 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             <div>
               <div className="space-y-4 ml-4">
                 <div className="space-y-2">
-                  <h3>Items</h3>
+                  <h3 className="mt-2 text-lg flex space-x-2">
+                    <span>Items</span>
+
+                    {itemsBySectionId[section.id]?.length && (
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={() => {
+                          dispatch({ type: "TOGGLE_EXPANDED_FOR_NOTES" });
+                        }}
+                      >
+                        <ExpandIcon />
+                      </Button>
+                    )}
+                  </h3>
 
                   {!itemsBySectionId[section.id]?.length && (
                     <p className="text-zinc-700 text-xs">(No items)</p>
                   )}
 
-                  {itemsBySectionId[section.id]?.map((item) => {
+                  {itemsBySectionId[section.id]?.map((item, index) => {
                     return (
                       <div
-                        className="flex space-x-2 items-end max-w-prose w-full"
+                        className="flex items-start space-x-2 max-w-prose w-full"
                         key={item.id}
                       >
-                        <Label label="Name">
-                          <Input
-                            required
-                            type="text"
-                            value={item.name}
-                            onChange={(e) => {
-                              dispatch({
-                                type: "UPDATE_ITEM",
-                                id: item.id,
-                                name: e.target.value,
-                              });
-                            }}
-                          />
-                        </Label>
+                        <div className="flex flex-col space-y-2 w-full">
+                          <Label label={`Name: ${index + 1}`}>
+                            <Input
+                              required
+                              type="text"
+                              value={item.name}
+                              onChange={(e) => {
+                                dispatch({
+                                  type: "UPDATE_ITEM",
+                                  id: item.id,
+                                  value: e.target.value,
+                                  property: "name",
+                                });
+                              }}
+                            />
+                          </Label>
 
-                        <div>
+                          <Label
+                            label={`Note ${index + 1}`}
+                            className={cn("ml-4 w-[calc(100%-1rem)]", {
+                              hidden: !state.expandedForNotes,
+                            })}
+                          >
+                            <Input
+                              type="text"
+                              value={item.note}
+                              onChange={(e) => {
+                                dispatch({
+                                  type: "UPDATE_ITEM",
+                                  id: item.id,
+                                  value: e.target.value,
+                                  property: "note",
+                                });
+                              }}
+                            />
+                          </Label>
+                        </div>
+
+                        <div className="mt-5">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => {
-                              dispatch({ type: "DELETE_ITEM", id: item.id });
+                              dispatch({
+                                type: "DELETE_ITEM",
+                                id: item.id,
+                              });
                             }}
                             aria-label="Delete item"
                           >
-                            <X />
+                            <TrashIcon />
                           </Button>
                         </div>
                       </div>
@@ -333,7 +386,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
           Create section
         </Button>
 
-        <div className="space-x-2">
+        <div className="flex space-x-2">
           {variant === "edit" && (
             <Button
               type="submit"

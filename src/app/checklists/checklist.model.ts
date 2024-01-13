@@ -55,7 +55,7 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
   const url = await getChecklistUrlById(id);
 
   if (url) {
-    await del(url);
+    await del(url, {});
 
     revalidatePath("checklists");
   }
@@ -68,6 +68,7 @@ export const createChecklist = async (checklist: IChecklist): Promise<void> => {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    cacheControlMaxAge: 0,
   });
 };
 
@@ -94,11 +95,11 @@ export const onChecklistSave = async ({
   } else {
     await updateChecklist(checklist);
   }
-  const checklistIdPath = `checklists/${checklist.id}`;
+  const checklistIdPath = `/checklists/${checklist.id}`;
 
   revalidatePath(checklistIdPath);
   revalidatePath(`${checklistIdPath}/edit`);
-  revalidatePath("checklists");
+  revalidatePath("/checklists");
 };
 
 export const onCheckboxesSave = async (formData: FormData) => {
@@ -120,7 +121,7 @@ export const onCheckboxesSave = async (formData: FormData) => {
 
     await updateChecklist({ ...checklist, sections });
 
-    const checklistIdRoute = `checklists/${checklist.id}`;
+    const checklistIdRoute = `/checklists/${checklist.id}`;
     revalidatePath(checklistIdRoute);
   }
 
@@ -144,9 +145,9 @@ export const onCheckboxesReset = async (formData: FormData) => {
 
     await updateChecklist({ ...checklist, sections });
 
-    const checklistIdRoute = `checklists/${checklist.id}`;
+    const checklistIdRoute = `/checklists/${checklist.id}`;
     revalidatePath(checklistIdRoute);
   }
 
-  redirect("checklists");
+  redirect("/checklists");
 };

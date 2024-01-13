@@ -3,6 +3,7 @@ export interface IChecklistItem {
   checklistSectionId: string;
   name: string;
   completed: boolean;
+  note?: string;
 }
 
 export interface IChecklistSection {

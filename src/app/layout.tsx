@@ -1,12 +1,8 @@
-import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
 import { TopNavigation } from "@/components/top-navigation";
 
 import type { Metadata } from "next";
 
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Checklists",
@@ -20,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={cn(inter.className)}>
+      <body>
         <TopNavigation />
         <div className="p-5">{children}</div>
       </body>
