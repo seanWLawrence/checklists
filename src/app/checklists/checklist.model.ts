@@ -57,7 +57,9 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
   if (url) {
     await del(url, {});
 
-    revalidatePath("checklists");
+    revalidatePath("/checklists");
+    revalidatePath(`/checklists/${id}`);
+    revalidatePath(`/checklists/${id}/edit`);
   }
 };
 
@@ -68,8 +70,10 @@ export const createChecklist = async (checklist: IChecklist): Promise<void> => {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
-    cacheControlMaxAge: 0,
   });
+
+  revalidatePath("/checklists");
+  redirect(`/checklists/${checklist.id}`);
 };
 
 export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
@@ -81,6 +85,11 @@ export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
     addRandomSuffix: false,
     cacheControlMaxAge: 0,
   });
+
+  revalidatePath("/checklists");
+  revalidatePath(`/checklists/${checklist.id}`);
+  revalidatePath(`/checklists/${checklist.id}/edit`);
+  redirect(`/checklists/${checklist.id}`);
 };
 
 export const onChecklistSave = async ({
@@ -95,11 +104,8 @@ export const onChecklistSave = async ({
   } else {
     await updateChecklist(checklist);
   }
-  const checklistIdPath = `/checklists/${checklist.id}`;
 
-  revalidatePath(checklistIdPath);
-  revalidatePath(`${checklistIdPath}/edit`);
-  revalidatePath("/checklists");
+  redirect(`/checklists/${checklist.id}`);
 };
 
 export const onCheckboxesSave = async (formData: FormData) => {
@@ -120,9 +126,6 @@ export const onCheckboxesSave = async (formData: FormData) => {
     });
 
     await updateChecklist({ ...checklist, sections });
-
-    const checklistIdRoute = `/checklists/${checklist.id}`;
-    revalidatePath(checklistIdRoute);
   }
 
   redirect("/checklists");
@@ -144,9 +147,6 @@ export const onCheckboxesReset = async (formData: FormData) => {
     });
 
     await updateChecklist({ ...checklist, sections });
-
-    const checklistIdRoute = `/checklists/${checklist.id}`;
-    revalidatePath(checklistIdRoute);
   }
 
   redirect("/checklists");

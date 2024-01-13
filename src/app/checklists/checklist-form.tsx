@@ -12,7 +12,12 @@ import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { TrashIcon } from "@/components/icons/trash-icon";
-import { deleteChecklistById, onChecklistSave } from "./checklist.model";
+import {
+  createChecklist,
+  deleteChecklistById,
+  onChecklistSave,
+  updateChecklist,
+} from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
 import { ExpandIcon } from "@/components/icons/expand-icon";
@@ -473,11 +478,11 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                   }),
                 };
 
-                await onChecklistSave({ variant, checklist });
-
-                const checklistIdPath = `/checklists/${checklist.id}`;
-
-                router.push(checklistIdPath);
+                if (variant === "new") {
+                  await createChecklist(checklist);
+                } else {
+                  await updateChecklist(checklist);
+                }
               }}
             >
               Save
