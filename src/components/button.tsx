@@ -43,7 +43,7 @@ export const Button: React.FC<
         setClickedRecently(true);
       }}
     >
-      <span>{children}</span>
+      <span className="text-nowrap">{children}</span>
 
       {pending && clickedRecently && (
         <Spinner

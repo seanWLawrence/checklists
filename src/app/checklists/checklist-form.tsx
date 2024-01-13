@@ -15,9 +15,9 @@ import { TrashIcon } from "@/components/icons/trash-icon";
 import { deleteChecklistById, onChecklistSave } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
-import { Accordion } from "@/components/accordion";
 import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
+import { MenuButton } from "@/components/menu-button";
 
 interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
@@ -39,7 +39,8 @@ type Action =
     }
   | { type: "DELETE_SECTION"; id: string }
   | { type: "DELETE_ITEM"; id: string }
-  | { type: "TOGGLE_EXPANDED_FOR_NOTES" };
+  | { type: "TOGGLE_EXPANDED_FOR_NOTES" }
+  | { type: "CLEAR_ITEMS" };
 
 interface ChecklistFormProps {
   variant: "new" | "edit";
@@ -179,6 +180,10 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         return { ...state, expandedForNotes: !state.expandedForNotes };
       }
 
+      if (action.type === "CLEAR_ITEMS") {
+        return { ...state, items: {} };
+      }
+
       return state;
     },
     { ...checklistToState(initialChecklist), expandedForNotes: false },
@@ -197,28 +202,92 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   }, [state.items]);
 
   const sectionsArray = Object.values(state.sections);
+  const hasItems = Object.values(state.items).length;
+  const shouldShowMenuButton = hasItems || variant === "edit";
 
   return (
     <form className="space-y-4 max-w-prose">
-      <div className="flex space-x-1">
+      <div className="flex space-x-2 items-center">
         <h1 className="text-3xl">Checklist</h1>
 
-        {variant === "edit" && (
-          <Button
-            type="submit"
+        {shouldShowMenuButton && (
+          <MenuButton
             variant="ghost"
-            formAction={async () => {
-              const confirmed = window.confirm("Delete?");
+            menu={
+              <div className="flex flex-col space-y-2">
+                {hasItems ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      dispatch({ type: "CLEAR_ITEMS" });
+                    }}
+                  >
+                    Clear items
+                  </Button>
+                ) : null}
 
-              if (confirmed) {
-                await deleteChecklistById(state.checklist.id);
+                {variant === "edit" && (
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    formAction={async () => {
+                      const name = window.prompt("New name?");
 
-                router.push("/checklists");
-              }
-            }}
-          >
-            <TrashIcon />
-          </Button>
+                      if (name) {
+                        const checklistId = id();
+
+                        const checklist: IChecklist = {
+                          ...state.checklist,
+                          id: checklistId,
+                          name,
+                          sections: Object.values(state.sections).map(
+                            (section) => {
+                              return {
+                                ...section,
+                                checklistId,
+                                items: Object.values(
+                                  itemsBySectionId[section.id] ?? {},
+                                ),
+                              };
+                            },
+                          ),
+                        };
+
+                        await onChecklistSave({ variant, checklist });
+
+                        const checklistIdPath = `/checklists/${checklist.id}`;
+
+                        router.push(checklistIdPath);
+                      }
+                    }}
+                  >
+                    Duplicate
+                  </Button>
+                )}
+
+                {variant === "edit" && (
+                  <div>
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      formAction={async () => {
+                        const confirmed = window.confirm("Delete?");
+
+                        if (confirmed) {
+                          await deleteChecklistById(state.checklist.id);
+
+                          router.push("/checklists");
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                )}
+              </div>
+            }
+          />
         )}
       </div>
 
@@ -243,7 +312,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             key={section.id}
             className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48"
           >
-            <legend className="flex text-2xl">
+            <legend className="flex text-2xl space-x-2">
               <span>Section: {section.name || "(blank)"}</span>
               <Button
                 type="button"
@@ -377,76 +446,43 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       })}
 
       <div className="w-full flex justify-between">
-        <Button
-          type="button"
-          onClick={() => {
-            dispatch({ type: "CREATE_SECTION" });
-          }}
-        >
-          Create section
-        </Button>
-
-        <div className="flex space-x-2">
-          {variant === "edit" && (
-            <Button
-              type="submit"
-              variant="outline"
-              formAction={async () => {
-                const name = window.prompt("New name?");
-
-                if (name) {
-                  const checklistId = id();
-
-                  const checklist: IChecklist = {
-                    ...state.checklist,
-                    id: checklistId,
-                    name,
-                    sections: Object.values(state.sections).map((section) => {
-                      return {
-                        ...section,
-                        checklistId,
-                        items: Object.values(
-                          itemsBySectionId[section.id] ?? {},
-                        ),
-                      };
-                    }),
-                  };
-
-                  await onChecklistSave({ variant, checklist });
-
-                  const checklistIdPath = `/checklists/${checklist.id}`;
-
-                  router.push(checklistIdPath);
-                }
-              }}
-            >
-              Duplicate
-            </Button>
-          )}
-
+        <div>
           <Button
-            type="submit"
-            variant="primary"
-            formAction={async () => {
-              const checklist: IChecklist = {
-                ...state.checklist,
-                sections: Object.values(state.sections).map((section) => {
-                  return {
-                    ...section,
-                    items: Object.values(itemsBySectionId[section.id] ?? {}),
-                  };
-                }),
-              };
-
-              await onChecklistSave({ variant, checklist });
-
-              const checklistIdPath = `/checklists/${checklist.id}`;
-
-              router.push(checklistIdPath);
+            type="button"
+            onClick={() => {
+              dispatch({ type: "CREATE_SECTION" });
             }}
           >
-            Save
+            Create section
           </Button>
+        </div>
+
+        <div className="flex space-x-2">
+          <div>
+            <Button
+              type="submit"
+              variant="primary"
+              formAction={async () => {
+                const checklist: IChecklist = {
+                  ...state.checklist,
+                  sections: Object.values(state.sections).map((section) => {
+                    return {
+                      ...section,
+                      items: Object.values(itemsBySectionId[section.id] ?? {}),
+                    };
+                  }),
+                };
+
+                await onChecklistSave({ variant, checklist });
+
+                const checklistIdPath = `/checklists/${checklist.id}`;
+
+                router.push(checklistIdPath);
+              }}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </div>
     </form>
