@@ -52,7 +52,7 @@ export const MenuButton: React.FC<
 
         {pending && clickedRecently && (
           <Spinner
-            className={cn({
+            className={cn("animate-in fade-in duration-1000", {
               "text-zinc-900": variant === "outline",
               "text-zinc-200": variant === "ghost",
               "text-zinc-50": variant === "primary",
@@ -63,7 +63,7 @@ export const MenuButton: React.FC<
 
       <div
         className={cn(
-          "border-2 border-zinc-900 rounded-lg p-2 -mt-[.125rem] absolute bg-white",
+          "border-2 border-zinc-900 rounded-lg p-2 -mt-[.125rem] absolute bg-white animate-in fade-in duration-200",
           {
             hidden: !visible,
           },

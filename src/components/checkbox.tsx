@@ -52,7 +52,12 @@ export const Checkbox: React.FC<
           type="button"
           className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center"
         >
-          {state.checked && <XIcon className="w-6 h-6" />}
+          <XIcon
+            className={cn("w-6 h-6 transition-opacity duration-100", {
+              "opacity-0": !state.checked,
+              "opacity-100": state.checked,
+            })}
+          />
         </button>
 
         <span

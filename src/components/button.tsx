@@ -45,7 +45,11 @@ export const Button: React.FC<
     >
       <span className="text-nowrap">{children}</span>
 
-      {pending && clickedRecently && (
+      <div
+        className={cn("animate-in fade-in duration-1000", {
+          hidden: !(pending && clickedRecently),
+        })}
+      >
         <Spinner
           className={cn({
             "text-zinc-900": variant === "outline",
@@ -53,7 +57,7 @@ export const Button: React.FC<
             "text-zinc-50": variant === "primary",
           })}
         />
-      )}
+      </div>
     </button>
   );
 };

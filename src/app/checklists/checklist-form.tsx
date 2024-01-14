@@ -18,11 +18,7 @@ import {
   onChecklistSave,
   updateChecklist,
 } from "./checklist.model";
-import {
-  checklist,
-  checklistItem,
-  checklistSection,
-} from "@/factories/checklist.factory";
+import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
 import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
@@ -320,7 +316,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         return (
           <fieldset
             key={section.id}
-            className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48"
+            className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48 animate-in fade-in duration-300"
           >
             <Heading level="legend" className="flex space-x-2">
               <span>Section: {section.name || "(blank)"}</span>
@@ -377,7 +373,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                   {itemsBySectionId[section.id]?.map((item, index) => {
                     return (
                       <div
-                        className="flex items-start space-x-2 max-w-prose w-full"
+                        className="flex items-start space-x-2 max-w-prose w-full animate-in fade-in duration-300"
                         key={item.id}
                       >
                         <div className="flex flex-col space-y-2 w-full">

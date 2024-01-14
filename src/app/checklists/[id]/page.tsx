@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
+import { MenuButton } from "@/components/menu-button";
 
 const Checklist: React.FC<{ params: { id: string } }> = async ({
   params: { id },
@@ -27,9 +28,28 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
           <Heading level={1}>{checklist.name}</Heading>
 
           <div>
-            <Button type="button" variant="outline">
-              <Link href={`/checklists/${id}/edit`}>Edit</Link>
-            </Button>
+            <MenuButton
+              variant="ghost"
+              menu={
+                <div className="flex flex-col space-y-2">
+                  <div>
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      formAction={onCheckboxesReset}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+
+                  <div>
+                    <Button type="button" variant="ghost">
+                      <Link href={`/checklists/${id}/edit`}>Edit</Link>
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
           </div>
         </div>
 
@@ -69,15 +89,7 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
           })}
         </div>
 
-        <div className="flex justify-between">
-          <Button
-            type="submit"
-            variant="outline"
-            formAction={onCheckboxesReset}
-          >
-            Reset
-          </Button>
-
+        <div className="flex justify-end">
           <Button type="submit" variant="primary" formAction={onCheckboxesSave}>
             Save
           </Button>

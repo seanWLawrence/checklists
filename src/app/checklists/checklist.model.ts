@@ -3,7 +3,7 @@ import { put, del, list } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 
 import { IChecklist } from "@/lib/types";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 
 const getChecklistUrlById = async (id: string): Promise<string> => {
   const checklists = await list({ prefix: `checklists/${id}.json` });
@@ -60,6 +60,7 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
     revalidatePath("/checklists");
     revalidatePath(`/checklists/${id}`);
     revalidatePath(`/checklists/${id}/edit`);
+    redirect("/checklists", RedirectType.push);
   }
 };
 
@@ -73,7 +74,7 @@ export const createChecklist = async (checklist: IChecklist): Promise<void> => {
   });
 
   revalidatePath("/checklists");
-  redirect(`/checklists/${checklist.id}`);
+  redirect(`/checklists/${checklist.id}`, RedirectType.push);
 };
 
 export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
@@ -89,7 +90,7 @@ export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
   revalidatePath("/checklists");
   revalidatePath(`/checklists/${checklist.id}`);
   revalidatePath(`/checklists/${checklist.id}/edit`);
-  redirect(`/checklists/${checklist.id}`);
+  redirect(`/checklists/${checklist.id}`, RedirectType.push);
 };
 
 export const onChecklistSave = async ({
@@ -105,7 +106,7 @@ export const onChecklistSave = async ({
     await updateChecklist(checklist);
   }
 
-  redirect(`/checklists/${checklist.id}`);
+  redirect(`/checklists/${checklist.id}`, RedirectType.push);
 };
 
 export const onCheckboxesSave = async (formData: FormData) => {
@@ -128,7 +129,7 @@ export const onCheckboxesSave = async (formData: FormData) => {
     await updateChecklist({ ...checklist, sections });
   }
 
-  redirect("/checklists");
+  redirect("/checklists", RedirectType.push);
 };
 
 export const onCheckboxesReset = async (formData: FormData) => {
@@ -149,5 +150,6 @@ export const onCheckboxesReset = async (formData: FormData) => {
     await updateChecklist({ ...checklist, sections });
   }
 
-  redirect("/checklists");
+  console.log("asd");
+  redirect("/checklists", RedirectType.push);
 };
