@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/button";
+import { Heading } from "@/components/heading";
 
 import { getChecklists } from "./checklist.model";
 
@@ -8,7 +9,7 @@ export const ChecklistList: React.FC<{}> = async () => {
 
   return (
     <section className="space-y-3">
-      <h1 className="text-3xl font-bold">Checklists</h1>
+      <Heading level={1}>Checklists</Heading>
 
       <div className="flex flex-wrap">
         {!checklists?.length && (

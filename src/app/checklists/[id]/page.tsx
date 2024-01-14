@@ -7,6 +7,7 @@ import {
 } from "@/app/checklists/checklist.model";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
+import { Heading } from "@/components/heading";
 
 const Checklist: React.FC<{ params: { id: string } }> = async ({
   params: { id },
@@ -23,7 +24,7 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
         />
 
         <div className="space-x-2 flex items-center">
-          <h1 className="text-3xl">{checklist.name}</h1>
+          <Heading level={1}>{checklist.name}</Heading>
 
           <div>
             <Button type="button" variant="outline">
@@ -39,7 +40,7 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
                 key={id}
                 className="space-y-1 border-2 border-zinc-700 px-5 pt-2 pb-5 rounded-lg w-full min-w-48"
               >
-                <legend className="text-2xl">{name}</legend>
+                <Heading level="legend">{name}</Heading>
 
                 <ul className="space-y-2">
                   {items.map(({ id, name, completed, note }) => {

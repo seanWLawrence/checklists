@@ -18,11 +18,16 @@ import {
   onChecklistSave,
   updateChecklist,
 } from "./checklist.model";
-import { checklistItem, checklistSection } from "@/factories/checklist.factory";
+import {
+  checklist,
+  checklistItem,
+  checklistSection,
+} from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
 import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
 import { MenuButton } from "@/components/menu-button";
+import { Heading } from "@/components/heading";
 
 interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
@@ -213,7 +218,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   return (
     <form className="space-y-4 max-w-prose">
       <div className="flex space-x-2 items-center">
-        <h1 className="text-3xl">Checklist</h1>
+        <Heading level={1}>{state.checklist.name || "(blank)"}</Heading>
 
         {shouldShowMenuButton && (
           <MenuButton
@@ -317,7 +322,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             key={section.id}
             className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48"
           >
-            <legend className="flex text-2xl space-x-2">
+            <Heading level="legend" className="flex space-x-2">
               <span>Section: {section.name || "(blank)"}</span>
               <Button
                 type="button"
@@ -329,7 +334,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
               >
                 <TrashIcon />
               </Button>
-            </legend>
+            </Heading>
 
             <Label label="Section name">
               <Input
@@ -349,7 +354,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             <div>
               <div className="space-y-4 ml-4">
                 <div className="space-y-2">
-                  <h3 className="mt-2 text-lg flex space-x-2">
+                  <Heading level={3} className="mt-2 flex space-x-2">
                     <span>Items</span>
 
                     {itemsBySectionId[section.id]?.length && (
@@ -363,7 +368,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         <ExpandIcon />
                       </Button>
                     )}
-                  </h3>
+                  </Heading>
 
                   {!itemsBySectionId[section.id]?.length && (
                     <p className="text-zinc-700 text-xs">(No items)</p>
