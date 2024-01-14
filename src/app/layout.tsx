@@ -7,6 +7,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Checklists",
   description: "A simple checklist.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
