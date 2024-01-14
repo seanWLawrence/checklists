@@ -350,7 +350,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             <div>
               <div className="space-y-4 ml-4">
                 <div className="space-y-2">
-                  <Heading level={3} className="mt-2 flex space-x-2">
+                  <Heading level={3} className="mt-3 flex space-x-2">
                     <span>Items</span>
 
                     {itemsBySectionId[section.id]?.length && (
@@ -394,7 +394,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           </Label>
 
                           <Label
-                            label={`Note ${index + 1}`}
+                            label={`Note: ${index + 1}`}
                             className={cn("ml-4 w-[calc(100%-1rem)]", {
                               hidden: !state.expandedForNotes,
                             })}

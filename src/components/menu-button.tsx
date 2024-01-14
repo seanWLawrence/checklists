@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
 import { useEffect, useState } from "react";
 import { MenuButtonIcon } from "./icons/menu-button-icon";
+import { Button } from "./button";
 
 export const MenuButton: React.FC<
   {
@@ -28,19 +29,10 @@ export const MenuButton: React.FC<
 
   return (
     <div className="relative">
-      <button
+      <Button
         {...rest}
-        className={cn(
-          "rounded-lg py-1 px-2 text-sm space-x-2 flex items-center",
-          {
-            "border-2 border-zinc-900": variant === "outline",
-            "border-2 border-transparent hover:border-zinc-200 transition-colors duration-100":
-              variant === "ghost",
-            "border-2 border-zinc-900 bg-zinc-900 text-zinc-50":
-              variant === "primary",
-          },
-          rest.className,
-        )}
+        variant="ghost"
+        className={cn("p-.5", rest.className)}
         onClick={() => {
           setVisible((prev) => !prev);
         }}
@@ -59,7 +51,7 @@ export const MenuButton: React.FC<
             })}
           />
         )}
-      </button>
+      </Button>
 
       <div
         className={cn(

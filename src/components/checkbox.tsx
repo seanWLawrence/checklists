@@ -1,73 +1,55 @@
 "use client";
-import { useId, useReducer, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { XIcon } from "@/components/icons/x-icon";
 import { cn } from "@/lib/utils";
-
-interface State {
-  checked?: boolean;
-}
-
-type Action = { type: "TOGGLE" };
 
 export const Checkbox: React.FC<
   { children: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>
 > = ({ children, ...rest }) => {
-  const [state, dispatch] = useReducer(
-    (state: State, action: Action) => {
-      if (action.type === "TOGGLE") {
-        return { checked: !state.checked } satisfies State;
-      }
-      return state;
-    },
-    { checked: rest.defaultChecked || rest.checked } satisfies State,
+  const [checked, setChecked] = useState<boolean>(
+    !!(rest.defaultChecked ?? rest.checked),
   );
 
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const onChange = () => {
-    dispatch({ type: "TOGGLE" });
+    setChecked((prev) => !prev);
 
-    if (inputRef.current && state.checked) {
-      inputRef.current.checked = state.checked;
+    if (inputRef.current && checked) {
+      inputRef.current.checked = checked;
     }
   };
 
   return (
-    <div>
+    <label htmlFor={id} className="flex items-center space-x-2 cursor-pointer">
       <input
         type="checkbox"
         className="hidden"
+        onChange={onChange}
         {...rest}
         id={id}
         ref={inputRef}
       />
 
-      <label
-        htmlFor={id}
-        onClick={onChange}
-        className="flex items-center space-x-2 cursor-pointer"
-      >
-        <button
-          type="button"
-          className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center"
-        >
+      <div className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center">
+        <span>
           <XIcon
             className={cn("w-6 h-6 transition-opacity duration-100", {
-              "opacity-0": !state.checked,
-              "opacity-100": state.checked,
+              "opacity-0": !checked,
+              "opacity-100": checked,
             })}
           />
-        </button>
-
-        <span
-          className={cn("text-sm text-zinc-800", {
-            "line-through": state.checked,
-          })}
-        >
-          {children}
         </span>
-      </label>
-    </div>
+      </div>
+
+      <span
+        className={cn("text-sm text-zinc-800", {
+          "line-through": checked,
+        })}
+      >
+        {children}
+      </span>
+    </label>
   );
 };
