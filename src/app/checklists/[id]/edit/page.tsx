@@ -1,6 +1,8 @@
 import { ChecklistForm } from "../../checklist-form";
 import { getChecklistById } from "../../checklist.model";
 
+export const revalidate = 0;
+
 const EditChecklist: React.FC<{
   params: { id: string };
 }> = async ({ params: { id } }) => {

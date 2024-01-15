@@ -17,9 +17,11 @@ export const ChecklistList: React.FC<{}> = async () => {
         )}
         {checklists?.map(({ id, name }) => {
           return (
-            <Button variant="outline" key={id} className="mr-2 mb-2">
-              <Link href={`/checklists/${id}`}>{name}</Link>
-            </Button>
+            <Link href={`/checklists/${id}`} key={id}>
+              <Button variant="outline" className="mr-2 mb-2">
+                {name}
+              </Button>
+            </Link>
           );
         })}
       </div>

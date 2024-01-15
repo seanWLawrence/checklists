@@ -90,7 +90,7 @@ export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
   revalidatePath("/checklists");
   revalidatePath(`/checklists/${checklist.id}`);
   revalidatePath(`/checklists/${checklist.id}/edit`);
-  redirect(`/checklists/${checklist.id}`, RedirectType.push);
+  redirect(`/checklists`, RedirectType.push);
 };
 
 export const onChecklistSave = async ({
@@ -128,8 +128,6 @@ export const onCheckboxesSave = async (formData: FormData) => {
 
     await updateChecklist({ ...checklist, sections });
   }
-
-  redirect("/checklists", RedirectType.push);
 };
 
 export const onCheckboxesReset = async (formData: FormData) => {
@@ -149,7 +147,4 @@ export const onCheckboxesReset = async (formData: FormData) => {
 
     await updateChecklist({ ...checklist, sections });
   }
-
-  console.log("asd");
-  redirect("/checklists", RedirectType.push);
 };

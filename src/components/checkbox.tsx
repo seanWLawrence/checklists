@@ -1,5 +1,5 @@
 "use client";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { XIcon } from "@/components/icons/x-icon";
 import { cn } from "@/lib/utils";
 
@@ -13,20 +13,26 @@ export const Checkbox: React.FC<
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const onChange = () => {
+  const onClick = () => {
     setChecked((prev) => !prev);
-
-    if (inputRef.current && checked) {
-      inputRef.current.checked = checked;
-    }
   };
 
+  useEffect(() => {
+    if (inputRef.current && inputRef.current?.checked !== checked) {
+      inputRef.current.checked = checked;
+    }
+  }, [checked]);
+
   return (
-    <label htmlFor={id} className="flex items-center space-x-2 cursor-pointer">
+    <button
+      className="flex items-center space-x-2 cursor-pointer p-1 rounded-lg"
+      type="button"
+      onClick={onClick}
+    >
       <input
         type="checkbox"
         className="hidden"
-        onChange={onChange}
+        onChange={onClick}
         {...rest}
         id={id}
         ref={inputRef}
@@ -50,6 +56,6 @@ export const Checkbox: React.FC<
       >
         {children}
       </span>
-    </label>
+    </button>
   );
 };

@@ -13,9 +13,11 @@ export const TopNavigation: React.FC<{}> = () => {
       </Link>
 
       <div>
-        <Button variant="ghost" type="button">
-          <Link href="/checklists/new">New</Link>
-        </Button>
+        <Link href="/checklists/new">
+          <Button variant="ghost" type="button">
+            New
+          </Button>
+        </Link>
       </div>
     </nav>
   );

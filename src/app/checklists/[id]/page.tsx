@@ -1,4 +1,3 @@
-"use server";
 import Link from "next/link";
 import {
   getChecklistById,
@@ -9,6 +8,8 @@ import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
 import { MenuButton } from "@/components/menu-button";
+
+export const revalidate = 0;
 
 const Checklist: React.FC<{ params: { id: string } }> = async ({
   params: { id },
@@ -32,21 +33,19 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({
               variant="ghost"
               menu={
                 <div className="flex flex-col space-y-2">
-                  <div>
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      formAction={onCheckboxesReset}
-                    >
-                      Reset
-                    </Button>
-                  </div>
-
-                  <div>
+                  <Link href={`/checklists/${id}/edit`}>
                     <Button type="button" variant="ghost">
-                      <Link href={`/checklists/${id}/edit`}>Edit</Link>
+                      Edit
                     </Button>
-                  </div>
+                  </Link>
+
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    formAction={onCheckboxesReset}
+                  >
+                    Reset
+                  </Button>
                 </div>
               }
             />
