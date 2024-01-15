@@ -29,7 +29,7 @@ interface State {
   checklist: Omit<IChecklist, "items" | "sections">;
   sections: Record<string /* sectionId */, Omit<IChecklistSection, "items">>;
   items: Record<string /* itemId */, IChecklistItem>;
-  expandedForNotes: boolean;
+  noteVisibilities: Record<string /* itemId */, boolean>;
 }
 
 type Action =
@@ -45,7 +45,7 @@ type Action =
     }
   | { type: "DELETE_SECTION"; id: string }
   | { type: "DELETE_ITEM"; id: string }
-  | { type: "TOGGLE_EXPANDED_FOR_NOTES" }
+  | { type: "TOGGLE_NOTE_VISIBILITY"; id: string }
   | { type: "CLEAR_ITEMS" };
 
 interface ChecklistFormProps {
@@ -55,7 +55,7 @@ interface ChecklistFormProps {
 
 const checklistToState = (
   checklist: IChecklist,
-): Omit<State, "expandedForNotes"> => {
+): Omit<State, "noteVisibilities"> => {
   const sections: State["sections"] = {};
   const items: State["items"] = {};
 
@@ -182,8 +182,14 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         } satisfies State;
       }
 
-      if (action.type === "TOGGLE_EXPANDED_FOR_NOTES") {
-        return { ...state, expandedForNotes: !state.expandedForNotes };
+      if (action.type === "TOGGLE_NOTE_VISIBILITY") {
+        return {
+          ...state,
+          noteVisibilities: {
+            ...state.noteVisibilities,
+            [action.id]: !state.noteVisibilities[action.id],
+          },
+        };
       }
 
       if (action.type === "CLEAR_ITEMS") {
@@ -192,7 +198,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
       return state;
     },
-    { ...checklistToState(initialChecklist), expandedForNotes: false },
+    { ...checklistToState(initialChecklist), noteVisibilities: {} },
   );
 
   const itemsBySectionId = useMemo(() => {
@@ -352,18 +358,6 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                 <div className="space-y-2">
                   <Heading level={3} className="mt-3 flex space-x-2">
                     <span>Items</span>
-
-                    {itemsBySectionId[section.id]?.length && (
-                      <Button
-                        variant="ghost"
-                        type="button"
-                        onClick={() => {
-                          dispatch({ type: "TOGGLE_EXPANDED_FOR_NOTES" });
-                        }}
-                      >
-                        <ExpandIcon />
-                      </Button>
-                    )}
                   </Heading>
 
                   {!itemsBySectionId[section.id]?.length && (
@@ -377,7 +371,26 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         key={item.id}
                       >
                         <div className="flex flex-col space-y-2 w-full">
-                          <Label label={`Name: ${index + 1}`}>
+                          <Label
+                            label={
+                              <div className="flex space-x-1 items-center">
+                                <span>Name: ${index + 1}</span>
+
+                                <Button
+                                  variant="ghost"
+                                  type="button"
+                                  onClick={() => {
+                                    dispatch({
+                                      type: "TOGGLE_NOTE_VISIBILITY",
+                                      id: item.id,
+                                    });
+                                  }}
+                                >
+                                  <ExpandIcon />
+                                </Button>
+                              </div>
+                            }
+                          >
                             <Input
                               required
                               type="text"
@@ -395,9 +408,12 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
                           <Label
                             label={`Note: ${index + 1}`}
-                            className={cn("ml-4 w-[calc(100%-1rem)]", {
-                              hidden: !state.expandedForNotes,
-                            })}
+                            className={cn(
+                              "ml-4 w-[calc(100%-1rem)] animate-in fade-in duration-300",
+                              {
+                                hidden: !state.noteVisibilities[item.id],
+                              },
+                            )}
                           >
                             <Input
                               type="text"
