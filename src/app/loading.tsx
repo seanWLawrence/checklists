@@ -13,7 +13,7 @@ export default function Loading() {
     <div className="space-y-2">
       <Heading level={1}>Checklists</Heading>
 
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap space-x-2">
         <ButtonSkeleton />
         <ButtonSkeleton />
         <ButtonSkeleton />

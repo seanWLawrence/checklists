@@ -408,6 +408,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                                 <Button
                                   variant="ghost"
                                   type="button"
+                                  className="px-.5"
                                   onClick={() => {
                                     dispatch({
                                       type: "TOGGLE_NOTE_VISIBILITY",
@@ -459,7 +460,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           </Label>
                         </div>
 
-                        <div className="mt-5">
+                        <div className="mt-8">
                           <Button
                             type="button"
                             variant="ghost"
@@ -469,7 +470,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                                 id: item.id,
                               });
                             }}
-                            aria-label="Delete item"
+                            aria-label={`Delete ${item.name}`}
                           >
                             <TrashIcon />
                           </Button>
