@@ -374,7 +374,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           <Label
                             label={
                               <div className="flex space-x-1 items-center">
-                                <span>Name: ${index + 1}</span>
+                                <span>Name: {index + 1}</span>
 
                                 <Button
                                   variant="ghost"

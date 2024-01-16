@@ -1,3 +1,1 @@
-export const LOCAL_STORAGE_KEYS = {
-  CHECKLISTS: "checklists",
-};
+export const AUTH_COOKIE_NAME = "auth";

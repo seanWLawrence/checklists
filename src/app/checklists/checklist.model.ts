@@ -4,9 +4,18 @@ import { revalidatePath } from "next/cache";
 
 import { IChecklist } from "@/lib/types";
 import { RedirectType, redirect } from "next/navigation";
+import { getUser } from "@/lib/auth.model";
 
 const getChecklistUrlById = async (id: string): Promise<string> => {
-  const checklists = await list({ prefix: `checklists/${id}.json` });
+  const user = getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const checklists = await list({
+    prefix: `checklists/${user.username}/${id}.json`,
+  });
 
   const url = checklists.blobs?.[0]?.url ?? null;
 
@@ -30,7 +39,13 @@ export const getChecklistById = async (
 };
 
 export const getChecklistsUrls = async (): Promise<string[]> => {
-  const checklists = await list({ prefix: `checklists/` });
+  const user = getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const checklists = await list({ prefix: `checklists/${user.username}/` });
 
   return checklists.blobs?.map((b) => b.url) ?? [];
 };
@@ -65,27 +80,47 @@ export const deleteChecklistById = async (id: string): Promise<void> => {
 };
 
 export const createChecklist = async (checklist: IChecklist): Promise<void> => {
+  const user = getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   // TODO add user id once we support login
-  await put(`checklists/${checklist.id}.json`, JSON.stringify(checklist), {
-    // TODO switch to private once it's supported
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-  });
+  await put(
+    `checklists/${user.username}/${checklist.id}.json`,
+    JSON.stringify(checklist),
+    {
+      // TODO switch to private once it's supported
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+    },
+  );
 
   revalidatePath("/checklists");
   redirect(`/checklists/${checklist.id}`, RedirectType.push);
 };
 
 export const updateChecklist = async (checklist: IChecklist): Promise<void> => {
+  const user = getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   // TODO add user id once we support login
-  await put(`checklists/${checklist.id}.json`, JSON.stringify(checklist), {
-    // TODO switch to private once it's supported
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-    cacheControlMaxAge: 0,
-  });
+  await put(
+    `checklists/${user.username}/${checklist.id}.json`,
+    JSON.stringify(checklist),
+    {
+      // TODO switch to private once it's supported
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+      cacheControlMaxAge: 0,
+    },
+  );
 
   revalidatePath("/checklists");
   revalidatePath(`/checklists/${checklist.id}`);
