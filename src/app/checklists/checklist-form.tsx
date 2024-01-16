@@ -46,7 +46,8 @@ type Action =
   | { type: "DELETE_SECTION"; id: string }
   | { type: "DELETE_ITEM"; id: string }
   | { type: "TOGGLE_NOTE_VISIBILITY"; id: string }
-  | { type: "CLEAR_ITEMS" };
+  | { type: "CLEAR_ITEMS" }
+  | { type: "CLEAR_COMPLETED_ITEMS" };
 
 interface ChecklistFormProps {
   variant: "new" | "edit";
@@ -196,6 +197,22 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         return { ...state, items: {} };
       }
 
+      if (action.type === "CLEAR_COMPLETED_ITEMS") {
+        return {
+          ...state,
+          items: Object.entries(state.items).reduce(
+            (acc: State["items"], [id, item]) => {
+              if (!item.completed) {
+                acc[id] = item;
+              }
+
+              return acc;
+            },
+            {},
+          ),
+        };
+      }
+
       return state;
     },
     { ...checklistToState(initialChecklist), noteVisibilities: {} },
@@ -228,15 +245,27 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             menu={
               <div className="flex flex-col space-y-2">
                 {hasItems ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      dispatch({ type: "CLEAR_ITEMS" });
-                    }}
-                  >
-                    Clear items
-                  </Button>
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        dispatch({ type: "CLEAR_ITEMS" });
+                      }}
+                    >
+                      Clear items
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        dispatch({ type: "CLEAR_COMPLETED_ITEMS" });
+                      }}
+                    >
+                      Clear completed items
+                    </Button>
+                  </>
                 ) : null}
 
                 {variant === "edit" && (
