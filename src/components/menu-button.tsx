@@ -2,7 +2,7 @@
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { MenuButtonIcon } from "./icons/menu-button-icon";
 import { Button } from "./button";
 
@@ -14,18 +14,12 @@ export const MenuButton: React.FC<
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ children, variant = "outline", menu, ...rest }) => {
   const { pending } = useFormStatus();
-  const [clickedRecently, setClickedRecently] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
   const [visible, setVisible] = useState<boolean>(false);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setClickedRecently(false);
-    }, 5000);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [clickedRecently]);
+  const onClickChildren = useCallback(() => {
+    setVisible(false);
+  }, []);
 
   return (
     <div className="relative">
@@ -34,7 +28,9 @@ export const MenuButton: React.FC<
         variant="ghost"
         className={cn("p-.5", rest.className)}
         onClick={() => {
-          setVisible((prev) => !prev);
+          startTransition(() => {
+            setVisible((prev) => !prev);
+          });
         }}
         type="button"
       >
@@ -42,7 +38,7 @@ export const MenuButton: React.FC<
 
         {children && <span>{children}</span>}
 
-        {pending && clickedRecently && (
+        {pending && (
           <Spinner
             className={cn("animate-in fade-in duration-1000", {
               "text-zinc-900": variant === "outline",
@@ -60,6 +56,11 @@ export const MenuButton: React.FC<
             hidden: !visible,
           },
         )}
+        onClick={() => {
+          startTransition(() => {
+            setVisible(false);
+          });
+        }}
       >
         {menu}
       </div>
