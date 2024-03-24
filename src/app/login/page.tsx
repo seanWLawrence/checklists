@@ -5,10 +5,10 @@ import { Label } from "@/components/label";
 import { getUser, login } from "@/lib/auth.model";
 import { redirect } from "next/navigation";
 
-const Login: React.FC<{}> = () => {
+const Login: React.FC = () => {
   const user = getUser();
 
-  if (user) {
+  if (user.isJust()) {
     redirect("/checklists");
   }
 

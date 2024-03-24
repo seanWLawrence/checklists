@@ -3,19 +3,14 @@
 import { useMemo, useReducer } from "react";
 import { useRouter } from "next/navigation";
 
-import type {
-  IChecklist,
-  IChecklistItem,
-  IChecklistSection,
-} from "@/lib/types";
+import type { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
 import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { TrashIcon } from "@/components/icons/trash-icon";
 import {
   createChecklist,
-  deleteChecklistById,
-  onChecklistSave,
+  deleteChecklist,
   updateChecklist,
 } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
@@ -26,9 +21,9 @@ import { MenuButton } from "@/components/menu-button";
 import { Heading } from "@/components/heading";
 
 interface State {
-  checklist: Omit<IChecklist, "items" | "sections">;
-  sections: Record<string /* sectionId */, Omit<IChecklistSection, "items">>;
-  items: Record<string /* itemId */, IChecklistItem>;
+  checklist: Omit<Checklist, "sections">;
+  sections: Record<string /* sectionId */, Omit<ChecklistSection, "items">>;
+  items: Record<string /* itemId */, ChecklistItem>;
   noteVisibilities: Record<string /* itemId */, boolean>;
 }
 
@@ -51,11 +46,11 @@ type Action =
 
 interface ChecklistFormProps {
   variant: "new" | "edit";
-  initialChecklist: IChecklist;
+  initialChecklist: Checklist;
 }
 
 const checklistToState = (
-  checklist: IChecklist,
+  checklist: Checklist,
 ): Omit<State, "noteVisibilities"> => {
   const sections: State["sections"] = {};
   const items: State["items"] = {};
@@ -155,7 +150,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       }
 
       if (action.type === "DELETE_SECTION") {
-        const items: Record<string, IChecklistItem> = {};
+        const items: Record<string, ChecklistItem> = {};
 
         Object.values(state.items).forEach((item) => {
           if (item.checklistSectionId !== action.id) {
@@ -219,7 +214,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   );
 
   const itemsBySectionId = useMemo(() => {
-    const bySectionId: Record<string /* sectionId */, IChecklistItem[]> = {};
+    const bySectionId: Record<string /* sectionId */, ChecklistItem[]> = {};
 
     Object.values(state.items).forEach((item) => {
       const existingItems = bySectionId[item.checklistSectionId];
@@ -278,7 +273,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                       if (name) {
                         const checklistId = id();
 
-                        const checklist: IChecklist = {
+                        const checklist: Checklist = {
                           ...state.checklist,
                           id: checklistId,
                           name,
@@ -295,7 +290,11 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           ),
                         };
 
-                        await onChecklistSave({ variant, checklist });
+                        if (variant === "edit") {
+                          await updateChecklist(checklist);
+                        } else {
+                          await createChecklist(checklist);
+                        }
 
                         const checklistIdPath = `/checklists/${checklist.id}`;
 
@@ -316,7 +315,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         const confirmed = window.confirm("Delete?");
 
                         if (confirmed) {
-                          await deleteChecklistById(state.checklist.id);
+                          await deleteChecklist(state.checklist);
 
                           router.push("/checklists");
                         }
@@ -515,7 +514,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
               type="submit"
               variant="primary"
               formAction={async () => {
-                const checklist: IChecklist = {
+                const checklist: Checklist = {
                   ...state.checklist,
                   sections: Object.values(state.sections).map((section) => {
                     return {

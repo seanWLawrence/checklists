@@ -1,9 +1,9 @@
 "use server";
+import { UUID } from "crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { array } from "purify-ts/Codec";
 import { Tuple } from "purify-ts/Tuple";
-import { UUID } from "crypto";
-import kv from "@vercel/kv";
+import { kv } from "@vercel/kv";
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
 
@@ -17,6 +17,8 @@ import {
 } from "@/lib/db.model";
 
 import { Checklist, Key, User, ChecklistBase } from "@/lib/types";
+import { Either } from "purify-ts/Either";
+import { logger } from "@/lib/logger";
 
 /**
  * Gets all checklist keys for a given user
@@ -34,17 +36,21 @@ const getChecklistKey = ({ user, id }: { user: User; id: UUID }): Key =>
  * Create
  */
 
-export const createChecklist = (
+export const createChecklist = async (
   checklist: ChecklistBase,
-): EitherAsync<string, Checklist> => {
-  return create({
+): Promise<string | Checklist> => {
+  const x = await create({
     key: (item) => getChecklistKey({ id: item.id, user: item.user }),
     item: checklist,
     decoder: ChecklistBase,
-  }).ifRight((checklist) => {
-    revalidatePath("/checklists");
-    redirect(`/checklists/${checklist.id}`, RedirectType.push);
-  });
+  })
+    .ifRight((checklist) => {
+      revalidatePath("/checklists");
+      redirect(`/checklists/${checklist.id}`, RedirectType.push);
+    })
+    .run();
+
+  return x.toJSON();
 };
 
 /**
@@ -82,28 +88,30 @@ const getAllChecklistsKeys = ({
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await liftEither(validateLoggedIn());
 
-    return fromPromise(getChecklistKeysBatch({ user, cursor }).map(async (response) => {
-      const nextCursor = response.fst();
-      const keys = response.snd();
+    return fromPromise(
+      getChecklistKeysBatch({ user, cursor }).map(async (response) => {
+        const nextCursor = response.fst();
+        const keys = response.snd();
 
-      const done = nextCursor === 0;
-      const allKeysThusFar = [...existingKeys, ...keys];
+        const done = nextCursor === 0;
+        const allKeysThusFar = [...existingKeys, ...keys];
 
-      if (done) {
-        return { keys: allKeysThusFar };
-      }
+        if (done) {
+          return { keys: allKeysThusFar };
+        }
 
-      /**
-       * We still have more to iterate through, recursively call until no more left
-       */
-      return fromPromise(
-        getAllChecklistsKeys({
-          cursor: response.fst(),
-          existingKeys: allKeysThusFar,
-        }).run(),
-      );
-    }));
-  })
+        /**
+         * We still have more to iterate through, recursively call until no more left
+         */
+        return fromPromise(
+          getAllChecklistsKeys({
+            cursor: response.fst(),
+            existingKeys: allKeysThusFar,
+          }).run(),
+        );
+      }),
+    );
+  });
 };
 
 export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
@@ -148,7 +156,7 @@ export const updateChecklist = (
  */
 
 export const deleteChecklist = (
-  checklist: Checklist,
+  checklist: Pick<Checklist, "id" | "user">,
 ): EitherAsync<string, void> => {
   return deleteAll([
     getChecklistKey({

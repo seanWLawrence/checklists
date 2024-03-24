@@ -1,11 +1,13 @@
 import { Either, Left, Right } from "purify-ts/Either";
-import { Key, Metadata, User } from "./types";
-import { getUser } from "./auth.model";
-import { randomUUID } from "node:crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { kv } from "@vercel/kv";
 import { Codec, date, intersect } from "purify-ts/Codec";
 import { Maybe } from "purify-ts/Maybe";
+
+import { Key, Metadata, User } from "./types";
+import { getUser } from "./auth.model";
+import { id } from "@/factories/id.factory";
+import { logger } from "./logger";
 
 export const isOk = (response: "OK" | string): boolean => response === "OK";
 
@@ -19,7 +21,7 @@ export const validateUserFromKey = ({
   user: User;
   key: Key;
 }): Either<string, User> => {
-  const usernameFromKey = key.match(/(?<=user#).*(?=#)/);
+  const usernameFromKey = key.match(/(?<=user#)[^#]*(?=#)/);
 
   if (usernameFromKey && user.username === usernameFromKey[0]) {
     return Right(user);
@@ -40,7 +42,7 @@ export const validateLoggedIn = (): Either<string, User> => {
  */
 export const createMetadata = (user: User): Metadata => {
   return {
-    id: randomUUID(),
+    id: id(),
     createdAtIso: date.encode(new Date()),
     updatedAtIso: date.encode(new Date()),
     user,
@@ -151,7 +153,7 @@ export const getObjectFromKey = <T extends object>({
   return EitherAsync(async ({ liftEither, throwE }) => {
     await liftEither(validateUserFromKey({ user, key }));
 
-    const response = Maybe.fromNullable(await kv.get(key));
+    const response = Maybe.fromNullable(await kv.hgetall(key));
 
     if (response.isNothing()) {
       throwE(`Object not found for key: '${key}'`);

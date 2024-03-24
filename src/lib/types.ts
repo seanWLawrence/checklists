@@ -14,7 +14,7 @@ import { Left, Right } from "purify-ts/Either";
 const UUID_REG_EXP =
   /[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}/;
 
-const IKEY_REG_EXP = new RegExp(`^user#${UUID_REG_EXP}#.*`);
+const IKEY_REG_EXP = new RegExp(`^user#.*#.*`);
 
 export const User = Codec.interface({
   username: string,
@@ -41,24 +41,23 @@ export const Metadata = Codec.interface({
 
 export type Metadata = GetType<typeof Metadata>;
 
-export const ChecklistItem = intersect(
-  Metadata,
-  Codec.interface({
-    name: string,
-    completed: boolean,
-    note: optional(string),
-  }),
-);
+export const ChecklistItem = Codec.interface({
+  id: UUID,
+  checklistSectionId: UUID,
+  name: string,
+  completed: boolean,
+  note: optional(string),
+});
 
 export type ChecklistItem = GetType<typeof ChecklistItem>;
 
-export const ChecklistSection = intersect(
-  Metadata,
-  Codec.interface({
-    name: string,
-    items: array(ChecklistItem),
-  }),
-);
+export const ChecklistSection = Codec.interface({
+  id: UUID,
+  name: string,
+  items: array(ChecklistItem),
+});
+
+export type ChecklistSection = GetType<typeof ChecklistSection>;
 
 export const ChecklistBase = Codec.interface({
   name: string,
@@ -77,6 +76,6 @@ export const Key = Codec.custom<Key>({
   decode: (input) =>
     typeof input === "string" && input.match(IKEY_REG_EXP)
       ? Right(input as Key)
-      : Left(`Invalid IKey: '${input}'`),
+      : Left(`Invalid Key: '${input}'`),
   encode: (input) => input, // strings have no serialization logic
 });
