@@ -253,7 +253,10 @@ export const markItemsIncompleteAction = async (
       revalidatePath(`/checklists/${x.id}`);
       revalidatePath(`/checklists/${x.id}/edit`);
     })
-    .ifLeft(logger.error)
+    .ifLeft((e) => {
+      logger.error(`Failed to mark items incomplete '(ID not available)'`);
+      logger.error(e);
+    })
     .run();
 
   return response.toJSON();
@@ -282,7 +285,14 @@ export const updateChecklistItemsAction = async (
       itemsBySectionId[section.id] = {
         ...section,
         items: section.items.map((item) => {
-          const checked = formData.get(`item__${item.id}`) === "on";
+          const checked = Maybe.fromNullable(formData.get(`item__${item.id}`))
+            .map((item) => item === "on")
+            .ifNothing(() => {
+              logger.error(
+                `Failed to find formData for item with ID '${item.id}' '(${item.name})'`,
+              );
+            })
+            .orDefault(false);
 
           return { ...item, completed: checked };
         }),
@@ -291,8 +301,6 @@ export const updateChecklistItemsAction = async (
 
     const updatedChecklist: Checklist = {
       ...checklist,
-      createdAtIso: date.encode(checklist.createdAtIso),
-      updatedAtIso: date.encode(new Date()),
       sections: [],
     };
 
@@ -306,7 +314,10 @@ export const updateChecklistItemsAction = async (
       logger.info(`Successfully updated items for ID '${x.id}' ('${x.name}')`);
       logger.info(x);
     })
-    .ifLeft(logger.error)
+    .ifLeft((e) => {
+      logger.error(`Failed to update items (ID not available)`);
+      logger.error(e);
+    })
     .run();
 
   return response.toJSON();
