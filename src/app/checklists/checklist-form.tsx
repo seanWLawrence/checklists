@@ -3,7 +3,12 @@
 import { useCallback, useMemo, useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import type { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
+import type {
+  Checklist,
+  ChecklistItem,
+  ChecklistSection,
+  UUID,
+} from "@/lib/types";
 import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
@@ -32,16 +37,16 @@ interface State {
 type Action =
   | { type: "UPDATE_CHECKLIST"; name: string }
   | { type: "CREATE_SECTION" }
-  | { type: "CREATE_ITEM"; sectionId: string; itemId: string }
-  | { type: "UPDATE_SECTION"; id: string; name: string }
+  | { type: "CREATE_ITEM"; sectionId: UUID; itemId: UUID }
+  | { type: "UPDATE_SECTION"; id: UUID; name: string }
   | {
       type: "UPDATE_ITEM";
-      id: string;
+      id: UUID;
       value: string;
       property: "name" | "note";
     }
-  | { type: "DELETE_SECTION"; id: string }
-  | { type: "DELETE_ITEM"; id: string }
+  | { type: "DELETE_SECTION"; id: UUID }
+  | { type: "DELETE_ITEM"; id: UUID }
   | { type: "TOGGLE_NOTE_VISIBILITY"; id: string }
   | { type: "CLEAR_ITEMS" }
   | { type: "CLEAR_COMPLETED_ITEMS" };
@@ -85,7 +90,6 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
           sections: {
             ...state.sections,
             [sectionId]: checklistSection({
-              checklistId: state.checklist.id,
               id: sectionId,
               name: "",
             }),
@@ -229,7 +233,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   }, [state.items]);
 
   const onCreateItem = useCallback(
-    ({ sectionId, itemId }: { sectionId: string; itemId: string }) => {
+    ({ sectionId, itemId }: { sectionId: UUID; itemId: UUID }) => {
       startTransition(() => {
         dispatch({
           type: "CREATE_ITEM",
