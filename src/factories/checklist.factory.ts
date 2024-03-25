@@ -1,10 +1,11 @@
+import { date } from "purify-ts/Codec";
 import { fillArray } from "./fill-array.factory";
 import { id } from "./id.factory";
-import { IChecklist, IChecklistItem, IChecklistSection } from "@/lib/types";
+import { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
 
 export const checklistItem = (
-  overrides?: Partial<IChecklistItem>,
-): IChecklistItem => {
+  overrides?: Partial<ChecklistItem>,
+): ChecklistItem => {
   return {
     id: id(),
     checklistSectionId: id(),
@@ -16,13 +17,12 @@ export const checklistItem = (
 };
 
 export const checklistSection = (
-  overrides?: Partial<IChecklistSection>,
-): IChecklistSection => {
+  overrides?: Partial<ChecklistSection>,
+): ChecklistSection => {
   const checklistSectionId = overrides?.id ?? id();
 
   return {
     id: checklistSectionId,
-    checklistId: id(),
     name: "some checklist section name",
     items: fillArray({
       length: 3,
@@ -32,15 +32,18 @@ export const checklistSection = (
   };
 };
 
-export const checklist = (overrides?: Partial<IChecklist>): IChecklist => {
+export const checklist = (overrides?: Partial<Checklist>): Checklist => {
   const checklistId = overrides?.id ?? id();
 
   return {
     id: checklistId,
+    createdAtIso: date.encode(new Date()),
+    updatedAtIso: date.encode(new Date()),
+    user: { username: "some username" },
     name: "some name",
     sections: fillArray({
       length: 3,
-      factory: () => checklistSection({ checklistId }),
+      factory: () => checklistSection(),
     }),
     ...(overrides ?? {}),
   };
