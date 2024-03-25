@@ -2,15 +2,10 @@
 
 import { id } from "@/factories/id.factory";
 import { ChecklistForm } from "../checklist-form";
-import {
-  checklist,
-  checklistItem,
-  checklistSection,
-} from "@/factories/checklist.factory";
+import { checklist, checklistSection } from "@/factories/checklist.factory";
 
 const initialChecklistId = id();
 const initialSectionId = id();
-const initialItemId = id();
 
 const initialChecklist = checklist({
   id: initialChecklistId,
@@ -18,7 +13,6 @@ const initialChecklist = checklist({
   sections: [
     checklistSection({
       id: initialSectionId,
-      checklistId: initialChecklistId,
       name: "",
       items: [],
     }),
