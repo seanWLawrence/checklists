@@ -212,6 +212,20 @@ export const updateChecklistAction = async (
   return response.toJSON();
 };
 
+const getChecklistFromFormData = (
+  formData: FormData,
+): Either<unknown, Checklist> => {
+  return Maybe.fromNullable(formData.get("checklist"))
+    .toEither(() => "Missing checklist formData")
+    .chain((x) =>
+      typeof x === "string"
+        ? Right(x)
+        : Left("Checklist formData is wrong type."),
+    )
+    .chain((x) => Either.encase(() => JSON.parse(x)))
+    .chain(Checklist.decode);
+};
+
 export const markItemsIncompleteAction = async (
   formData: FormData,
 ): Promise<Checklist | unknown> => {
@@ -219,17 +233,7 @@ export const markItemsIncompleteAction = async (
     const itemsBySectionId: Record<string /* sectionId */, ChecklistSection> =
       {};
 
-    const checklist = await liftEither(
-      Maybe.fromNullable(formData.get("checklist"))
-        .toEither(() => "Missing checklist formData")
-        .chain((x) =>
-          typeof x === "string"
-            ? Right(x)
-            : Left("Checklist formData is wrong type."),
-        )
-        .chain((x) => Either.encase(() => JSON.parse(x)))
-        .chain(Checklist.decode),
-    );
+    const checklist = await liftEither(getChecklistFromFormData(formData));
 
     checklist.sections.forEach((section) => {
       itemsBySectionId[section.id] = {
@@ -260,10 +264,25 @@ export const markItemsIncompleteAction = async (
       revalidatePath(`/checklists/${x.id}/edit`);
     })
     .ifLeft((e) => {
-      logger.error(`Failed to mark items incomplete '(ID not available)'`);
+      getChecklistFromFormData(formData)
+        .ifRight((checklist) => {
+          logger.error(
+            `Failed to mark items incomplete with ID '${checklist.id}' '(${checklist.name})'`,
+          );
+        })
+        .extract();
+
       logger.error(e);
     })
     .run();
+
+  if (response.isRight()) {
+    getChecklistFromFormData(formData)
+      .ifRight((checklist) => {
+        redirect(`/checklists/${checklist.id}`, RedirectType.push);
+      })
+      .extract();
+  }
 
   return response.toJSON();
 };
@@ -275,17 +294,7 @@ export const updateChecklistItemsAction = async (
     const itemsBySectionId: Record<string /* sectionId */, ChecklistSection> =
       {};
 
-    const checklist = await liftEither(
-      Maybe.fromNullable(formData.get("checklist"))
-        .toEither(() => "Missing checklist formData")
-        .chain((x) =>
-          typeof x === "string"
-            ? Right(x)
-            : Left("Checklist formData is wrong type."),
-        )
-        .chain((x) => Either.encase(() => JSON.parse(x)))
-        .chain(Checklist.decode),
-    );
+    const checklist = await liftEither(getChecklistFromFormData(formData));
 
     checklist.sections.forEach((section) => {
       itemsBySectionId[section.id] = {
@@ -321,7 +330,14 @@ export const updateChecklistItemsAction = async (
       logger.info(x);
     })
     .ifLeft((e) => {
-      logger.error(`Failed to update items (ID not available)`);
+      getChecklistFromFormData(formData)
+        .ifRight((checklist) => {
+          logger.error(
+            `Failed to update items with ID '${checklist.id}' '(${checklist.name})'`,
+          );
+        })
+        .extract();
+
       logger.error(e);
     })
     .run();
