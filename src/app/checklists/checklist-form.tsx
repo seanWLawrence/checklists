@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useReducer, useTransition } from "react";
+import { useCallback, useMemo, useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
@@ -19,7 +19,8 @@ import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
 import { MenuButton } from "@/components/menu-button";
 import { Heading } from "@/components/heading";
-import Link from "next/link";
+import { Maybe } from "purify-ts/Maybe";
+import { NonEmptyList } from "purify-ts";
 
 interface State {
   checklist: Omit<Checklist, "sections">;
@@ -31,7 +32,7 @@ interface State {
 type Action =
   | { type: "UPDATE_CHECKLIST"; name: string }
   | { type: "CREATE_SECTION" }
-  | { type: "CREATE_ITEM"; sectionId: string }
+  | { type: "CREATE_ITEM"; sectionId: string; itemId: string }
   | { type: "UPDATE_SECTION"; id: string; name: string }
   | {
       type: "UPDATE_ITEM";
@@ -93,7 +94,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       }
 
       if (action.type === "CREATE_ITEM") {
-        const itemId = id();
+        const itemId = action.itemId;
 
         return {
           ...state,
@@ -226,6 +227,26 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
     return bySectionId;
   }, [state.items]);
+
+  const onCreateItem = useCallback(
+    ({ sectionId, itemId }: { sectionId: string; itemId: string }) => {
+      startTransition(() => {
+        dispatch({
+          type: "CREATE_ITEM",
+          sectionId,
+          itemId,
+        });
+
+        setTimeout(() => {
+          Maybe.fromNullable(document.getElementsByName(`item__${itemId}`))
+            .chain(($els) => NonEmptyList.fromArray(Array.from($els)))
+            .map(($els) => NonEmptyList.head($els))
+            .ifJust(($el) => $el.focus());
+        }, 50);
+      });
+    },
+    [],
+  );
 
   const sectionsArray = Object.values(state.sections);
   const hasItems = Object.values(state.items).length;
@@ -404,43 +425,32 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         key={item.id}
                       >
                         <div className="flex flex-col space-y-2 w-full">
-                          <Label
-                            label={
-                              <div className="flex space-x-1 items-center">
-                                <span>Name: {index + 1}</span>
+                          <Input
+                            required
+                            type="text"
+                            value={item.name}
+                            name={`item__${item.id}`}
+                            onChange={(e) => {
+                              dispatch({
+                                type: "UPDATE_ITEM",
+                                id: item.id,
+                                value: e.target.value,
+                                property: "name",
+                              });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
 
-                                <Button
-                                  variant="ghost"
-                                  type="button"
-                                  className="px-.5"
-                                  onClick={() => {
-                                    startTransition(() =>
-                                      dispatch({
-                                        type: "TOGGLE_NOTE_VISIBILITY",
-                                        id: item.id,
-                                      }),
-                                    );
-                                  }}
-                                >
-                                  <ExpandIcon />
-                                </Button>
-                              </div>
-                            }
-                          >
-                            <Input
-                              required
-                              type="text"
-                              value={item.name}
-                              onChange={(e) => {
-                                dispatch({
-                                  type: "UPDATE_ITEM",
-                                  id: item.id,
-                                  value: e.target.value,
-                                  property: "name",
+                                const itemId = id();
+
+                                onCreateItem({
+                                  sectionId: section.id,
+                                  itemId,
                                 });
-                              }}
-                            />
-                          </Label>
+                              }
+                            }}
+                          />
 
                           <Label
                             label={`Note: ${index + 1}`}
@@ -466,7 +476,23 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           </Label>
                         </div>
 
-                        <div className="mt-8">
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            className="px-.5"
+                            onClick={() => {
+                              startTransition(() =>
+                                dispatch({
+                                  type: "TOGGLE_NOTE_VISIBILITY",
+                                  id: item.id,
+                                }),
+                              );
+                            }}
+                          >
+                            <ExpandIcon />
+                          </Button>
+
                           <Button
                             type="button"
                             variant="ghost"
@@ -491,12 +517,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                 <div className="flex justify-end w-full">
                   <Button
                     onClick={() => {
-                      startTransition(() =>
-                        dispatch({
-                          type: "CREATE_ITEM",
-                          sectionId: section.id,
-                        }),
-                      );
+                      onCreateItem({ sectionId: section.id, itemId: id() });
                     }}
                     type="button"
                     variant="outline"

@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
-import { MenuButton } from "@/components/menu-button";
 import { UUID } from "@/lib/types";
 
 export const revalidate = 0;
