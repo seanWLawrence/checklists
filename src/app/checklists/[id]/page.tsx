@@ -1,11 +1,15 @@
+import { EitherAsync } from "purify-ts/EitherAsync";
 import Link from "next/link";
-import { getChecklist } from "@/app/checklists/checklist.model";
+import {
+  getChecklist,
+  markItemsIncompleteAction,
+  updateChecklistItemsAction,
+} from "@/app/checklists/checklist.model";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
 import { MenuButton } from "@/components/menu-button";
 import { UUID } from "@/lib/types";
-import { EitherAsync } from "purify-ts/EitherAsync";
 
 export const revalidate = 0;
 
@@ -39,9 +43,9 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({ params }) => {
                   <Button
                     type="submit"
                     variant="ghost"
-                    // formAction={onCheckboxesReset}
+                    formAction={markItemsIncompleteAction}
                   >
-                    Reset
+                    Mark items incomplete
                   </Button>
                 </div>
               }
@@ -89,7 +93,7 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({ params }) => {
           <Button
             type="submit"
             variant="primary"
-            // formAction={onCheckboxesSave}
+            formAction={updateChecklistItemsAction}
           >
             Save
           </Button>

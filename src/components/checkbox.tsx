@@ -1,10 +1,13 @@
 "use client";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { XIcon } from "@/components/icons/x-icon";
 import { cn } from "@/lib/utils";
 
 export const Checkbox: React.FC<
-  { children: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>
+  { children: React.ReactNode } & Pick<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "defaultChecked" | "name" | "checked"
+  >
 > = ({ children, ...rest }) => {
   const [checked, setChecked] = useState<boolean>(
     !!(rest.defaultChecked ?? rest.checked),
@@ -13,15 +16,9 @@ export const Checkbox: React.FC<
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     setChecked((prev) => !prev);
-  };
-
-  useEffect(() => {
-    if (inputRef.current && inputRef.current?.checked !== checked) {
-      inputRef.current.checked = checked;
-    }
-  }, [checked]);
+  }, []);
 
   return (
     <button
@@ -32,10 +29,11 @@ export const Checkbox: React.FC<
       <input
         type="checkbox"
         className="hidden"
-        onChange={onClick}
-        {...rest}
+        checked={checked}
         id={id}
+        readOnly
         ref={inputRef}
+        name={rest.name}
       />
 
       <div className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center">

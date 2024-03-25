@@ -1,7 +1,7 @@
 "use server";
 import { UUID } from "crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { array } from "purify-ts/Codec";
+import { array, date } from "purify-ts/Codec";
 import { Tuple } from "purify-ts/Tuple";
 import { kv } from "@vercel/kv";
 import { revalidatePath } from "next/cache";
@@ -16,8 +16,15 @@ import {
   validateLoggedIn,
 } from "@/lib/db.model";
 
-import { Checklist, Key, User, ChecklistBase } from "@/lib/types";
-import { Either } from "purify-ts/Either";
+import {
+  Checklist,
+  Key,
+  User,
+  ChecklistBase,
+  ChecklistSection,
+} from "@/lib/types";
+import { Either, Left, Right } from "purify-ts/Either";
+import { Maybe } from "purify-ts/Maybe";
 import { logger } from "@/lib/logger";
 
 /**
@@ -36,18 +43,26 @@ const getChecklistKey = ({ user, id }: { user: User; id: UUID }): Key =>
  * Create
  */
 
-export const createChecklist = async (
+export const createChecklistAction = async (
   checklist: ChecklistBase,
-): Promise<string | Checklist> => {
+): Promise<unknown | Checklist> => {
   const x = await create({
     key: (item) => getChecklistKey({ id: item.id, user: item.user }),
     item: checklist,
     decoder: ChecklistBase,
   })
     .ifRight((checklist) => {
+      logger.info(
+        `Successfully created checklist with ID '${checklist.id}' ('${checklist.name}')`,
+      );
       revalidatePath("/checklists");
       redirect(`/checklists/${checklist.id}`, RedirectType.push);
     })
+    .ifLeft((e) => {
+      logger.error(`Failed to create checklist '${checklist.name}'`);
+      logger.error(e);
+    })
+
     .run();
 
   return x.toJSON();
@@ -123,10 +138,18 @@ export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
     return await fromPromise(
       getAllObjectsFromKeys({ keys: validatedKeys, decoder: Checklist }),
     );
-  });
+  })
+    .ifRight(() => {
+      logger.info(`Successfully loaded all checklists`);
+      revalidatePath("/checklists");
+    })
+    .ifLeft((e) => {
+      logger.error(`Failed to load all checklists`);
+      logger.error(e);
+    });
 };
 
-export const getChecklist = (id: UUID): EitherAsync<string, Checklist> => {
+export const getChecklist = (id: UUID): EitherAsync<unknown, Checklist> => {
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await liftEither(validateLoggedIn());
     const key = getChecklistKey({ id, user });
@@ -134,34 +157,184 @@ export const getChecklist = (id: UUID): EitherAsync<string, Checklist> => {
     return fromPromise(
       getObjectFromKey({ key, decoder: Checklist, user }).run(),
     );
-  });
+  })
+    .ifRight((x) => {
+      logger.info(
+        `Successfully loaded checklist with ID '${x.id}' ('${x.name}')`,
+      );
+      revalidatePath(`/checklists/${x.id}`);
+      revalidatePath(`/checklists/${x.id}/edit`);
+    })
+    .ifLeft((e) => {
+      logger.error(`Failed to load checklist with ID '${id}'`);
+      logger.error(e);
+    });
 };
 
 /**
  * Update
  */
 
-export const updateChecklist = (
+export const updateChecklist_serverOnly = (
   checklist: Checklist,
-): EitherAsync<string, Checklist> => {
+): EitherAsync<unknown, Checklist> => {
   return update({
     key: (item) => getChecklistKey({ id: item.id, user: item.user }),
     decoder: Checklist,
     item: checklist,
-  });
+  })
+    .ifRight((x) => {
+      logger.info(
+        `Successfully updated checklist with ID '${x.id}' ('${x.name}')`,
+      );
+      revalidatePath(`/checklists/${x.id}`);
+      revalidatePath(`/checklists/${x.id}/edit`);
+    })
+    .ifLeft((e) => {
+      logger.error(
+        `Failed to update checklist with ID '${checklist.id}' ('${checklist.name}')`,
+      );
+      logger.error(e);
+    });
+};
+
+export const updateChecklistAction = async (
+  checklist: Checklist,
+): Promise<unknown | Checklist> => {
+  const response = await updateChecklist_serverOnly(checklist).run();
+
+  return response.toJSON();
+};
+
+export const markItemsIncompleteAction = async (
+  formData: FormData,
+): Promise<Checklist | unknown> => {
+  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
+    const itemsBySectionId: Record<string /* sectionId */, ChecklistSection> =
+      {};
+
+    const checklist = await liftEither(
+      Maybe.fromNullable(formData.get("checklist"))
+        .toEither(() => "Missing checklist formData")
+        .chain((x) =>
+          typeof x === "string"
+            ? Right(x)
+            : Left("Checklist formData is wrong type."),
+        )
+        .chain((x) => Either.encase(() => JSON.parse(x)))
+        .chain(Checklist.decode),
+    );
+
+    checklist.sections.forEach((section) => {
+      itemsBySectionId[section.id] = {
+        ...section,
+        items: section.items.map((item) => {
+          return { ...item, completed: false };
+        }),
+      };
+    });
+
+    const updatedChecklist: Checklist = {
+      ...checklist,
+      sections: [],
+    };
+
+    Object.values(itemsBySectionId).forEach((section) => {
+      updatedChecklist.sections.push(section);
+    });
+
+    return fromPromise(updateChecklist_serverOnly(updatedChecklist).run());
+  })
+    .ifRight((x) => {
+      logger.info(
+        `Successfully marked items incomplete for ID '${x.id}' ('${x.name}')`,
+      );
+      logger.info(x);
+      revalidatePath(`/checklists/${x.id}`);
+      revalidatePath(`/checklists/${x.id}/edit`);
+    })
+    .ifLeft(logger.error)
+    .run();
+
+  return response.toJSON();
+};
+
+export const updateChecklistItemsAction = async (
+  formData: FormData,
+): Promise<Checklist | unknown> => {
+  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
+    const itemsBySectionId: Record<string /* sectionId */, ChecklistSection> =
+      {};
+
+    const checklist = await liftEither(
+      Maybe.fromNullable(formData.get("checklist"))
+        .toEither(() => "Missing checklist formData")
+        .chain((x) =>
+          typeof x === "string"
+            ? Right(x)
+            : Left("Checklist formData is wrong type."),
+        )
+        .chain((x) => Either.encase(() => JSON.parse(x)))
+        .chain(Checklist.decode),
+    );
+
+    checklist.sections.forEach((section) => {
+      itemsBySectionId[section.id] = {
+        ...section,
+        items: section.items.map((item) => {
+          const checked = formData.get(`item__${item.id}`) === "on";
+
+          return { ...item, completed: checked };
+        }),
+      };
+    });
+
+    const updatedChecklist: Checklist = {
+      ...checklist,
+      createdAtIso: date.encode(checklist.createdAtIso),
+      updatedAtIso: date.encode(new Date()),
+      sections: [],
+    };
+
+    Object.values(itemsBySectionId).forEach((section) => {
+      updatedChecklist.sections.push(section);
+    });
+
+    return fromPromise(updateChecklist_serverOnly(updatedChecklist).run());
+  })
+    .ifRight((x) => {
+      logger.info(`Successfully updated items for ID '${x.id}' ('${x.name}')`);
+      logger.info(x);
+    })
+    .ifLeft(logger.error)
+    .run();
+
+  return response.toJSON();
 };
 
 /**
  * Delete
  */
 
-export const deleteChecklist = (
+export const deleteChecklistAction = async (
   checklist: Pick<Checklist, "id" | "user">,
-): EitherAsync<string, void> => {
-  return deleteAll([
+): Promise<unknown | void> => {
+  const response = await deleteAll([
     getChecklistKey({
       id: checklist.id,
       user: checklist.user,
     }),
-  ]);
+  ])
+    .ifRight(() => {
+      logger.info(`Successfully deleted checklist with ID '${checklist.id}'`);
+      revalidatePath(`/checklists/${checklist.id}`);
+      revalidatePath(`/checklists/${checklist.id}/edit`);
+    })
+    .ifLeft((e) => {
+      logger.error(`Failed to delete checklist with ID '${checklist.id}'`);
+      logger.error(e);
+    })
+    .run();
+
+  return response.toJSON();
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useReducer } from "react";
+import { useMemo, useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
@@ -9,9 +9,9 @@ import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { TrashIcon } from "@/components/icons/trash-icon";
 import {
-  createChecklist,
-  deleteChecklist,
-  updateChecklist,
+  createChecklistAction,
+  deleteChecklistAction,
+  updateChecklistAction,
 } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
@@ -70,6 +70,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   initialChecklist,
   variant,
 }) => {
+  const [, startTransition] = useTransition();
   const router = useRouter();
 
   const [state, dispatch] = useReducer(
@@ -245,7 +246,9 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                       type="button"
                       variant="ghost"
                       onClick={() => {
-                        dispatch({ type: "CLEAR_ITEMS" });
+                        startTransition(() =>
+                          dispatch({ type: "CLEAR_ITEMS" }),
+                        );
                       }}
                     >
                       Clear items
@@ -255,7 +258,9 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                       type="button"
                       variant="ghost"
                       onClick={() => {
-                        dispatch({ type: "CLEAR_COMPLETED_ITEMS" });
+                        startTransition(() =>
+                          dispatch({ type: "CLEAR_COMPLETED_ITEMS" }),
+                        );
                       }}
                     >
                       Clear completed items
@@ -291,9 +296,9 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         };
 
                         if (variant === "edit") {
-                          await updateChecklist(checklist);
+                          await updateChecklistAction(checklist);
                         } else {
-                          await createChecklist(checklist);
+                          // await createChecklist(checklist).run();
                         }
 
                         const checklistIdPath = `/checklists/${checklist.id}`;
@@ -315,7 +320,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         const confirmed = window.confirm("Delete?");
 
                         if (confirmed) {
-                          await deleteChecklist(state.checklist);
+                          await deleteChecklistAction(state.checklist);
 
                           router.push("/checklists");
                         }
@@ -353,13 +358,16 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48 animate-in fade-in duration-300"
           >
             <Heading level="legend" className="flex space-x-2">
-              <span>Section: {section.name || "(blank)"}</span>
+              <span>{section.name || "(blank)"}</span>
+
               <Button
                 type="button"
                 variant="ghost"
                 aria-label="Delete section"
                 onClick={() => {
-                  dispatch({ type: "DELETE_SECTION", id: section.id });
+                  startTransition(() =>
+                    dispatch({ type: "DELETE_SECTION", id: section.id }),
+                  );
                 }}
               >
                 <TrashIcon />
@@ -409,10 +417,12 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                                   type="button"
                                   className="px-.5"
                                   onClick={() => {
-                                    dispatch({
-                                      type: "TOGGLE_NOTE_VISIBILITY",
-                                      id: item.id,
-                                    });
+                                    startTransition(() =>
+                                      dispatch({
+                                        type: "TOGGLE_NOTE_VISIBILITY",
+                                        id: item.id,
+                                      }),
+                                    );
                                   }}
                                 >
                                   <ExpandIcon />
@@ -464,10 +474,12 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                             type="button"
                             variant="ghost"
                             onClick={() => {
-                              dispatch({
-                                type: "DELETE_ITEM",
-                                id: item.id,
-                              });
+                              startTransition(() =>
+                                dispatch({
+                                  type: "DELETE_ITEM",
+                                  id: item.id,
+                                }),
+                              );
                             }}
                             aria-label={`Delete ${item.name}`}
                           >
@@ -482,7 +494,12 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                 <div className="flex justify-end w-full">
                   <Button
                     onClick={() => {
-                      dispatch({ type: "CREATE_ITEM", sectionId: section.id });
+                      startTransition(() =>
+                        dispatch({
+                          type: "CREATE_ITEM",
+                          sectionId: section.id,
+                        }),
+                      );
                     }}
                     type="button"
                     variant="outline"
@@ -501,7 +518,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
           <Button
             type="button"
             onClick={() => {
-              dispatch({ type: "CREATE_SECTION" });
+              startTransition(() => dispatch({ type: "CREATE_SECTION" }));
             }}
           >
             Create section
@@ -525,9 +542,9 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                 };
 
                 if (variant === "new") {
-                  await createChecklist(checklist);
+                  await createChecklistAction(checklist);
                 } else {
-                  await updateChecklist(checklist);
+                  await updateChecklistAction(checklist);
                 }
               }}
             >

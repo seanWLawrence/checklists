@@ -34,7 +34,7 @@ export const validateUserFromKey = ({
  * Ensures there's a logged in user and returns the user if true
  */
 export const validateLoggedIn = (): Either<string, User> => {
-  return getUser().toEither("Not logged in");
+  return getUser().toEither("Not logged in").ifLeft(logger.error);
 };
 
 /**
@@ -60,7 +60,7 @@ export const create = <T extends object>({
   key: (itemToCreate: T & Metadata) => Key;
   item: T;
   decoder: Codec<T>;
-}): EitherAsync<string, T & Metadata> => {
+}): EitherAsync<unknown, T & Metadata> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     const user = await liftEither(validateLoggedIn());
 
@@ -89,7 +89,7 @@ export const update = <T extends Metadata & object>({
   key: (item: T & Metadata) => Key;
   item: T;
   decoder: Codec<T>;
-}): EitherAsync<string, T> => {
+}): EitherAsync<unknown, T> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     const user = await liftEither(validateLoggedIn());
 
@@ -97,6 +97,7 @@ export const update = <T extends Metadata & object>({
       intersect(Metadata, decoder).decode({
         ...item,
         user,
+        createdAtIso: date.encode(item.createdAtIso),
         updatedAtIso: new Date().toISOString(),
       }),
     );
@@ -118,7 +119,7 @@ export const update = <T extends Metadata & object>({
 /**
  * Deletes all items with matching keys in the key value store
  */
-export const deleteAll = (keys: Key[]): EitherAsync<string, void> => {
+export const deleteAll = (keys: Key[]): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     const user = await liftEither(validateLoggedIn());
 
@@ -149,7 +150,7 @@ export const getObjectFromKey = <T extends object>({
   key: Key;
   decoder: Codec<T>;
   user: User;
-}): EitherAsync<string, T> => {
+}): EitherAsync<unknown, T> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     await liftEither(validateUserFromKey({ user, key }));
 
@@ -172,7 +173,7 @@ export const getAllObjectsFromKeys = <T extends object>({
 }: {
   keys: Key[];
   decoder: Codec<T>;
-}): EitherAsync<string, T[]> => {
+}): EitherAsync<unknown, T[]> => {
   return EitherAsync(async ({ liftEither, fromPromise }) => {
     const user = await liftEither(validateLoggedIn());
 
