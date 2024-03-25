@@ -276,14 +276,6 @@ export const markItemsIncompleteAction = async (
     })
     .run();
 
-  if (response.isRight()) {
-    getChecklistFromFormData(formData)
-      .ifRight((checklist) => {
-        redirect(`/checklists/${checklist.id}`, RedirectType.push);
-      })
-      .extract();
-  }
-
   return response.toJSON();
 };
 

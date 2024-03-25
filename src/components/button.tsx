@@ -2,7 +2,6 @@
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
-import { useEffect, useState } from "react";
 
 export const Button: React.FC<
   {
@@ -11,18 +10,6 @@ export const Button: React.FC<
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ children, variant = "outline", ...rest }) => {
   const { pending } = useFormStatus();
-  const [clickedRecently, setClickedRecently] = useState<boolean>(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setClickedRecently(false);
-    }, 5000);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [clickedRecently]);
-
   return (
     <div>
       <button
@@ -41,15 +28,13 @@ export const Button: React.FC<
         )}
         onClick={(e) => {
           rest.onClick?.(e);
-
-          setClickedRecently(true);
         }}
       >
         <span className="text-nowrap whitespace-nowrap">{children}</span>
 
         <div
           className={cn("animate-in fade-in duration-1000", {
-            hidden: !(pending && clickedRecently),
+            hidden: !pending,
           })}
         >
           <Spinner
