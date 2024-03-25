@@ -65,7 +65,7 @@ export const create = <T extends object>({
     const user = await liftEither(validateLoggedIn());
 
     const itemToCreate = await liftEither(
-      intersect(Metadata, decoder).decode({ ...createMetadata(user), ...item }),
+      intersect(Metadata, decoder).decode({ ...item, ...createMetadata(user) }),
     );
 
     const response = await kv.hmset(key(itemToCreate), itemToCreate);

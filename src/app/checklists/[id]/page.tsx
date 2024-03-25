@@ -26,31 +26,17 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({ params }) => {
           name="checklist"
         />
 
-        <div className="space-x-2 flex items-center">
+        <div className="flex items-start">
           <Heading level={1}>{checklist.name}</Heading>
 
-          <div>
-            <MenuButton
-              variant="ghost"
-              menu={
-                <div className="flex flex-col space-y-2">
-                  <Link href={`/checklists/${id}/edit`}>
-                    <Button type="button" variant="ghost">
-                      Edit
-                    </Button>
-                  </Link>
-
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    formAction={markItemsIncompleteAction}
-                  >
-                    Mark items incomplete
-                  </Button>
-                </div>
-              }
-            />
-          </div>
+          <Link
+            href={`/checklists/${id}/edit`}
+            className="underline underline-offset-2"
+          >
+            <Button type="button" variant="ghost">
+              Edit
+            </Button>
+          </Link>
         </div>
 
         <div className="space-y-4">
@@ -89,7 +75,15 @@ const Checklist: React.FC<{ params: { id: string } }> = async ({ params }) => {
           })}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <Button
+            type="submit"
+            variant="outline"
+            formAction={markItemsIncompleteAction}
+          >
+            Mark all incomplete
+          </Button>
+
           <Button
             type="submit"
             variant="primary"

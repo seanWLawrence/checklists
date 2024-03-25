@@ -19,6 +19,7 @@ import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
 import { MenuButton } from "@/components/menu-button";
 import { Heading } from "@/components/heading";
+import Link from "next/link";
 
 interface State {
   checklist: Omit<Checklist, "sections">;
@@ -295,11 +296,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           ),
                         };
 
-                        if (variant === "edit") {
-                          await updateChecklistAction(checklist);
-                        } else {
-                          // await createChecklist(checklist).run();
-                        }
+                        await createChecklistAction(checklist);
 
                         const checklistIdPath = `/checklists/${checklist.id}`;
 

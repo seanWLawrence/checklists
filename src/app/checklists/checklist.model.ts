@@ -1,7 +1,7 @@
 "use server";
 import { UUID } from "crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { array, date } from "purify-ts/Codec";
+import { array } from "purify-ts/Codec";
 import { Tuple } from "purify-ts/Tuple";
 import { kv } from "@vercel/kv";
 import { revalidatePath } from "next/cache";
@@ -46,26 +46,28 @@ const getChecklistKey = ({ user, id }: { user: User; id: UUID }): Key =>
 export const createChecklistAction = async (
   checklist: ChecklistBase,
 ): Promise<unknown | Checklist> => {
-  const x = await create({
+  const response = await create({
     key: (item) => getChecklistKey({ id: item.id, user: item.user }),
     item: checklist,
     decoder: ChecklistBase,
   })
+    .ifLeft((e) => {
+      logger.error(`Failed to create checklist '${checklist.name}'`);
+      logger.error(e);
+    })
     .ifRight((checklist) => {
       logger.info(
         `Successfully created checklist with ID '${checklist.id}' ('${checklist.name}')`,
       );
       revalidatePath("/checklists");
-      redirect(`/checklists/${checklist.id}`, RedirectType.push);
     })
-    .ifLeft((e) => {
-      logger.error(`Failed to create checklist '${checklist.name}'`);
-      logger.error(e);
-    })
-
     .run();
 
-  return x.toJSON();
+  if (response.isRight()) {
+    redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+  }
+
+  return response.toJSON();
 };
 
 /**
@@ -202,6 +204,10 @@ export const updateChecklistAction = async (
   checklist: Checklist,
 ): Promise<unknown | Checklist> => {
   const response = await updateChecklist_serverOnly(checklist).run();
+
+  if (response.isRight()) {
+    redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+  }
 
   return response.toJSON();
 };
