@@ -2,9 +2,10 @@
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { MenuButtonIcon } from "./icons/menu-button-icon";
 import { Button } from "./button";
+import { Maybe } from "purify-ts/Maybe";
 
 export const MenuButton: React.FC<
   {
@@ -14,15 +15,27 @@ export const MenuButton: React.FC<
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ children, variant = "outline", menu, ...rest }) => {
   const { pending } = useFormStatus();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [visible, setVisible] = useState<boolean>(false);
 
-  const onClickChildren = useCallback(() => {
-    setVisible(false);
+  const ref = useRef<null | HTMLDivElement>(null);
+
+  useEffect(() => {
+    const outsideClickListener = (event: MouseEvent) => {
+      if (event?.target && !ref.current?.contains(event.target as Node)) {
+        setVisible(false);
+      }
+    };
+
+    document.addEventListener("click", outsideClickListener);
+
+    return () => {
+      document.removeEventListener("click", outsideClickListener);
+    };
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <Button
         {...rest}
         variant="ghost"

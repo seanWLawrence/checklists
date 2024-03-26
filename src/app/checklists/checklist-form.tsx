@@ -377,7 +377,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         return (
           <fieldset
             key={section.id}
-            className="space-y-1 border-2 border-zinc-700 px-5 py-2 rounded-lg w-full min-w-48 animate-in fade-in duration-300"
+            className="space-y-1 border-2 border-zinc-700 px-3 py-2 rounded-lg w-full min-w-48 animate-in fade-in duration-300"
           >
             <Heading level="legend" className="flex space-x-2">
               <span>{section.name || "(blank)"}</span>
@@ -412,9 +412,9 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
             </Label>
 
             <div>
-              <div className="space-y-4 ml-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Heading level={3} className="mt-3 flex space-x-2">
+                  <Heading level={3} className="mt-3">
                     <span>Items</span>
                   </Heading>
 
@@ -425,7 +425,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                   {itemsBySectionId[section.id]?.map((item, index) => {
                     return (
                       <div
-                        className="flex items-start space-x-2 max-w-prose w-full animate-in fade-in duration-300"
+                        className="flex items-start space-x-1 max-w-prose w-full animate-in fade-in duration-300"
                         key={item.id}
                       >
                         <div className="flex flex-col space-y-2 w-full">
@@ -454,30 +454,25 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                                 });
                               }
                             }}
+                            placeholder="Name"
                           />
 
-                          <Label
-                            label={`Note: ${index + 1}`}
-                            className={cn(
-                              "ml-4 w-[calc(100%-1rem)] animate-in fade-in duration-300",
-                              {
-                                hidden: !state.noteVisibilities[item.id],
-                              },
-                            )}
-                          >
-                            <Input
-                              type="text"
-                              value={item.note}
-                              onChange={(e) => {
-                                dispatch({
-                                  type: "UPDATE_ITEM",
-                                  id: item.id,
-                                  value: e.target.value,
-                                  property: "note",
-                                });
-                              }}
-                            />
-                          </Label>
+                          <Input
+                            className={cn("animate-in fade-in duration-300", {
+                              hidden: !state.noteVisibilities[item.id],
+                            })}
+                            type="text"
+                            value={item.note}
+                            onChange={(e) => {
+                              dispatch({
+                                type: "UPDATE_ITEM",
+                                id: item.id,
+                                value: e.target.value,
+                                property: "note",
+                              });
+                            }}
+                            placeholder="Note"
+                          />
                         </div>
 
                         <div className="flex space-x-1">

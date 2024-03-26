@@ -22,7 +22,7 @@ export const Checkbox: React.FC<
 
   return (
     <button
-      className="flex items-center space-x-2 cursor-pointer p-1 rounded-lg"
+      className="flex items-center cursor-pointer p-1 rounded-lg"
       type="button"
       onClick={onClick}
     >
@@ -36,7 +36,7 @@ export const Checkbox: React.FC<
         name={rest.name}
       />
 
-      <div className="border-2 border-zinc-900 rounded h-6 w-6 text-[1rem] flex justify-center items-center">
+      <div className="border-2 border-zinc-900 rounded h-6 w-6 min-w-6 min-h-6 text-[1rem] flex justify-center items-center mr-3">
         <span>
           <XIcon
             className={cn("w-6 h-6 transition-opacity duration-100", {
@@ -48,7 +48,7 @@ export const Checkbox: React.FC<
       </div>
 
       <span
-        className={cn("text-sm text-zinc-800", {
+        className={cn("text-sm text-zinc-800 text-left", {
           "line-through": checked,
         })}
       >

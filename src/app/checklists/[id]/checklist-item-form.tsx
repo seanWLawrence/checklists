@@ -14,8 +14,6 @@ import { cn } from "@/lib/utils";
 export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   checklist,
 }) => {
-  const router = useRouter();
-
   const hasCompletedItems = checklist.sections.some((section) => {
     return section.items.some((item) => item.completed);
   });
@@ -29,7 +27,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
 
         <Link
           href={`/checklists/${checklist.id}/edit`}
-          className="underline underline-offset-2"
+          className="underline underline-offset-2 ml-1"
         >
           <Button type="button" variant="ghost">
             Edit
@@ -42,7 +40,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           return (
             <fieldset
               key={id}
-              className="space-y-1 border-2 border-zinc-700 px-5 pt-2 pb-5 rounded-lg w-full min-w-48"
+              className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48"
             >
               <Heading level="legend">{name}</Heading>
 
@@ -50,7 +48,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                 <ul className="space-y-2">
                   {items.map(({ id, name, completed, note }) => {
                     return (
-                      <li key={id} className="ml-5 flex flex-col space-y-1">
+                      <li key={id} className="flex flex-col space-y-.5">
                         <Checkbox
                           defaultChecked={completed}
                           name={`item__${id}`}
@@ -59,7 +57,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                         </Checkbox>
 
                         {note && (
-                          <p className="text-xs text-zinc-500 ml-8">{note}</p>
+                          <p className="text-xs text-zinc-500 ml-10">{note}</p>
                         )}
                       </li>
                     );
