@@ -3,13 +3,74 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
-import { Checklist } from "@/lib/types";
+import { Checklist, ChecklistItemTimeEstimate } from "@/lib/types";
 import {
   markItemsIncompleteAction,
   updateChecklistItemsAction,
 } from "../checklist.model";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Maybe } from "purify-ts/Maybe";
+import React from "react";
+
+const unitToMinutes = { h: 60, m: 1 };
+
+const getTimeEstimateInMinutes = (timeEstimate: ChecklistItemTimeEstimate) => {
+  return Maybe.fromNullable(timeEstimate.match(/^\d+/)?.[0])
+    .map(Number)
+    .chain((num) => {
+      return Maybe.fromNullable(timeEstimate.match(/(m|h)$/)?.[0]).map(
+        (unit) => {
+          return { unit, num };
+        },
+      );
+    })
+    .map(({ unit, num }) => {
+      return unitToMinutes[unit as keyof typeof unitToMinutes] * num;
+    })
+    .orDefault(0);
+};
+
+const roundToNearestHalf = (num: number): number => {
+  return Math.round(num * 2) / 2;
+};
+
+const roundToNearestFive = (num: number): number => {
+  return Math.round(num / 5) * 5;
+};
+
+const getTimeEstimateFromMinutes = (
+  minutes: number,
+): ChecklistItemTimeEstimate => {
+  if (minutes >= 60) {
+    return `${roundToNearestHalf(minutes / 60)}h`;
+  }
+
+  return `${roundToNearestFive(minutes)}m`;
+};
+
+const sumTimeEstimates = (
+  timeEstimates: (ChecklistItemTimeEstimate | undefined)[],
+): ChecklistItemTimeEstimate => {
+  const sumInMinutes = timeEstimates.reduce((acc, x) => {
+    acc += x ? getTimeEstimateInMinutes(x) : 0;
+
+    return acc;
+  }, 0);
+
+  return getTimeEstimateFromMinutes(sumInMinutes);
+};
+
+const TimeEstimateBadge: React.FC<{
+  timeEstimates: (ChecklistItemTimeEstimate | undefined)[];
+}> = ({ timeEstimates }) => {
+  return (
+    <span>
+      <span className="text-xs bg-zinc-200 text-zinc-900 rounded py-1 px-1.5">
+        {sumTimeEstimates(timeEstimates)}
+      </span>
+    </span>
+  );
+};
 
 export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   checklist,
@@ -38,35 +99,56 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
       <div className="space-y-4">
         {checklist.sections.map(({ id, name, items }) => {
           return (
-            <fieldset
-              key={id}
-              className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48"
-            >
-              <Heading level="legend">{name}</Heading>
+            <div key={id}>
+              <fieldset className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
+                <Heading level="legend">{name}</Heading>
 
-              {items.length ? (
-                <ul className="space-y-2">
-                  {items.map(({ id, name, completed, note }) => {
-                    return (
-                      <li key={id} className="flex flex-col space-y-.5">
-                        <Checkbox
-                          defaultChecked={completed}
-                          name={`item__${id}`}
-                        >
-                          {name}
-                        </Checkbox>
+                {items.length ? (
+                  <div>
+                    <ul className="space-y-2">
+                      {items.map(
+                        ({ id, name, completed, note, timeEstimate }) => {
+                          return (
+                            <li key={id} className="flex flex-col space-y-.5">
+                              <Checkbox
+                                defaultChecked={completed}
+                                name={`item__${id}`}
+                              >
+                                <div className="flex justify-between w-full">
+                                  <span>{name}</span>
 
-                        {note && (
-                          <p className="text-xs text-zinc-500 ml-10">{note}</p>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-xs text-zinc-700">(No items)</p>
-              )}
-            </fieldset>
+                                  {timeEstimate && (
+                                    <TimeEstimateBadge
+                                      timeEstimates={[timeEstimate]}
+                                    />
+                                  )}
+                                </div>
+                              </Checkbox>
+
+                              {note && (
+                                <p className="text-xs text-zinc-600 ml-10">
+                                  {note}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        },
+                      )}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-700">(No items)</p>
+                )}
+              </fieldset>
+
+              <div className="w-full flex justify-end items-baseline pr-4 mt-2">
+                <span className="mr-1.5 text-xs">Total:</span>
+
+                <TimeEstimateBadge
+                  timeEstimates={items.map((x) => x.timeEstimate)}
+                />
+              </div>
+            </div>
           );
         })}
       </div>

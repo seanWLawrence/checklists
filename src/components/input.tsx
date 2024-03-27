@@ -8,7 +8,7 @@ export const Input: React.FC<
     <input
       {...rest}
       className={cn(
-        "rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 min-w-48 w-full max-w-prose",
+        "rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full max-w-prose",
         rest.className,
       )}
     />

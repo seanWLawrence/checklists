@@ -43,7 +43,7 @@ type Action =
       type: "UPDATE_ITEM";
       id: UUID;
       value: string;
-      property: "name" | "note";
+      property: "name" | "note" | "timeEstimate";
     }
   | { type: "DELETE_SECTION"; id: UUID }
   | { type: "DELETE_ITEM"; id: UUID }
@@ -422,7 +422,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                     <p className="text-zinc-700 text-xs">(No items)</p>
                   )}
 
-                  {itemsBySectionId[section.id]?.map((item, index) => {
+                  {itemsBySectionId[section.id]?.map((item) => {
                     return (
                       <div
                         className="flex items-start space-x-1 max-w-prose w-full animate-in fade-in duration-300"
@@ -457,22 +457,44 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                             placeholder="Name"
                           />
 
-                          <Input
-                            className={cn("animate-in fade-in duration-300", {
-                              hidden: !state.noteVisibilities[item.id],
-                            })}
-                            type="text"
-                            value={item.note}
-                            onChange={(e) => {
-                              dispatch({
-                                type: "UPDATE_ITEM",
-                                id: item.id,
-                                value: e.target.value,
-                                property: "note",
-                              });
-                            }}
-                            placeholder="Note"
-                          />
+                          <div className="flex space-x-1">
+                            <Input
+                              className={cn(
+                                "animate-in fade-in duration-300 max-w-14",
+                                {
+                                  hidden: !state.noteVisibilities[item.id],
+                                },
+                              )}
+                              type="text"
+                              value={item.timeEstimate ?? ""}
+                              onChange={(e) => {
+                                dispatch({
+                                  type: "UPDATE_ITEM",
+                                  id: item.id,
+                                  value: e.target.value,
+                                  property: "timeEstimate",
+                                });
+                              }}
+                              placeholder="Time"
+                            />
+
+                            <Input
+                              className={cn("animate-in fade-in duration-300", {
+                                hidden: !state.noteVisibilities[item.id],
+                              })}
+                              type="text"
+                              value={item.note ?? ""}
+                              onChange={(e) => {
+                                dispatch({
+                                  type: "UPDATE_ITEM",
+                                  id: item.id,
+                                  value: e.target.value,
+                                  property: "note",
+                                });
+                              }}
+                              placeholder="Note"
+                            />
+                          </div>
                         </div>
 
                         <div className="flex space-x-1">

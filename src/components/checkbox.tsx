@@ -48,7 +48,7 @@ export const Checkbox: React.FC<
       </div>
 
       <span
-        className={cn("text-sm text-zinc-800 text-left", {
+        className={cn("text-sm text-zinc-800 text-left w-full", {
           "line-through": checked,
         })}
       >

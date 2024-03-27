@@ -41,12 +41,28 @@ export const Metadata = Codec.interface({
 
 export type Metadata = GetType<typeof Metadata>;
 
+type ChecklistItemTimeEstimateValue = `${number}m` | `${number}h`;
+
+export const ChecklistItemTimeEstimate =
+  Codec.custom<ChecklistItemTimeEstimateValue>({
+    decode: (input) =>
+      typeof input === "string" && input.match(/^\d+(m|h)$/)
+        ? Right(input as ChecklistItemTimeEstimateValue)
+        : Left(`Invalid ChecklistItemTimeEstimateValue. Received: '${input}'`),
+    encode: (input) => input, // strings have no serialization logic
+  });
+
+export type ChecklistItemTimeEstimate = GetType<
+  typeof ChecklistItemTimeEstimate
+>;
+
 export const ChecklistItem = Codec.interface({
   id: UUID,
   checklistSectionId: UUID,
   name: string,
   completed: boolean,
   note: optional(string),
+  timeEstimate: optional(ChecklistItemTimeEstimate),
 });
 
 export type ChecklistItem = GetType<typeof ChecklistItem>;

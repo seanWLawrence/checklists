@@ -12,6 +12,7 @@ export const checklistItem = (
     name: "some checklist item name",
     note: "some checklist item note",
     completed: false,
+    timeEstimate: undefined,
     ...(overrides ?? {}),
   };
 };
