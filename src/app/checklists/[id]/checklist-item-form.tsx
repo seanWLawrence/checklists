@@ -145,7 +145,12 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                 <span className="mr-1.5 text-xs">Total:</span>
 
                 <TimeEstimateBadge
-                  timeEstimates={items.map((x) => x.timeEstimate)}
+                  timeEstimates={items.reduce((acc, x) => {
+                    if (!x.completed && x.timeEstimate) {
+                      acc.push(x.timeEstimate);
+                    }
+                    return acc;
+                  }, [] as ChecklistItemTimeEstimate[])}
                 />
               </div>
             </div>
