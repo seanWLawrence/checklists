@@ -142,7 +142,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
               </fieldset>
 
               <div className="w-full flex justify-end items-baseline pr-4 mt-2">
-                <span className="mr-1.5 text-xs">Total:</span>
+                <span className="mr-1.5 text-xs">{name}:</span>
 
                 <TimeEstimateBadge
                   timeEstimates={items.reduce((acc, x) => {
@@ -156,6 +156,23 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
             </div>
           );
         })}
+      </div>
+
+      <hr className="w-full border-t-1 border-t-gray-200" />
+
+      <div className="flex justify-end items-baseline w-full pr-4">
+        <span className="mr-1.5 text-xs">{checklist.name}:</span>
+
+        <TimeEstimateBadge
+          timeEstimates={checklist.sections.reduce((acc, x) => {
+            x.items.forEach((item) => {
+              if (!item.completed && item.timeEstimate) {
+                acc.push(item.timeEstimate);
+              }
+            });
+            return acc;
+          }, [] as ChecklistItemTimeEstimate[])}
+        />
       </div>
 
       <div
