@@ -20,7 +20,6 @@ import {
 } from "./checklist.model";
 import { checklistItem, checklistSection } from "@/factories/checklist.factory";
 import { id } from "@/factories/id.factory";
-import { ExpandIcon } from "@/components/icons/expand-icon";
 import { cn } from "@/lib/utils";
 import { MenuButton } from "@/components/menu-button";
 import { Heading } from "@/components/heading";
@@ -31,7 +30,6 @@ interface State {
   checklist: Omit<Checklist, "sections">;
   sections: Record<string /* sectionId */, Omit<ChecklistSection, "items">>;
   items: Record<string /* itemId */, ChecklistItem>;
-  noteVisibilities: Record<string /* itemId */, boolean>;
 }
 
 type Action =
@@ -47,7 +45,6 @@ type Action =
     }
   | { type: "DELETE_SECTION"; id: UUID }
   | { type: "DELETE_ITEM"; id: UUID }
-  | { type: "TOGGLE_NOTE_VISIBILITY"; id: string }
   | { type: "CLEAR_ITEMS" }
   | { type: "CLEAR_COMPLETED_ITEMS" };
 
@@ -56,9 +53,7 @@ interface ChecklistFormProps {
   initialChecklist: Checklist;
 }
 
-const checklistToState = (
-  checklist: Checklist,
-): Omit<State, "noteVisibilities"> => {
+const checklistToState = (checklist: Checklist): State => {
   const sections: State["sections"] = {};
   const items: State["items"] = {};
 
@@ -188,10 +183,6 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       if (action.type === "TOGGLE_NOTE_VISIBILITY") {
         return {
           ...state,
-          noteVisibilities: {
-            ...state.noteVisibilities,
-            [action.id]: !state.noteVisibilities[action.id],
-          },
         };
       }
 
@@ -217,7 +208,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 
       return state;
     },
-    { ...checklistToState(initialChecklist), noteVisibilities: {} },
+    { ...checklistToState(initialChecklist) },
   );
 
   const itemsBySectionId = useMemo(() => {
@@ -461,9 +452,6 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                             <Input
                               className={cn(
                                 "animate-in fade-in duration-300 max-w-14",
-                                {
-                                  hidden: !state.noteVisibilities[item.id],
-                                },
                               )}
                               type="text"
                               value={item.timeEstimate ?? ""}
@@ -479,9 +467,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                             />
 
                             <Input
-                              className={cn("animate-in fade-in duration-300", {
-                                hidden: !state.noteVisibilities[item.id],
-                              })}
+                              className={cn("animate-in fade-in duration-300")}
                               type="text"
                               value={item.note ?? ""}
                               onChange={(e) => {
@@ -497,39 +483,21 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            type="button"
-                            className="px-.5"
-                            onClick={() => {
-                              startTransition(() =>
-                                dispatch({
-                                  type: "TOGGLE_NOTE_VISIBILITY",
-                                  id: item.id,
-                                }),
-                              );
-                            }}
-                          >
-                            <ExpandIcon />
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => {
-                              startTransition(() =>
-                                dispatch({
-                                  type: "DELETE_ITEM",
-                                  id: item.id,
-                                }),
-                              );
-                            }}
-                            aria-label={`Delete ${item.name}`}
-                          >
-                            <TrashIcon />
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            startTransition(() =>
+                              dispatch({
+                                type: "DELETE_ITEM",
+                                id: item.id,
+                              }),
+                            );
+                          }}
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <TrashIcon />
+                        </Button>
                       </div>
                     );
                   })}
