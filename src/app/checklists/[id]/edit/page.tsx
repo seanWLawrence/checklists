@@ -3,8 +3,6 @@ import { ChecklistForm } from "../../checklist-form";
 import { getChecklist } from "../../checklist.model";
 import { EitherAsync } from "purify-ts";
 
-export const revalidate = 0;
-
 const EditChecklist: React.FC<{
   params: { id: string };
 }> = async ({ params }) => {

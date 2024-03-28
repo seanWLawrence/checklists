@@ -3,8 +3,6 @@ import { getChecklist } from "@/app/checklists/checklist.model";
 import { UUID } from "@/lib/types";
 import { ChecklistItemForm } from "./checklist-item-form";
 
-export const revalidate = 0;
-
 const Checklist: React.FC<{ params: { id: string } }> = async ({ params }) => {
   const node = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const id = await liftEither(UUID.decode(params.id));
