@@ -83,12 +83,23 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
     <form className="space-y-4 max-w-prose">
       <input type="hidden" value={JSON.stringify(checklist)} name="checklist" />
 
-      <div className="flex items-start">
+      <div className="flex items-center space-x-1">
         <Heading level={1}>{checklist.name}</Heading>
+
+        <TimeEstimateBadge
+          timeEstimates={checklist.sections.reduce((acc, x) => {
+            x.items.forEach((item) => {
+              if (!item.completed && item.timeEstimate) {
+                acc.push(item.timeEstimate);
+              }
+            });
+            return acc;
+          }, [] as ChecklistItemTimeEstimate[])}
+        />
 
         <Link
           href={`/checklists/${checklist.id}/edit`}
-          className="underline underline-offset-2 ml-1"
+          className="underline underline-offset-2"
         >
           <Button type="button" variant="ghost">
             Edit
@@ -101,7 +112,20 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           return (
             <div key={id}>
               <fieldset className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
-                <Heading level="legend">{name}</Heading>
+                <Heading level="legend" className="flex items-center space-x-2">
+                  <span>{name}</span>
+
+                  <div className="text-xs font-normal">
+                    <TimeEstimateBadge
+                      timeEstimates={items.reduce((acc, x) => {
+                        if (!x.completed && x.timeEstimate) {
+                          acc.push(x.timeEstimate);
+                        }
+                        return acc;
+                      }, [] as ChecklistItemTimeEstimate[])}
+                    />
+                  </div>
+                </Heading>
 
                 {items.length ? (
                   <div>
@@ -140,39 +164,9 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                   <p className="text-xs text-zinc-700">(No items)</p>
                 )}
               </fieldset>
-
-              <div className="w-full flex justify-end items-baseline pr-4 mt-2">
-                <span className="mr-1.5 text-xs">{name}:</span>
-
-                <TimeEstimateBadge
-                  timeEstimates={items.reduce((acc, x) => {
-                    if (!x.completed && x.timeEstimate) {
-                      acc.push(x.timeEstimate);
-                    }
-                    return acc;
-                  }, [] as ChecklistItemTimeEstimate[])}
-                />
-              </div>
             </div>
           );
         })}
-      </div>
-
-      <hr className="w-full border-t-1 border-t-gray-200" />
-
-      <div className="flex justify-end items-baseline w-full pr-4">
-        <span className="mr-1.5 text-xs">{checklist.name}:</span>
-
-        <TimeEstimateBadge
-          timeEstimates={checklist.sections.reduce((acc, x) => {
-            x.items.forEach((item) => {
-              if (!item.completed && item.timeEstimate) {
-                acc.push(item.timeEstimate);
-              }
-            });
-            return acc;
-          }, [] as ChecklistItemTimeEstimate[])}
-        />
       </div>
 
       <div
