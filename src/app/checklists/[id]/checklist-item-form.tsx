@@ -83,7 +83,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
 
   return (
     <div className="space-y-4 max-w-prose">
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-2">
         <Heading level={1}>{checklist.name}</Heading>
 
         <TimeEstimateBadge
