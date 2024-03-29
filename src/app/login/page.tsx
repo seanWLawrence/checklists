@@ -2,7 +2,7 @@ import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
-import { getUser, login } from "@/lib/auth.model";
+import { getUser, login } from "./auth.model";
 import { redirect } from "next/navigation";
 
 const Login: React.FC = () => {

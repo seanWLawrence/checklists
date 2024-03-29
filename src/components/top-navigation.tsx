@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "./button";
-import { getUser, logout } from "@/lib/auth.model";
+import { getUser, logout } from "@/app/login/auth.model";
 import { MenuButton } from "./menu-button";
 
 export const TopNavigation: React.FC<{}> = async () => {

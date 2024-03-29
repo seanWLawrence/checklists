@@ -1,11 +1,11 @@
 import { Either, Left, Right } from "purify-ts/Either";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { kv } from "@vercel/kv";
 import { Codec, date, intersect } from "purify-ts/Codec";
 import { Maybe } from "purify-ts/Maybe";
+import { kv } from "@vercel/kv";
 
 import { Key, Metadata, User } from "./types";
-import { getUser } from "./auth.model";
+import { getUser } from "@/app/login/auth.model";
 import { id } from "@/factories/id.factory";
 import { logger } from "./logger";
 

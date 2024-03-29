@@ -2,13 +2,9 @@
 
 import { useCallback, useMemo, useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Maybe } from "purify-ts/Maybe";
+import { NonEmptyList } from "purify-ts/NonEmptyList";
 
-import type {
-  Checklist,
-  ChecklistItem,
-  ChecklistSection,
-  UUID,
-} from "@/lib/types";
 import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
@@ -23,8 +19,13 @@ import { id } from "@/factories/id.factory";
 import { cn } from "@/lib/utils";
 import { MenuButton } from "@/components/menu-button";
 import { Heading } from "@/components/heading";
-import { Maybe } from "purify-ts/Maybe";
-import { NonEmptyList } from "purify-ts";
+
+import type {
+  Checklist,
+  ChecklistItem,
+  ChecklistSection,
+} from "./checklist.types";
+import type { UUID } from "@/lib/types";
 
 interface State {
   checklist: Omit<Checklist, "sections">;

@@ -1,12 +1,13 @@
 "use server";
 
 import { cookies } from "next/headers";
-
-import { AUTH_COOKIE_NAME } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import { Maybe } from "purify-ts/Maybe";
-import { User } from "./types";
-import { Codec, Either, Left, Right, string } from "purify-ts";
+import { Either, Left, Right } from "purify-ts/Either";
+import { Codec, string } from "purify-ts/Codec";
+
+import { AUTH_COOKIE_NAME } from "@/lib/constants";
+import { User } from "@/lib/types";
 
 const oneYear = 1000 * 60 * 24 * 365;
 const AUTH_SECRET = process.env.AUTH_SECRET;

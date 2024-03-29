@@ -3,10 +3,12 @@ import { UUID } from "crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { array } from "purify-ts/Codec";
 import { Tuple } from "purify-ts/Tuple";
+import { Either, Left, Right } from "purify-ts/Either";
+import { Maybe } from "purify-ts/Maybe";
+
 import { kv } from "@vercel/kv";
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
-
 import {
   create,
   deleteAll,
@@ -15,16 +17,8 @@ import {
   update,
   validateLoggedIn,
 } from "@/lib/db.model";
-
-import {
-  Checklist,
-  Key,
-  User,
-  ChecklistBase,
-  ChecklistSection,
-} from "@/lib/types";
-import { Either, Left, Right } from "purify-ts/Either";
-import { Maybe } from "purify-ts/Maybe";
+import { ChecklistBase, Checklist, ChecklistSection } from "./checklist.types";
+import { Key, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
 /**
