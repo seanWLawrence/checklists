@@ -436,10 +436,10 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                             placeholder="Name"
                           />
 
-                          <div className="flex space-x-1">
+                          <div className="flex space-x-1 w-full">
                             <Input
                               className={cn(
-                                "animate-in fade-in duration-300 max-w-14",
+                                "animate-in fade-in duration-300 max-w-12",
                               )}
                               type="text"
                               value={item.timeEstimate ?? ""}
@@ -472,6 +472,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         </div>
 
                         <Button
+                          className="sm:w-14 flex justify-center"
                           type="button"
                           variant="ghost"
                           onClick={() => {
