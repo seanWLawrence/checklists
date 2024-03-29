@@ -108,7 +108,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
       </div>
 
       <div className="space-y-4">
-        <form ref={formRef}>
+        <form ref={formRef} className="space-y-4">
           <input
             type="hidden"
             value={JSON.stringify(checklist)}
