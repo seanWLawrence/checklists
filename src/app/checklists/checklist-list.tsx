@@ -26,7 +26,9 @@ export const ChecklistList: React.FC = async () => {
   }
 
   if (checklistsEither.isRight()) {
-    const checklists = checklistsEither.extract();
+    const checklists = checklistsEither
+      .extract()
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
     return (
       <section className="space-y-3">
