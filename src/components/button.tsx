@@ -10,6 +10,7 @@ export const Button: React.FC<
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
 > = ({ children, variant = "outline", ...rest }) => {
   const { pending } = useFormStatus();
+
   return (
     <div>
       <button

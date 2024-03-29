@@ -189,6 +189,7 @@ export const updateChecklist_serverOnly = (
       logger.info(
         `Successfully updated checklist with ID '${x.id}' ('${x.name}')`,
       );
+      revalidatePath("/checklists");
       revalidatePath(`/checklists/${x.id}`);
       revalidatePath(`/checklists/${x.id}/edit`);
     })
@@ -320,6 +321,9 @@ export const updateChecklistItemsAction = async (
     .ifRight((x) => {
       logger.info(`Successfully updated items for ID '${x.id}' ('${x.name}')`);
       logger.info(x);
+
+      revalidatePath(`/checklists/${x.id}`);
+      revalidatePath(`/checklists/${x.id}/edit`);
     })
     .ifLeft((e) => {
       getChecklistFromFormData(formData)
@@ -352,6 +356,7 @@ export const deleteChecklistAction = async (
   ])
     .ifRight(() => {
       logger.info(`Successfully deleted checklist with ID '${checklist.id}'`);
+      revalidatePath("/checklists");
       revalidatePath(`/checklists/${checklist.id}`);
       revalidatePath(`/checklists/${checklist.id}/edit`);
     })

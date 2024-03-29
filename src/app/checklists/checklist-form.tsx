@@ -180,12 +180,6 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         } satisfies State;
       }
 
-      if (action.type === "TOGGLE_NOTE_VISIBILITY") {
-        return {
-          ...state,
-        };
-      }
-
       if (action.type === "CLEAR_ITEMS") {
         return { ...state, items: {} };
       }
@@ -248,7 +242,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
   const shouldShowMenuButton = hasItems || variant === "edit";
 
   return (
-    <form className="space-y-4 max-w-prose">
+    <div className="space-y-4 max-w-prose">
       <div className="flex space-x-2 items-center">
         <Heading level={1}>{state.checklist.name || "(blank)"}</Heading>
 
@@ -286,10 +280,8 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                 ) : null}
 
                 {variant === "edit" && (
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    formAction={async () => {
+                  <form
+                    action={async () => {
                       const name = window.prompt("New name?");
 
                       if (name) {
@@ -313,35 +305,31 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                         };
 
                         await createChecklistAction(checklist);
-
-                        const checklistIdPath = `/checklists/${checklist.id}`;
-
-                        router.push(checklistIdPath);
                       }
                     }}
                   >
-                    Duplicate
-                  </Button>
+                    <Button type="submit" variant="ghost">
+                      Duplicate
+                    </Button>
+                  </form>
                 )}
 
                 {variant === "edit" && (
-                  <div>
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      formAction={async () => {
-                        const confirmed = window.confirm("Delete?");
+                  <form
+                    action={async () => {
+                      const confirmed = window.confirm("Delete?");
 
-                        if (confirmed) {
-                          await deleteChecklistAction(state.checklist);
+                      if (confirmed) {
+                        await deleteChecklistAction(state.checklist);
 
-                          router.push("/checklists");
-                        }
-                      }}
-                    >
+                        router.push("/checklists");
+                      }
+                    }}
+                  >
+                    <Button type="submit" variant="ghost">
                       Delete
                     </Button>
-                  </div>
+                  </form>
                 )}
               </div>
             }
@@ -533,33 +521,31 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
         </div>
 
         <div className="flex space-x-2">
-          <div>
-            <Button
-              type="submit"
-              variant="primary"
-              formAction={async () => {
-                const checklist: Checklist = {
-                  ...state.checklist,
-                  sections: Object.values(state.sections).map((section) => {
-                    return {
-                      ...section,
-                      items: Object.values(itemsBySectionId[section.id] ?? {}),
-                    };
-                  }),
-                };
+          <form
+            action={async () => {
+              const checklist: Checklist = {
+                ...state.checklist,
+                sections: Object.values(state.sections).map((section) => {
+                  return {
+                    ...section,
+                    items: Object.values(itemsBySectionId[section.id] ?? {}),
+                  };
+                }),
+              };
 
-                if (variant === "new") {
-                  await createChecklistAction(checklist);
-                } else {
-                  await updateChecklistAction(checklist);
-                }
-              }}
-            >
+              if (variant === "new") {
+                await createChecklistAction(checklist);
+              } else {
+                await updateChecklistAction(checklist);
+              }
+            }}
+          >
+            <Button type="submit" variant="primary">
               Save
             </Button>
-          </div>
+          </form>
         </div>
       </div>
-    </form>
+    </div>
   );
 };
