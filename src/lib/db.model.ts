@@ -62,9 +62,10 @@ export const create = <T extends object>({
   item: T;
   decoder: Codec<T>;
 }): EitherAsync<unknown, T & Metadata> => {
-  return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(validateLoggedIn());
+  const userEither = validateLoggedIn();
 
+  return EitherAsync(async ({ liftEither, throwE }) => {
+    const user = await liftEither(userEither);
     const itemToCreate = await liftEither(
       intersect(Metadata, decoder).decode({ ...item, ...createMetadata(user) }),
     );
@@ -91,8 +92,10 @@ export const update = <T extends Metadata & object>({
   item: T;
   decoder: Codec<T>;
 }): EitherAsync<unknown, T> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     const itemToUpdate = await liftEither(
       intersect(Metadata, decoder).decode({
@@ -121,8 +124,10 @@ export const update = <T extends Metadata & object>({
  * Deletes all items with matching keys in the key value store
  */
 export const deleteAll = (keys: Key[]): EitherAsync<unknown, void> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     await liftEither(
       Either.sequence(
@@ -175,8 +180,10 @@ export const getAllObjectsFromKeys = <T extends object>({
   keys: Key[];
   decoder: Codec<T>;
 }): EitherAsync<unknown, T[]> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ liftEither, fromPromise }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     const promises = keys.map((key) => {
       return getObjectFromKey({ user, decoder, key });
@@ -234,8 +241,10 @@ export const getAllItemsKeys = ({
   existingKeys: Key[];
   scanKey: Key;
 }): EitherAsync<unknown, { cursor?: number; keys: Key[] }> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     return fromPromise(
       getItemsKeysBatch({ user, cursor, scanKey }).map(async (response) => {

@@ -140,8 +140,10 @@ export const createJournalAction = async (
  */
 
 export const getAllJournals = (): EitherAsync<unknown, Journal[]> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     const { keys: validatedKeys } = await fromPromise(
       getAllItemsKeys({
@@ -167,8 +169,10 @@ export const getAllJournals = (): EitherAsync<unknown, Journal[]> => {
 export const getJournal = (
   createdAtIso: Date,
 ): EitherAsync<unknown, Journal> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
     const key = getJournalKey({ createdAtIso, user });
 
     return fromPromise(getObjectFromKey({ key, decoder: Journal, user }).run());
@@ -194,6 +198,8 @@ export const getJournal = (
 export const updateJournalAction = async (
   formData: FormData,
 ): Promise<unknown | Journal> => {
+  const userEither = validateLoggedIn();
+
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const metadata = await liftEither(
       getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
@@ -213,7 +219,7 @@ export const updateJournalAction = async (
       yyyyMmDdDate(createdAtIso) !== yyyyMmDdDate(metadata.createdAtIso);
 
     if (dateChanged) {
-      const user = await liftEither(validateLoggedIn());
+      const user = await liftEither(userEither);
       await fromPromise(
         deleteAll([
           getJournalKey({ user, createdAtIso: metadata.createdAtIso }),

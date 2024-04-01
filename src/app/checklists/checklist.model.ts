@@ -67,8 +67,10 @@ export const createChecklistAction = async (
  */
 
 export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
 
     const { keys: validatedKeys } = await fromPromise(
       getAllItemsKeys({
@@ -92,8 +94,10 @@ export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
 };
 
 export const getChecklist = (id: UUID): EitherAsync<unknown, Checklist> => {
+  const userEither = validateLoggedIn();
+
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+    const user = await liftEither(userEither);
     const key = getChecklistKey({ id, user });
 
     return fromPromise(
