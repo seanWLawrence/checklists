@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
-import { Checklist, ChecklistItemTimeEstimate } from "@/lib/types";
+import { Checklist, ChecklistItemTimeEstimate } from "../checklist.types";
 import {
   markItemsIncompleteAction,
   updateChecklistItemsAction,

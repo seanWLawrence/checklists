@@ -9,21 +9,35 @@ export const TopNavigation: React.FC<{}> = async () => {
 
   return (
     <nav className="py-2 px-5 flex space-x-1 items-center w-full">
-      <Link
-        color="foreground"
-        href="/checklists"
-        className="font-bold text-inherit"
-      >
-        Checklists
+      <Link href="/" className="font-bold text-inherit">
+        App
       </Link>
 
       {user && (
         <MenuButton
           menu={
             <div className="flex flex-col space-y-2">
+              <Link href="/checklists">
+                <Button variant="ghost" type="button">
+                  Checklists
+                </Button>
+              </Link>
+
               <Link href="/checklists/new">
                 <Button variant="ghost" type="button">
-                  New
+                  New checklist
+                </Button>
+              </Link>
+
+              <Link href="/journals">
+                <Button variant="ghost" type="button">
+                  Journals
+                </Button>
+              </Link>
+
+              <Link href="/journals/new">
+                <Button variant="ghost" type="button">
+                  New journal
                 </Button>
               </Link>
 

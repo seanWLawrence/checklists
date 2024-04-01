@@ -1,5 +1,14 @@
 import { type UUID as IUUID } from "crypto";
-import { Codec, GetType, date, intersect, string } from "purify-ts/Codec";
+import {
+  Codec,
+  GetType,
+  array,
+  boolean,
+  date,
+  intersect,
+  optional,
+  string,
+} from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 
 const UUID_REG_EXP =
@@ -32,6 +41,7 @@ export const Metadata = Codec.interface({
 
 export type Metadata = GetType<typeof Metadata>;
 
+
 export type Key = `user#${string /* username */}#${string}`;
 
 export const Key = Codec.custom<Key>({
@@ -41,3 +51,13 @@ export const Key = Codec.custom<Key>({
       : Left(`Invalid Key: '${input}'`),
   encode: (input) => input, // strings have no serialization logic
 });
+
+export const JournalBase = Codec.interface({
+  content: string,
+});
+
+export type JournalBase = GetType<typeof JournalBase>;
+
+export const Journal = intersect(Metadata, JournalBase);
+
+export type Journal = GetType<typeof Journal>;

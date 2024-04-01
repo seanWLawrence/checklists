@@ -1,17 +1,15 @@
 "use server";
 import { UUID } from "crypto";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { array } from "purify-ts/Codec";
-import { Tuple } from "purify-ts/Tuple";
 import { Either, Left, Right } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
 
-import { kv } from "@vercel/kv";
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
 import {
   create,
   deleteAll,
+  getAllItemsKeys,
   getAllObjectsFromKeys,
   getObjectFromKey,
   update,
@@ -68,67 +66,15 @@ export const createChecklistAction = async (
  * Read
  */
 
-const getChecklistKeysBatch = ({
-  user,
-  cursor,
-}: {
-  user: User;
-  cursor?: number;
-}): EitherAsync<unknown, Tuple<number /* cursor */, Key[]>> => {
-  return EitherAsync(async ({ liftEither }) => {
-    const response = Tuple.fromArray(
-      await kv.scan(cursor ?? 0, {
-        type: "hash",
-        match: getAllChecklistsScanKey({ user }),
-      }),
-    );
-
-    const keys = await liftEither(array(Key).decode(response.snd()));
-
-    return Tuple.fromArray([response.fst(), keys]);
-  });
-};
-
-const getAllChecklistsKeys = ({
-  cursor,
-  existingKeys,
-}: {
-  cursor?: number;
-  existingKeys: Key[];
-}): EitherAsync<unknown, { cursor?: number; keys: Key[] }> => {
+export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await liftEither(validateLoggedIn());
 
-    return fromPromise(
-      getChecklistKeysBatch({ user, cursor }).map(async (response) => {
-        const nextCursor = response.fst();
-        const keys = response.snd();
-
-        const done = nextCursor === 0;
-        const allKeysThusFar = [...existingKeys, ...keys];
-
-        if (done) {
-          return { keys: allKeysThusFar };
-        }
-
-        /**
-         * We still have more to iterate through, recursively call until no more left
-         */
-        return fromPromise(
-          getAllChecklistsKeys({
-            cursor: response.fst(),
-            existingKeys: allKeysThusFar,
-          }).run(),
-        );
-      }),
-    );
-  });
-};
-
-export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
-  return EitherAsync(async ({ fromPromise }) => {
     const { keys: validatedKeys } = await fromPromise(
-      getAllChecklistsKeys({ existingKeys: [] }),
+      getAllItemsKeys({
+        existingKeys: [],
+        scanKey: getAllChecklistsScanKey({ user }),
+      }),
     );
 
     return await fromPromise(

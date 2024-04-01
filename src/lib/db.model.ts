@@ -1,6 +1,6 @@
 import { Either, Left, Right } from "purify-ts/Either";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { Codec, date, intersect } from "purify-ts/Codec";
+import { Codec, array, date, intersect } from "purify-ts/Codec";
 import { Maybe } from "purify-ts/Maybe";
 import { kv } from "@vercel/kv";
 
@@ -8,6 +8,7 @@ import { Key, Metadata, User } from "./types";
 import { getUser } from "@/app/login/auth.model";
 import { id } from "@/factories/id.factory";
 import { logger } from "./logger";
+import { Tuple } from "purify-ts/Tuple";
 
 export const isOk = (response: "OK" | string): boolean => response === "OK";
 
@@ -189,4 +190,108 @@ export const getAllObjectsFromKeys = <T extends object>({
         .run(),
     );
   });
+};
+
+const getItemsKeysBatch = ({
+  user,
+  cursor,
+  scanKey,
+}: {
+  user: User;
+  cursor?: number;
+  scanKey: Key;
+}): EitherAsync<unknown, Tuple<number /* cursor */, Key[]>> => {
+  return EitherAsync(async ({ liftEither }) => {
+    const response = Tuple.fromArray(
+      await kv.scan(cursor ?? 0, {
+        type: "hash",
+        match: scanKey,
+      }),
+    );
+
+    const keys = await liftEither(
+      array(Key)
+        .decode(response.snd())
+        .chain((keys) =>
+          Either.sequence(
+            keys.map((key) => {
+              return validateUserFromKey({ user, key }).map(() => key);
+            }),
+          ),
+        ),
+    );
+
+    return Tuple.fromArray([response.fst(), keys]);
+  });
+};
+
+export const getAllItemsKeys = ({
+  cursor,
+  existingKeys,
+  scanKey,
+}: {
+  cursor?: number;
+  existingKeys: Key[];
+  scanKey: Key;
+}): EitherAsync<unknown, { cursor?: number; keys: Key[] }> => {
+  return EitherAsync(async ({ fromPromise, liftEither }) => {
+    const user = await liftEither(validateLoggedIn());
+
+    return fromPromise(
+      getItemsKeysBatch({ user, cursor, scanKey }).map(async (response) => {
+        const nextCursor = response.fst();
+        const keys = response.snd();
+
+        const done = nextCursor === 0;
+        const allKeysThusFar = [...existingKeys, ...keys];
+
+        if (done) {
+          return { keys: allKeysThusFar };
+        }
+
+        /**
+         * We still have more to iterate through, recursively call until no more left
+         */
+        return fromPromise(
+          getAllItemsKeys({
+            cursor: response.fst(),
+            existingKeys: allKeysThusFar,
+            scanKey,
+          }).run(),
+        );
+      }),
+    );
+  });
+};
+
+export const getStringFromFormData = ({
+  name,
+  formData,
+}: {
+  name: string;
+  formData: FormData;
+}): Either<string, string> => {
+  return Maybe.fromNullable(formData.get(name))
+    .toEither(`Missing ${name}`)
+    .chain((x) =>
+      typeof x === "string" ? Right(x) : Left(`'${name}' is wrong type`),
+    );
+};
+
+export const getJsonFromFormData = <T extends object>({
+  name,
+  formData,
+  decoder,
+}: {
+  name: string;
+  formData: FormData;
+  decoder: Codec<T>;
+}): Either<unknown, T> => {
+  return Maybe.fromNullable(formData.get(name))
+    .toEither(`Missing ${name}`)
+    .chain((x) =>
+      typeof x === "string" ? Right(x) : Left(`'${name}' is wrong type`),
+    )
+    .chain((x) => Either.encase(() => JSON.parse(x)))
+    .chain(decoder.decode);
 };

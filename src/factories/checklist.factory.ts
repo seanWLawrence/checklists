@@ -1,7 +1,11 @@
 import { date } from "purify-ts/Codec";
 import { fillArray } from "./fill-array.factory";
 import { id } from "./id.factory";
-import { Checklist, ChecklistItem, ChecklistSection } from "@/lib/types";
+import {
+  Checklist,
+  ChecklistItem,
+  ChecklistSection,
+} from "@/app/checklists/checklist.types";
 
 export const checklistItem = (
   overrides?: Partial<ChecklistItem>,
