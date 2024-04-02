@@ -4,7 +4,8 @@ import { NonEmptyList } from "purify-ts/NonEmptyList";
 import Link from "next/link";
 
 import { Heading } from "@/components/heading";
-import { getJournal, prettyDate } from "../journal.model";
+import { getJournal } from "../journal.model";
+import { prettyDate } from "../journal.lib";
 import { CreatedAtLocal } from "../journal.types";
 
 const prettyContent = (content: string): React.ReactNode => {
