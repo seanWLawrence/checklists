@@ -3,12 +3,21 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { Codec, array, date, intersect } from "purify-ts/Codec";
 import { Maybe } from "purify-ts/Maybe";
 import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
 import { Key, Metadata, User } from "./types";
 import { getUser } from "@/app/login/auth.model";
 import { id } from "@/factories/id.factory";
 import { logger } from "./logger";
 import { Tuple } from "purify-ts/Tuple";
+
+export const client =
+  process.env.NODE_ENV === "development"
+    ? new Redis({
+        url: "http://localhost:8079",
+        token: "example_token",
+      })
+    : kv;
 
 export const isOk = (response: "OK" | string): boolean => response === "OK";
 
@@ -70,7 +79,7 @@ export const create = <T extends object>({
       intersect(Metadata, decoder).decode({ ...item, ...createMetadata(user) }),
     );
 
-    const response = await kv.hmset(key(itemToCreate), itemToCreate);
+    const response = await client.hmset(key(itemToCreate), itemToCreate);
 
     if (!isOk(response)) {
       throwE(`Failed to create ${key}`);
@@ -110,7 +119,7 @@ export const update = <T extends Metadata & object>({
 
     await liftEither(validateUserFromKey({ key, user }));
 
-    const response = await kv.hmset(key, itemToUpdate);
+    const response = await client.hmset(key, itemToUpdate);
 
     if (!isOk(response)) {
       throwE(`Failed to update ${key}`);
@@ -137,7 +146,7 @@ export const deleteAll = (keys: Key[]): EitherAsync<unknown, void> => {
       ),
     );
 
-    const response = await kv.del(...keys);
+    const response = await client.del(...keys);
 
     if (response === 0) {
       throwE(`Failed to delete one or more ${keys.join(", ")}`);
@@ -160,7 +169,7 @@ export const getObjectFromKey = <T extends object>({
   return EitherAsync(async ({ liftEither, throwE }) => {
     await liftEither(validateUserFromKey({ user, key }));
 
-    const response = Maybe.fromNullable(await kv.hgetall(key));
+    const response = Maybe.fromNullable(await client.hgetall(key));
 
     if (response.isNothing()) {
       throwE(`Object not found for key: '${key}'`);
@@ -210,7 +219,7 @@ const getItemsKeysBatch = ({
 }): EitherAsync<unknown, Tuple<number /* cursor */, Key[]>> => {
   return EitherAsync(async ({ liftEither }) => {
     const response = Tuple.fromArray(
-      await kv.scan(cursor ?? 0, {
+      await client.scan(cursor ?? 0, {
         type: "hash",
         match: scanKey,
       }),
