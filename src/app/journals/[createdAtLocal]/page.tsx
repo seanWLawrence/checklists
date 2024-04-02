@@ -1,11 +1,11 @@
 import React from "react";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { NonEmptyList } from "purify-ts/NonEmptyList";
-import { Either } from "purify-ts/Either";
 import Link from "next/link";
 
 import { Heading } from "@/components/heading";
-import { getJournal, prettyDate, yyyyMmDdDate } from "../journal.model";
+import { getJournal } from "../journal.model";
+import { CreatedAtLocal } from "../journal.types";
 
 const prettyContent = (content: string): React.ReactNode => {
   return NonEmptyList.fromArray(content.split("\n"))
@@ -48,9 +48,13 @@ const prettyContent = (content: string): React.ReactNode => {
               <div key={`${section.heading}-${index}`} className="space-y-1">
                 <Heading level={2}>{section.heading}</Heading>
 
-                {section.children.map((row, index) => (
-                  <p key={`${row}-${index}`}>{row}</p>
-                ))}
+                <ul>
+                  {section.children.map((row, index) => (
+                    <li className="list-disc ml-4" key={`${row}-${index}`}>
+                      {row}
+                    </li>
+                  ))}
+                </ul>
               </div>
             );
           })}
@@ -60,24 +64,24 @@ const prettyContent = (content: string): React.ReactNode => {
     .extract();
 };
 
-const Journal: React.FC<{ params: { createdAtIso: string } }> = async ({
+const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
   params,
 }) => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
-    const createdAtIso = await liftEither(
-      Either.encase(() => new Date(params.createdAtIso)),
+    const createdAtLocal = await liftEither(
+      CreatedAtLocal.decode(params.createdAtLocal),
     );
 
-    const journal = await fromPromise(getJournal(createdAtIso));
+    const journal = await fromPromise(getJournal(createdAtLocal));
 
     return (
       <main className="space-y-2">
         <div className="flex space-x-2 items-center">
-          <Heading level={1}>{prettyDate(journal.createdAtIso)}</Heading>
+          <Heading level={1}>{journal.createdAtLocal}</Heading>
 
           <Link
             className="underline underline-offset-2 text-xs"
-            href={`/journals/${yyyyMmDdDate(journal.createdAtIso)}/edit`}
+            href={`/journals/${journal.createdAtLocal}/edit`}
           >
             Edit
           </Link>

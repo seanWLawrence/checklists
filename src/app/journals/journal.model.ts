@@ -1,7 +1,6 @@
 "use server";
 import { Either, Left, Right } from "purify-ts/Either";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { date } from "purify-ts/Codec";
 import { revalidatePath } from "next/cache";
 import { RedirectType, redirect } from "next/navigation";
 import {
@@ -15,31 +14,9 @@ import {
   update,
   validateLoggedIn,
 } from "@/lib/db.model";
-import { JournalBase, Journal } from "./journal.types";
+import { JournalBase, Journal, CreatedAtLocal } from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
-
-const LOCALE = "en-US";
-
-const PRETTY_DATE_FORMAT = new Intl.DateTimeFormat(LOCALE, {
-  month: "long",
-  year: "numeric",
-  day: "numeric",
-});
-
-export const prettyDate = (date: Date): string => {
-  return PRETTY_DATE_FORMAT.format(date);
-};
-
-const YYYY_MM_DD_FORMAT = new Intl.DateTimeFormat(LOCALE, {
-  day: "2-digit",
-  year: "numeric",
-  month: "2-digit",
-});
-
-export const yyyyMmDdDate = (date: Date): string => {
-  return YYYY_MM_DD_FORMAT.format(date).replaceAll("/", "-");
-};
 
 /**
  * Gets all journal keys for a given user
@@ -52,18 +29,18 @@ const getAllJournalsScanKey = ({ user }: { user: User }): Key =>
  */
 const getJournalKey = ({
   user,
-  createdAtIso,
+  createdAtLocal,
 }: {
   user: User;
-  createdAtIso: Date;
-}): Key => `user#${user.username}#journal#${yyyyMmDdDate(createdAtIso)}`;
+  createdAtLocal: CreatedAtLocal;
+}): Key => `user#${user.username}#journal#${createdAtLocal}`;
 
 /**
  * Create
  */
 
 const validateDateIsUnique = (
-  createdAtIso: Date,
+  createdAtLocal: CreatedAtLocal,
 ): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const existingKeys = await fromPromise(getAllJournals());
@@ -71,13 +48,10 @@ const validateDateIsUnique = (
     await liftEither(
       Either.sequence(
         existingKeys.map((x) => {
-          const dateAlreadyExists =
-            yyyyMmDdDate(x.createdAtIso) === yyyyMmDdDate(createdAtIso);
+          const dateAlreadyExists = x.createdAtLocal === createdAtLocal;
 
           if (dateAlreadyExists) {
-            return Left(
-              `Journal with date ${yyyyMmDdDate(createdAtIso)} already exists`,
-            );
+            return Left(`Journal with date ${createdAtLocal} already exists`);
           }
 
           return Right(undefined);
@@ -91,13 +65,13 @@ export const createJournalAction = async (
   formData: FormData,
 ): Promise<unknown | Journal> => {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
-    const createdAtIso = await liftEither(
-      getStringFromFormData({ name: "createdAtIso", formData }).chain(
-        date.decode,
+    const createdAtLocal = await liftEither(
+      getStringFromFormData({ name: "createdAtLocal", formData }).chain(
+        CreatedAtLocal.decode,
       ),
     );
 
-    await fromPromise(validateDateIsUnique(createdAtIso));
+    await fromPromise(validateDateIsUnique(createdAtLocal));
 
     const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
@@ -105,8 +79,8 @@ export const createJournalAction = async (
 
     return fromPromise(
       create({
-        key: (item) => getJournalKey({ createdAtIso, user: item.user }),
-        item: { content },
+        key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
+        item: { content, createdAtLocal },
         decoder: JournalBase,
       })
         .ifLeft((e) => {
@@ -115,9 +89,7 @@ export const createJournalAction = async (
         })
         .ifRight((journal) => {
           logger.info(
-            `Successfully created journal with date '${yyyyMmDdDate(
-              journal.createdAtIso,
-            )}'`,
+            `Successfully created journal with date '${journal.createdAtLocal}'`,
           );
           revalidatePath("/journals");
         })
@@ -127,7 +99,7 @@ export const createJournalAction = async (
 
   if (response.isRight()) {
     redirect(
-      `/journals/${yyyyMmDdDate(response.extract().createdAtIso)}`,
+      `/journals/${response.extract().createdAtLocal}`,
       RedirectType.push,
     );
   }
@@ -167,26 +139,24 @@ export const getAllJournals = (): EitherAsync<unknown, Journal[]> => {
 };
 
 export const getJournal = (
-  createdAtIso: Date,
+  createdAtLocal: CreatedAtLocal,
 ): EitherAsync<unknown, Journal> => {
   const userEither = validateLoggedIn();
 
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await liftEither(userEither);
-    const key = getJournalKey({ createdAtIso, user });
+    const key = getJournalKey({ createdAtLocal, user });
 
     return fromPromise(getObjectFromKey({ key, decoder: Journal, user }).run());
   })
     .ifRight((x) => {
-      const dateId = yyyyMmDdDate(x.createdAtIso);
+      const dateId = x.createdAtLocal;
       logger.info(`Successfully loaded journal for date '${dateId}'`);
       revalidatePath(`/journals/${dateId}`);
       revalidatePath(`/journals/${dateId}/edit`);
     })
     .ifLeft((e) => {
-      logger.error(
-        `Failed to load journal with date '${yyyyMmDdDate(createdAtIso)}'`,
-      );
+      logger.error(`Failed to load journal with date '${createdAtLocal}'`);
       logger.error(e);
     });
 };
@@ -205,9 +175,15 @@ export const updateJournalAction = async (
       getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
     );
 
-    const createdAtIso = await liftEither(
-      getStringFromFormData({ name: "createdAtIso", formData }).chain(
-        date.decode,
+    const existingCreatedAtLocal = await liftEither(
+      getStringFromFormData({ name: "existingCreatedAtLocal", formData }).chain(
+        CreatedAtLocal.decode,
+      ),
+    );
+
+    const createdAtLocal = await liftEither(
+      getStringFromFormData({ name: "createdAtLocal", formData }).chain(
+        CreatedAtLocal.decode,
       ),
     );
 
@@ -215,45 +191,35 @@ export const updateJournalAction = async (
       getStringFromFormData({ name: "content", formData }),
     );
 
-    const dateChanged =
-      yyyyMmDdDate(createdAtIso) !== yyyyMmDdDate(metadata.createdAtIso);
+    const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
       const user = await liftEither(userEither);
-      await fromPromise(
-        deleteAll([
-          getJournalKey({ user, createdAtIso: metadata.createdAtIso }),
-        ]),
-      );
+      await fromPromise(deleteAll([getJournalKey({ user, createdAtLocal })]));
     }
 
     return fromPromise(
       update({
-        key: (item) =>
-          getJournalKey({ createdAtIso: item.createdAtIso, user: item.user }),
+        key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         decoder: Journal,
-        item: { ...metadata, createdAtIso, content },
+        item: { ...metadata, createdAtLocal, content },
       })
         .ifRight((x) => {
-          const dateId = yyyyMmDdDate(x.createdAtIso);
+          const dateId = x.createdAtLocal;
           logger.info(`Successfully updated journal with date '${dateId}'`);
           revalidatePath("/journals");
           revalidatePath(`/journals/${dateId}`);
           revalidatePath(`/journals/${dateId}/edit`);
         })
         .ifLeft(async (e) => {
-          const metadata = await liftEither(
-            getJsonFromFormData({
-              name: "metadata",
-              formData,
-              decoder: Metadata,
-            }),
+          const createdAtLocal = await liftEither(
+            getStringFromFormData({ name: "createdAtLocal", formData }).chain(
+              CreatedAtLocal.decode,
+            ),
           );
 
           logger.error(
-            `Failed to update journal with date '${yyyyMmDdDate(
-              metadata.createdAtIso,
-            )}')`,
+            `Failed to update journal with date '${createdAtLocal}')`,
           );
           logger.error(e);
         }),
@@ -262,7 +228,7 @@ export const updateJournalAction = async (
 
   if (response.isRight()) {
     redirect(
-      `/journals/${yyyyMmDdDate(response.extract().createdAtIso)}`,
+      `/journals/${response.extract().createdAtLocal}`,
       RedirectType.push,
     );
   }
@@ -277,33 +243,43 @@ export const updateJournalAction = async (
 export const deleteJournalAction = async (
   formData: FormData,
 ): Promise<unknown | void> => {
-  const response = await EitherAsync(async ({ liftEither }) => {
+  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
+    const createdAtLocal = await liftEither(
+      getStringFromFormData({ name: "createdAtLocal", formData }).chain(
+        CreatedAtLocal.decode,
+      ),
+    );
+
     const metadata = await liftEither(
       getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
     );
 
-    deleteAll([
-      getJournalKey({
-        createdAtIso: metadata.createdAtIso,
-        user: metadata.user,
-      }),
-    ])
-      .ifRight(() => {
-        const dateId = yyyyMmDdDate(metadata.createdAtIso);
-        logger.info(`Successfully deleted journal with ID '${dateId}'`);
-        revalidatePath("/journals");
-        revalidatePath(`/journals/${dateId}`);
-        revalidatePath(`/journals/${dateId}/edit`);
-      })
-      .ifLeft((e) => {
-        logger.error(
-          `Failed to delete checklist with date '${yyyyMmDdDate(
-            metadata.createdAtIso,
-          )}'`,
-        );
-        logger.error(e);
-      });
+    return fromPromise(
+      deleteAll([
+        getJournalKey({
+          createdAtLocal,
+          user: metadata.user,
+        }),
+      ])
+        .ifRight(() => {
+          const dateId = createdAtLocal;
+          logger.info(`Successfully deleted journal with ID '${dateId}'`);
+          revalidatePath("/journals");
+          revalidatePath(`/journals/${dateId}`);
+          revalidatePath(`/journals/${dateId}/edit`);
+        })
+        .ifLeft((e) => {
+          logger.error(
+            `Failed to delete checklist with date '${createdAtLocal}'`,
+          );
+          logger.error(e);
+        }),
+    );
   }).run();
+
+  if (response.isRight()) {
+    redirect("/journals", RedirectType.push);
+  }
 
   return response.toJSON();
 };

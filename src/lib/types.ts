@@ -41,7 +41,6 @@ export const Metadata = Codec.interface({
 
 export type Metadata = GetType<typeof Metadata>;
 
-
 export type Key = `user#${string /* username */}#${string}`;
 
 export const Key = Codec.custom<Key>({
@@ -51,13 +50,3 @@ export const Key = Codec.custom<Key>({
       : Left(`Invalid Key: '${input}'`),
   encode: (input) => input, // strings have no serialization logic
 });
-
-export const JournalBase = Codec.interface({
-  content: string,
-});
-
-export type JournalBase = GetType<typeof JournalBase>;
-
-export const Journal = intersect(Metadata, JournalBase);
-
-export type Journal = GetType<typeof Journal>;

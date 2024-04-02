@@ -1,18 +1,18 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { Either } from "purify-ts/Either";
 
 import { JournalForm } from "../../journal-form";
 import { getJournal } from "../../journal.model";
+import { CreatedAtLocal } from "../../journal.types";
 
-const EditJournal: React.FC<{ params: { createdAtIso: string } }> = async ({
+const EditJournal: React.FC<{ params: { createdAtLocal: string } }> = async ({
   params,
 }) => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
-    const createdAtIso = await liftEither(
-      Either.encase(() => new Date(params.createdAtIso)),
+    const createdAtLocal = await liftEither(
+      CreatedAtLocal.decode(params.createdAtLocal),
     );
 
-    const journal = await fromPromise(getJournal(createdAtIso));
+    const journal = await fromPromise(getJournal(createdAtLocal));
 
     return <JournalForm journal={journal} />;
   })
