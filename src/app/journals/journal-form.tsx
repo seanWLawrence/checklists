@@ -7,19 +7,21 @@ import { Input } from "@/components/input";
 import { DeleteJournalForm } from "./[createdAtLocal]/edit/delete-journal-form";
 
 const DEFAULT_TEMPLATE =
-  "## Excited for" +
+  "## Grateful for" +
   "\n\n" +
-  "## Important things to do today" +
+  "## What could make today great?" +
   "\n\n" +
-  "## Went well" +
+  "## Daily affirmation" +
   "\n\n" +
-  "## To improve";
+  "## Highlights of the day" +
+  "\n\n" +
+  "## What did I learn today?";
 
 export const JournalForm: React.FC<{
   journal?: Journal;
 }> = ({ journal }) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-w-prose">
       <div className="flex space-x-1 items-center">
         <Heading level={1}>{journal ? "Edit" : "New"} journal</Heading>
 
@@ -59,11 +61,11 @@ export const JournalForm: React.FC<{
         <textarea
           name="content"
           defaultValue={journal?.content ?? DEFAULT_TEMPLATE}
-          className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full max-w-prose"
+          className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full"
           rows={20}
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end w-full max-w-xl">
           <Button type="submit" variant="primary">
             Save
           </Button>

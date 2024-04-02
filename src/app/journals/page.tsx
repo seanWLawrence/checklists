@@ -10,8 +10,6 @@ const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
   const node = await EitherAsync(async ({ fromPromise }) => {
     const journals = await fromPromise(getAllJournals().run());
 
-    console.log(Object.entries(groupJournals(journals)));
-
     return (
       <main className="space-y-2">
         <Heading level={1}>Journals</Heading>
@@ -19,10 +17,10 @@ const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
         <div className="space-y-1">
           {Object.entries(groupJournals(journals)).map(([year, monthMap]) => {
             return (
-              <section key={year} className="space-y-3">
+              <section key={year} className="space-y-4">
                 {Object.entries(monthMap).map(([month, journals]) => {
                   return (
-                    <section key={month}>
+                    <section key={month} className="space-y-1">
                       <Heading level={2}>
                         {months[Number(month) - 1]} {year}
                       </Heading>
