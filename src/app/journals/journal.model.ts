@@ -18,6 +18,18 @@ import { JournalBase, Journal, CreatedAtLocal } from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
+const YYYY_MM_DD = Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+export const prettyDate = (createdAtLocal: CreatedAtLocal): string => {
+  return Either.encase(() => new Date(createdAtLocal))
+    .map((d) => YYYY_MM_DD.format(d))
+    .orDefault(createdAtLocal);
+};
+
 /**
  * Gets all journal keys for a given user
  */

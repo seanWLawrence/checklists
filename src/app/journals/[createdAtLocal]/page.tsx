@@ -4,7 +4,7 @@ import { NonEmptyList } from "purify-ts/NonEmptyList";
 import Link from "next/link";
 
 import { Heading } from "@/components/heading";
-import { getJournal } from "../journal.model";
+import { getJournal, prettyDate } from "../journal.model";
 import { CreatedAtLocal } from "../journal.types";
 
 const prettyContent = (content: string): React.ReactNode => {
@@ -77,7 +77,7 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
     return (
       <main className="space-y-2">
         <div className="flex space-x-2 items-center">
-          <Heading level={1}>{journal.createdAtLocal}</Heading>
+          <Heading level={1}>{prettyDate(journal.createdAtLocal)}</Heading>
 
           <Link
             className="underline underline-offset-2 text-xs"

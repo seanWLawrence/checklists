@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getAllJournals } from "./journal.model";
+import { getAllJournals, prettyDate } from "./journal.model";
 import { Heading } from "@/components/heading";
 
 const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
@@ -16,7 +16,7 @@ const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
           {journals.map((j) => (
             <li key={j.createdAtIso.toISOString()}>
               <Link href={`/journals/${j.createdAtLocal}`}>
-                {j.createdAtLocal}
+                {prettyDate(j.createdAtLocal)}
               </Link>
             </li>
           ))}
