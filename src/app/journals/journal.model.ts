@@ -14,7 +14,7 @@ import {
   update,
   validateLoggedIn,
 } from "@/lib/db.model";
-import { JournalBase, Journal, CreatedAtLocal } from "./journal.types";
+import { JournalBase, Journal, CreatedAtLocal, Level } from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
@@ -77,10 +77,22 @@ export const createJournalAction = async (
       getStringFromFormData({ name: "content", formData }),
     );
 
+    const energyLevel = await liftEither(
+      getStringFromFormData({ name: "energyLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const moodLevel = await liftEither(
+      getStringFromFormData({ name: "moodLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
     return fromPromise(
       create({
         key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
-        item: { content, createdAtLocal },
+        item: { content, createdAtLocal, moodLevel, energyLevel },
         decoder: JournalBase,
       })
         .ifLeft((e) => {
@@ -191,6 +203,18 @@ export const updateJournalAction = async (
       getStringFromFormData({ name: "content", formData }),
     );
 
+    const energyLevel = await liftEither(
+      getStringFromFormData({ name: "energyLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const moodLevel = await liftEither(
+      getStringFromFormData({ name: "moodLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
@@ -202,7 +226,7 @@ export const updateJournalAction = async (
       update({
         key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         decoder: Journal,
-        item: { ...metadata, createdAtLocal, content },
+        item: { ...metadata, createdAtLocal, content, energyLevel, moodLevel },
       })
         .ifRight((x) => {
           const dateId = x.createdAtLocal;

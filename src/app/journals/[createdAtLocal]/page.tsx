@@ -7,6 +7,7 @@ import { Heading } from "@/components/heading";
 import { getJournal } from "../journal.model";
 import { prettyDate } from "../journal.lib";
 import { CreatedAtLocal } from "../journal.types";
+import { Label } from "@/components/label";
 
 const prettyContent = (content: string): React.ReactNode => {
   return NonEmptyList.fromArray(content.split("\n"))
@@ -87,6 +88,14 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
             Edit
           </Link>
         </div>
+
+        <Label label="Energy level (low to high)">
+          <input type="range" readOnly value={journal?.energyLevel} />
+        </Label>
+
+        <Label label="Mood (low to high)">
+          <input type="range" value={journal?.moodLevel} readOnly />
+        </Label>
 
         <div className="space-y-1">{prettyContent(journal.content)}</div>
       </main>

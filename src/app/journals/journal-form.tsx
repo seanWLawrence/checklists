@@ -32,12 +32,35 @@ export const JournalForm: React.FC<{
         action={journal ? updateJournalAction : createJournalAction}
         className="space-y-2"
       >
+        <Label label="Energy level (low to high)">
+          <input
+            type="range"
+            name="energyLevel"
+            min="1"
+            max="5"
+            defaultValue={journal?.energyLevel}
+            required
+          />
+        </Label>
+
+        <Label label="Mood (low to high)">
+          <input
+            type="range"
+            name="moodLevel"
+            min="1"
+            max="5"
+            defaultValue={journal?.moodLevel}
+            required
+          />
+        </Label>
+
         {journal && (
           <input
             name="metadata"
             type="hidden"
             value={JSON.stringify(journal)}
             readOnly
+            required
           />
         )}
 
@@ -47,6 +70,7 @@ export const JournalForm: React.FC<{
             type="hidden"
             value={journal.createdAtLocal}
             readOnly
+            required
           />
         )}
 
@@ -55,6 +79,7 @@ export const JournalForm: React.FC<{
             type="date"
             defaultValue={journal?.createdAtLocal}
             name="createdAtLocal"
+            required
           />
         </Label>
 
@@ -63,6 +88,7 @@ export const JournalForm: React.FC<{
           defaultValue={journal?.content ?? DEFAULT_TEMPLATE}
           className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full"
           rows={20}
+          required
         />
 
         <div className="flex justify-end w-full max-w-xl">

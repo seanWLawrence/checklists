@@ -1,4 +1,4 @@
-import { Codec, string, GetType, intersect } from "purify-ts/Codec";
+import { Codec, string, GetType, intersect, optional } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 import { Metadata } from "@/lib/types";
 
@@ -13,9 +13,24 @@ export const CreatedAtLocal = Codec.custom<CreatedAtLocal>({
   encode: (input) => input,
 });
 
+export type Level = 1 | 2 | 3 | 4 | 5;
+
+export const Level = Codec.custom<Level>({
+  decode: (input) => {
+    const val = Number(input);
+
+    return val > 0 && val < 6
+      ? Right(input as Level)
+      : Left(`Invalid level ${input}`);
+  },
+  encode: (input) => input,
+});
+
 export const JournalBase = Codec.interface({
   content: string,
   createdAtLocal: CreatedAtLocal,
+  energyLevel: optional(Level),
+  moodLevel: optional(Level),
 });
 
 export type JournalBase = GetType<typeof JournalBase>;
