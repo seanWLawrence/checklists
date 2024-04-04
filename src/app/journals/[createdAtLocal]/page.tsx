@@ -90,11 +90,23 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
         </div>
 
         <Label label="Energy level (low to high)">
-          <input type="range" readOnly value={journal?.energyLevel} />
+          <input
+            type="range"
+            readOnly
+            value={journal?.energyLevel}
+            min="1"
+            max="5"
+          />
         </Label>
 
         <Label label="Mood (low to high)">
-          <input type="range" value={journal?.moodLevel} readOnly />
+          <input
+            type="range"
+            value={journal?.moodLevel}
+            readOnly
+            min="1"
+            max="5"
+          />
         </Label>
 
         <div className="space-y-1">{prettyContent(journal.content)}</div>
