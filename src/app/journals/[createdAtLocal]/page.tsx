@@ -77,7 +77,7 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
     const journal = await fromPromise(getJournal(createdAtLocal));
 
     return (
-      <main className="space-y-2">
+      <main className="space-y-2 max-w-prose">
         <div className="flex space-x-2 items-center">
           <Heading level={1}>{prettyDate(journal.createdAtLocal)}</Heading>
 

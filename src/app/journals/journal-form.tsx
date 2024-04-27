@@ -7,6 +7,8 @@ import { Input } from "@/components/input";
 import { DeleteJournalForm } from "./[createdAtLocal]/edit/delete-journal-form";
 
 const DEFAULT_TEMPLATE =
+  "## Dreams" +
+  "\n\n" +
   "## Grateful for" +
   "\n\n" +
   "## What could make today great?" +

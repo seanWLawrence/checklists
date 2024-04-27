@@ -3,54 +3,60 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getAllJournals } from "./journal.model";
 import { Heading } from "@/components/heading";
-import { groupJournals, months, prettyDate } from "./journal.lib";
+import { groupJournals, prettyDate } from "./journal.lib";
 import { Journal } from "./journal.types";
+import { Button } from "@/components/button";
 
 const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
   const node = await EitherAsync(async ({ fromPromise }) => {
     const journals = await fromPromise(getAllJournals().run());
+    const groupedJournals = Object.entries(groupJournals(journals));
 
     return (
       <main className="space-y-2">
         <Heading level={1}>Journals</Heading>
 
         <div className="space-y-1">
-          {Object.entries(groupJournals(journals)).map(([year, monthMap]) => {
+          {groupedJournals.map(([year, monthMap]) => {
+            const lastMonthIndex = groupedJournals.length - 1;
+            const hasMoreThanOneMonth = Object.keys(monthMap).length > 1;
+
             return (
               <section key={year} className="space-y-4">
-                {Object.entries(monthMap).map(([month, journals]) => {
-                  return (
-                    <section key={month} className="space-y-1">
-                      <Heading level={2}>
-                        {months[Number(month) - 1]} {year}
-                      </Heading>
+                <Heading level={2}>{year}</Heading>
 
-                      <ul className="space-y-1">
-                        {[...(journals as Journal[])]
-                          .sort(
-                            (a, b) =>
-                              new Date(a.createdAtLocal).getTime() -
-                              new Date(b.createdAtLocal).getTime(),
-                          )
-                          .map((j) => (
-                            <li
-                              key={j.createdAtIso.toISOString()}
-                              className="list-disc ml-4"
-                            >
+                <div className="space-y-1">
+                  {Object.entries(monthMap).map(([month, journals], index) => {
+                    return (
+                      <div key={month}>
+                        <div className="flex flex-wrap">
+                          {[...(journals as Journal[])]
+                            .sort(
+                              (a, b) =>
+                                new Date(a.createdAtLocal).getTime() -
+                                new Date(b.createdAtLocal).getTime(),
+                            )
+                            .map((j) => (
                               <Link
                                 href={`/journals/${j.createdAtLocal}`}
-                                className="underline underline-offset-4"
+                                key={j.createdAtIso.toISOString()}
                               >
-                                {prettyDate(j.createdAtLocal, {
-                                  withYear: false,
-                                })}
+                                <Button variant="outline" className="mr-2 mb-2">
+                                  {prettyDate(j.createdAtLocal, {
+                                    withYear: false,
+                                  })}
+                                </Button>
                               </Link>
-                            </li>
-                          ))}
-                      </ul>
-                    </section>
-                  );
-                })}
+                            ))}
+                        </div>
+
+                        {index < lastMonthIndex && hasMoreThanOneMonth && (
+                          <hr className="border-t-2 border-t-zinc-300 mt-2 mb-4 max-w-10" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             );
           })}

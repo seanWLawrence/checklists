@@ -36,7 +36,7 @@ export const ChecklistList: React.FC = async () => {
 
         <div className="flex flex-wrap">
           {!checklists.length && (
-            <p className="text-sm textt-zinc-700">No items.</p>
+            <p className="text-sm text-zinc-700">No items.</p>
           )}
 
           {checklists.map(({ id, name }) => {

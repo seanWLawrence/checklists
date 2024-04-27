@@ -123,7 +123,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                     level="legend"
                     className="flex items-center space-x-2"
                   >
-                    <span>{name}</span>
+                    <span className="mr-1">{name}</span>
 
                     <div className="text-xs font-normal">
                       <TimeEstimateBadge
