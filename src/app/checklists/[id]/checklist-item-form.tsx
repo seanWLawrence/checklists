@@ -160,7 +160,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                                 </Checkbox>
 
                                 {note && (
-                                  <p className="text-xs text-zinc-600 ml-10">
+                                  <p className="text-xs text-zinc-600">
                                     {note}
                                   </p>
                                 )}
