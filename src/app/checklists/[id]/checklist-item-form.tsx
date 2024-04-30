@@ -139,7 +139,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
 
                   {items.length ? (
                     <div>
-                      <ul className="space-y-2">
+                      <ul className="space-y-4">
                         {items.map(
                           ({ id, name, completed, note, timeEstimate }) => {
                             return (
@@ -160,7 +160,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                                 </Checkbox>
 
                                 {note && (
-                                  <p className="text-xs text-zinc-600">
+                                  <p className="text-xs text-zinc-600 ml-1">
                                     {note}
                                   </p>
                                 )}
