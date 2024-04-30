@@ -89,10 +89,36 @@ export const createJournalAction = async (
         .chain(Level.decode),
     );
 
+    const healthLevel = await liftEither(
+      getStringFromFormData({ name: "healthLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const creativityLevel = await liftEither(
+      getStringFromFormData({ name: "creativityLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const relationshipsLevel = await liftEither(
+      getStringFromFormData({ name: "relationshipsLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
     return fromPromise(
       create({
         key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
-        item: { content, createdAtLocal, moodLevel, energyLevel },
+        item: {
+          content,
+          createdAtLocal,
+          moodLevel,
+          energyLevel,
+          healthLevel,
+          creativityLevel,
+          relationshipsLevel,
+        },
         decoder: JournalBase,
       })
         .ifLeft((e) => {
@@ -215,6 +241,24 @@ export const updateJournalAction = async (
         .chain(Level.decode),
     );
 
+    const healthLevel = await liftEither(
+      getStringFromFormData({ name: "healthLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const creativityLevel = await liftEither(
+      getStringFromFormData({ name: "creativityLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
+    const relationshipsLevel = await liftEither(
+      getStringFromFormData({ name: "relationshipsLevel", formData })
+        .map(Number)
+        .chain(Level.decode),
+    );
+
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
@@ -226,7 +270,16 @@ export const updateJournalAction = async (
       update({
         key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         decoder: Journal,
-        item: { ...metadata, createdAtLocal, content, energyLevel, moodLevel },
+        item: {
+          ...metadata,
+          createdAtLocal,
+          content,
+          energyLevel,
+          moodLevel,
+          healthLevel,
+          creativityLevel,
+          relationshipsLevel,
+        },
       })
         .ifRight((x) => {
           const dateId = x.createdAtLocal;

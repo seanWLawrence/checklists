@@ -56,6 +56,39 @@ export const JournalForm: React.FC<{
           />
         </Label>
 
+        <Label label="Health (low to high)">
+          <input
+            type="range"
+            name="healthLevel"
+            min="1"
+            max="5"
+            defaultValue={journal?.healthLevel}
+            required
+          />
+        </Label>
+
+        <Label label="Creativity (low to high)">
+          <input
+            type="range"
+            name="creativityLevel"
+            min="1"
+            max="5"
+            defaultValue={journal?.creativityLevel}
+            required
+          />
+        </Label>
+
+        <Label label="Relationships (low to high)">
+          <input
+            type="range"
+            name="relationshipsLevel"
+            min="1"
+            max="5"
+            defaultValue={journal?.relationshipsLevel}
+            required
+          />
+        </Label>
+
         {journal && (
           <input
             name="metadata"

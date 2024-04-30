@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 const keysToTriggerChecked = new Set<string>(["Enter", " ", "Return"]);
 
 export const Checkbox: React.FC<
-  { children: React.ReactNode } & Pick<
+  { children: React.ReactNode; note?: string } & Pick<
     React.InputHTMLAttributes<HTMLInputElement>,
     "defaultChecked" | "name" | "checked"
   >
-> = ({ children, ...rest }) => {
+> = ({ children, note, ...rest }) => {
   const [checked, setChecked] = useState<boolean>(
     !!(rest.defaultChecked ?? rest.checked),
   );
@@ -40,7 +40,7 @@ export const Checkbox: React.FC<
 
   return (
     <label
-      className="flex items-center cursor-pointer p-1 rounded-lg"
+      className="flex flex-col space-y-.5 cursor-pointer p-1 rounded-lg"
       htmlFor={id}
       onKeyDown={toggleCheckedKeyDown}
       onClick={toggleCheckedClick}
@@ -62,6 +62,16 @@ export const Checkbox: React.FC<
       >
         {children}
       </span>
+
+      {note && (
+        <span
+          className={cn("text-xs text-zinc-600", {
+            "line-through decoration-1": checked,
+          })}
+        >
+          {note}
+        </span>
+      )}
     </label>
   );
 };

@@ -109,6 +109,36 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
           />
         </Label>
 
+        <Label label="Health (low to high)">
+          <input
+            type="range"
+            value={journal?.healthLevel}
+            readOnly
+            min="1"
+            max="5"
+          />
+        </Label>
+
+        <Label label="Creativity (low to high)">
+          <input
+            type="range"
+            value={journal?.creativityLevel}
+            readOnly
+            min="1"
+            max="5"
+          />
+        </Label>
+
+        <Label label="Relationships (low to high)">
+          <input
+            type="range"
+            value={journal?.relationshipsLevel}
+            readOnly
+            min="1"
+            max="5"
+          />
+        </Label>
+
         <div className="space-y-1">{prettyContent(journal.content)}</div>
       </main>
     );

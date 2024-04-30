@@ -147,6 +147,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                                 <Checkbox
                                   defaultChecked={completed}
                                   name={`item__${id}`}
+                                  note={note}
                                 >
                                   <div className="flex justify-between w-full">
                                     <span>{name}</span>
@@ -158,12 +159,6 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                                     )}
                                   </div>
                                 </Checkbox>
-
-                                {note && (
-                                  <p className="text-xs text-zinc-600 ml-1">
-                                    {note}
-                                  </p>
-                                )}
                               </li>
                             );
                           },

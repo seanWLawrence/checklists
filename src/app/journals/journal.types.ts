@@ -31,6 +31,9 @@ export const JournalBase = Codec.interface({
   createdAtLocal: CreatedAtLocal,
   energyLevel: optional(Level),
   moodLevel: optional(Level),
+  healthLevel: optional(Level),
+  creativityLevel: optional(Level),
+  relationshipsLevel: optional(Level),
 });
 
 export type JournalBase = GetType<typeof JournalBase>;
