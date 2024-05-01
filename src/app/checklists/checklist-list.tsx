@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 
 import { getAllChecklists } from "./checklist.model";
+import { Checklist } from "./checklist.types";
 
 export const ChecklistList: React.FC = async () => {
   const checklistsEither = await getAllChecklists().run();
@@ -26,26 +27,51 @@ export const ChecklistList: React.FC = async () => {
   }
 
   if (checklistsEither.isRight()) {
-    const checklists = checklistsEither
-      .extract()
-      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    const checklistsByFirstChar = Array.from(
+      checklistsEither
+        .extract()
+        .sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+        )
+        .reduce((acc, x) => {
+          const firstChar = x.name.trim().at(0)?.toLowerCase();
+
+          if (!firstChar) {
+            return acc;
+          }
+
+          const checklistsForFirstChar = acc.get(firstChar) ?? [];
+          checklistsForFirstChar.push(x);
+
+          acc.set(firstChar, checklistsForFirstChar);
+
+          return acc;
+        }, new Map<string, Checklist[]>())
+        .entries(),
+    );
 
     return (
       <section className="space-y-3">
         <Heading level={1}>Checklists</Heading>
 
-        <div className="flex flex-wrap">
-          {!checklists.length && (
-            <p className="text-sm text-zinc-700">No items.</p>
-          )}
+        {!checklistsByFirstChar.length && (
+          <p className="text-sm text-zinc-700">No items.</p>
+        )}
 
-          {checklists.map(({ id, name }) => {
+        <div className="space-y-1">
+          {checklistsByFirstChar.map(([firstChar, checklists]) => {
             return (
-              <Link href={`/checklists/${id}`} key={id}>
-                <Button variant="outline" className="mr-2 mb-2">
-                  {name}
-                </Button>
-              </Link>
+              <div className="flex flex-wrap" key={firstChar}>
+                {checklists.map(({ id, name }) => {
+                  return (
+                    <Link href={`/checklists/${id}`} key={id}>
+                      <Button variant="outline" className="mr-2 mb-2">
+                        {name}
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
