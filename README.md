@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Checklists and journals
 
-## Getting Started
+This is a personal application I wrote for things I use frequently.
 
-First, run the development server:
+## Checklists
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+These are lists that you can use as a TODO of sorts. But they shine when you
+use them for things you do regularly, like making a list of things that you
+pack for travel. You can just reset the list and complete things the next time
+you travel without having to create a new list.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+It also has some handy things like a note field and time estimate that counts
+for you. For example:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Do this, 15m
+- Do that, 15m
+- Do this other thing, 2h
+- Do that other thing, 1h
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Total 3.5h
 
-## Learn More
+There are also some actions like hiding completed, clearing items, clearing
+completed items, duplicating, etc. that make it useful for everyday usage.
 
-To learn more about Next.js, take a look at the following resources:
+Oh and you can do everything with your keyboard easily. Hitting enter when
+focused on a checklist item input creates a new item and focuses to it. And
+everything else is standard keyboard accessibility like Tab, etc.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Journals
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+I journal a lot of my phone and wanted to have bullet points without typing `-
+` or `* `, so each new line makes a new bullet point. There are also some
+number sliders to rate how well you each day for different things, like "mood
+level", "energy level", "relationships", etc. I may graph this data over time
+to see how well I do over time, we'll see!
 
-## Deploy on Vercel
+## Prerequisites
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Node.js
+- Docker
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Getting started
+
+> This section is a work in progress
+
+- Clone the repo
+- Install your dependencies with `npm install`
+- Create a Vercel project and free Vercel KV store
+- Pull your Vercel config using the Vercel CLI
+- Add an environment variable called `AUTH_SECRET` in your
+  `.env.development.local` file. This will be your password for logging in.
+  You'll also add this environment variable in the Vercel console. I recommend
+  using a different one for local development vs production.
+
+### Running the local dev server
+
+- In a terminal, start the dev server with `npm run dev`
+- In another terminal, start the local Redis server with `docker compose up`
+- Login with any username, and the value you set for `AUTH_SECRET` as your
+  password. All checklists and journals will be stored under this username.
+
+### Deploying
+
+- Connect your cloned repo to Vercel for auto-deployment and it'll auto deploy
+  when you push to the repo
+
+## Technology
+
+- Next.js/React
+- Vercel
+- Tailwind
+- Redis
+- Purify.ts
+- Docker (for local Redis server)
+
+## Tenets
+
+- Typesafe
+- Functional style using Purify TS. It makes things easy with Monads to handle
+  runtime validation and chaining async operations with nice error handling.
+- Simple architecture
+- Minimalistic UI
+
+## License
+
+MIT
