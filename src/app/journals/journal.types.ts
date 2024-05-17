@@ -2,6 +2,9 @@ import { Codec, string, GetType, intersect, optional } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 import { Metadata } from "@/lib/types";
 
+/**
+ * YYYY-MM-DD
+ */
 export type CreatedAtLocal =
   `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
 

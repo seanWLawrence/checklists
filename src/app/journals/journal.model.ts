@@ -263,7 +263,48 @@ export const updateJournalAction = async (
 
     if (dateChanged) {
       const user = await liftEither(userEither);
-      await fromPromise(deleteAll([getJournalKey({ user, createdAtLocal })]));
+
+      await fromPromise(
+        deleteAll([
+          getJournalKey({ user, createdAtLocal: existingCreatedAtLocal }),
+        ]),
+      );
+
+      return fromPromise(
+        create({
+          key: (item) => getJournalKey({ createdAtLocal, user: item.user }),
+          decoder: Journal,
+          item: {
+            ...metadata,
+            createdAtLocal,
+            content,
+            energyLevel,
+            moodLevel,
+            healthLevel,
+            creativityLevel,
+            relationshipsLevel,
+          },
+        })
+          .ifRight((x) => {
+            const dateId = x.createdAtLocal;
+            logger.info(`Successfully updated journal with date '${dateId}'`);
+            revalidatePath("/journals");
+            revalidatePath(`/journals/${dateId}`);
+            revalidatePath(`/journals/${dateId}/edit`);
+          })
+          .ifLeft(async (e) => {
+            const createdAtLocal = await liftEither(
+              getStringFromFormData({ name: "createdAtLocal", formData }).chain(
+                CreatedAtLocal.decode,
+              ),
+            );
+
+            logger.error(
+              `Failed to update journal with date '${createdAtLocal}')`,
+            );
+            logger.error(e);
+          }),
+      );
     }
 
     return fromPromise(
