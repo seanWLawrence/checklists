@@ -10,7 +10,7 @@ import {
 } from "../checklist.model";
 import { cn } from "@/lib/utils";
 import { Maybe } from "purify-ts/Maybe";
-import React, { useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 const unitToMinutes = { h: 60, m: 1 };
 
@@ -80,6 +80,12 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   });
 
   const formRef = useRef<HTMLFormElement | null>(null);
+  const [showCompleted, setShowCompleted] = useState<boolean>(false);
+
+  const toggleShowCompleted = useCallback(
+    () => setShowCompleted((prev) => !prev),
+    [],
+  );
 
   return (
     <div className="space-y-4 max-w-prose">
@@ -142,25 +148,32 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                       <ul className="space-y-4">
                         {items.map(
                           ({ id, name, completed, note, timeEstimate }) => {
-                            return (
-                              <li key={id} className="flex flex-col space-y-.5">
-                                <Checkbox
-                                  defaultChecked={completed}
-                                  name={`item__${id}`}
-                                  note={note}
+                            if (showCompleted || !completed) {
+                              return (
+                                <li
+                                  key={id}
+                                  className="flex flex-col space-y-.5"
                                 >
-                                  <div className="flex justify-between w-full">
-                                    <span>{name}</span>
+                                  <Checkbox
+                                    defaultChecked={completed}
+                                    name={`item__${id}`}
+                                    note={note}
+                                  >
+                                    <div className="flex justify-between w-full">
+                                      <span>{name}</span>
 
-                                    {timeEstimate && (
-                                      <TimeEstimateBadge
-                                        timeEstimates={[timeEstimate]}
-                                      />
-                                    )}
-                                  </div>
-                                </Checkbox>
-                              </li>
-                            );
+                                      {timeEstimate && (
+                                        <TimeEstimateBadge
+                                          timeEstimates={[timeEstimate]}
+                                        />
+                                      )}
+                                    </div>
+                                  </Checkbox>
+                                </li>
+                              );
+                            }
+
+                            return null;
                           },
                         )}
                       </ul>
@@ -181,20 +194,30 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           })}
         >
           {hasCompletedItems && (
-            <form
-              action={async () => {
-                Maybe.fromNullable(formRef.current).ifJust(async (x) => {
-                  const formData = new FormData(x);
-                  await markItemsIncompleteAction(formData);
+            <div className="flex space-x-2">
+              <form
+                action={async () => {
+                  Maybe.fromNullable(formRef.current).ifJust(async (x) => {
+                    const formData = new FormData(x);
+                    await markItemsIncompleteAction(formData);
 
-                  window.location.reload();
-                });
-              }}
-            >
-              <Button type="submit" variant="outline">
-                Mark all incomplete
+                    window.location.reload();
+                  });
+                }}
+              >
+                <Button type="submit" variant="outline">
+                  Mark all incomplete
+                </Button>
+              </form>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={toggleShowCompleted}
+              >
+                {showCompleted ? "Hide completed" : "Show completed"}
               </Button>
-            </form>
+            </div>
           )}
 
           <form
