@@ -3,7 +3,11 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
-import { Checklist, ChecklistItemTimeEstimate } from "../checklist.types";
+import {
+  Checklist,
+  ChecklistItem,
+  ChecklistItemTimeEstimate,
+} from "../checklist.types";
 import {
   markItemsIncompleteAction,
   updateChecklistItemsAction,
@@ -11,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
+import { checklist } from "@/factories/checklist.factory";
 
 const unitToMinutes = { h: 60, m: 1 };
 
@@ -72,6 +77,20 @@ const TimeEstimateBadge: React.FC<{
   );
 };
 
+const filterCompletedItemsIfHidden = ({
+  items,
+  showCompleted,
+}: {
+  showCompleted: boolean;
+  items: ChecklistItem[];
+}): ChecklistItem[] => {
+  if (!showCompleted) {
+    return items.filter((x) => !x.completed);
+  }
+
+  return items;
+};
+
 export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   checklist,
 }) => {
@@ -122,6 +141,11 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           />
 
           {checklist.sections.map(({ id, name, items }) => {
+            const filteredItems = filterCompletedItemsIfHidden({
+              showCompleted,
+              items,
+            });
+
             return (
               <div key={id}>
                 <fieldset className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
@@ -143,37 +167,30 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                     </div>
                   </Heading>
 
-                  {items.length ? (
+                  {filteredItems.length ? (
                     <div>
                       <ul className="space-y-4">
-                        {items.map(
+                        {filteredItems.map(
                           ({ id, name, completed, note, timeEstimate }) => {
-                            if (showCompleted || !completed) {
-                              return (
-                                <li
-                                  key={id}
-                                  className="flex flex-col space-y-.5"
+                            return (
+                              <li key={id} className="flex flex-col space-y-.5">
+                                <Checkbox
+                                  defaultChecked={completed}
+                                  name={`item__${id}`}
+                                  note={note}
                                 >
-                                  <Checkbox
-                                    defaultChecked={completed}
-                                    name={`item__${id}`}
-                                    note={note}
-                                  >
-                                    <div className="flex justify-between w-full">
-                                      <span>{name}</span>
+                                  <div className="flex justify-between w-full">
+                                    <span>{name}</span>
 
-                                      {timeEstimate && (
-                                        <TimeEstimateBadge
-                                          timeEstimates={[timeEstimate]}
-                                        />
-                                      )}
-                                    </div>
-                                  </Checkbox>
-                                </li>
-                              );
-                            }
-
-                            return null;
+                                    {timeEstimate && (
+                                      <TimeEstimateBadge
+                                        timeEstimates={[timeEstimate]}
+                                      />
+                                    )}
+                                  </div>
+                                </Checkbox>
+                              </li>
+                            );
                           },
                         )}
                       </ul>
