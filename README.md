@@ -75,11 +75,16 @@ to see how well I do over time, we'll see!
 
 ## Tenets
 
-- Typesafe
-- Functional style using Purify TS. It makes things easy with Monads to handle
-  runtime validation and chaining async operations with nice error handling.
-- Simple architecture
-- Minimalistic UI
+- Typesafe: Makes it much easier to code in
+- Private: I didn't want to share my inner most journal entries and thoughts on
+  a public app that any engineer could read if they wanted to
+- Access to my data: In the same vein as privacy, I want to be able to download
+  all of my data anytime I want
+- Functional style: It makes things easy with Monads to handle runtime
+  validation and chaining async operations with nice error handling.
+- Simple architecture: Vercel and Redis. No infrastructure as code needed for
+  an app this simple.
+- Minimalistic UI: Nothing fancy, just easy to use and works great on mobile.
 
 ## License
 
