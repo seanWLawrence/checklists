@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
-import { checklist } from "@/factories/checklist.factory";
+import { MenuButton } from "@/components/menu-button";
 
 const unitToMinutes = { h: 60, m: 1 };
 
@@ -109,7 +109,40 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   return (
     <div className="space-y-4 max-w-prose">
       <div className="flex items-center space-x-2">
-        <Heading level={1}>{checklist.name}</Heading>
+        <Heading level={1} className="flex space-x-1 items-center">
+          {checklist.name}
+
+          {hasCompletedItems && (
+            <MenuButton
+              menu={
+                <div className="flex flex-col space-y-2">
+                  <form
+                    action={async () => {
+                      Maybe.fromNullable(formRef.current).ifJust(async (x) => {
+                        const formData = new FormData(x);
+                        await markItemsIncompleteAction(formData);
+
+                        window.location.reload();
+                      });
+                    }}
+                  >
+                    <Button type="submit" variant="outline">
+                      Reset completed
+                    </Button>
+                  </form>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={toggleShowCompleted}
+                  >
+                    {showCompleted ? "Hide completed" : "Show completed"}
+                  </Button>
+                </div>
+              }
+            ></MenuButton>
+          )}
+        </Heading>
 
         <TimeEstimateBadge
           timeEstimates={checklist.sections.reduce((acc, x) => {
@@ -167,35 +200,50 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                     </div>
                   </Heading>
 
-                  {filteredItems.length ? (
-                    <div>
-                      <ul className="space-y-4">
-                        {filteredItems.map(
-                          ({ id, name, completed, note, timeEstimate }) => {
+                  <div>
+                    <ul className="space-y-4">
+                      {items.map(
+                        ({ id, name, completed, note, timeEstimate }) => {
+                          // Hidden so they won't appear, but will get submitted
+                          if (completed && !showCompleted) {
                             return (
-                              <li key={id} className="flex flex-col space-y-.5">
+                              <div className="hidden" key={id}>
                                 <Checkbox
                                   defaultChecked={completed}
                                   name={`item__${id}`}
                                   note={note}
                                 >
-                                  <div className="flex justify-between w-full">
-                                    <span>{name}</span>
-
-                                    {timeEstimate && (
-                                      <TimeEstimateBadge
-                                        timeEstimates={[timeEstimate]}
-                                      />
-                                    )}
-                                  </div>
+                                  {"This is hidden"}
                                 </Checkbox>
-                              </li>
+                              </div>
                             );
-                          },
-                        )}
-                      </ul>
-                    </div>
-                  ) : (
+                          }
+
+                          return (
+                            <li key={id} className="flex flex-col space-y-.5">
+                              <Checkbox
+                                defaultChecked={completed}
+                                name={`item__${id}`}
+                                note={note}
+                              >
+                                <div className="flex justify-between w-full">
+                                  <span>{name}</span>
+
+                                  {timeEstimate && (
+                                    <TimeEstimateBadge
+                                      timeEstimates={[timeEstimate]}
+                                    />
+                                  )}
+                                </div>
+                              </Checkbox>
+                            </li>
+                          );
+                        },
+                      )}
+                    </ul>
+                  </div>
+
+                  {filteredItems.length === 0 && (
                     <p className="text-xs text-zinc-700">(No items)</p>
                   )}
                 </fieldset>
@@ -204,39 +252,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           })}
         </form>
 
-        <div
-          className={cn("flex", {
-            "justify-between": hasCompletedItems,
-            "justify-end": !hasCompletedItems,
-          })}
-        >
-          {hasCompletedItems && (
-            <div className="flex space-x-2">
-              <form
-                action={async () => {
-                  Maybe.fromNullable(formRef.current).ifJust(async (x) => {
-                    const formData = new FormData(x);
-                    await markItemsIncompleteAction(formData);
-
-                    window.location.reload();
-                  });
-                }}
-              >
-                <Button type="submit" variant="outline">
-                  Mark all incomplete
-                </Button>
-              </form>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={toggleShowCompleted}
-              >
-                {showCompleted ? "Hide completed" : "Show completed"}
-              </Button>
-            </div>
-          )}
-
+        <div className="justify-end flex">
           <form
             action={() => {
               Maybe.fromNullable(formRef.current).ifJust(async (x) => {

@@ -1,14 +1,5 @@
 import { type UUID as IUUID } from "crypto";
-import {
-  Codec,
-  GetType,
-  array,
-  boolean,
-  date,
-  intersect,
-  optional,
-  string,
-} from "purify-ts/Codec";
+import { Codec, GetType, date, string } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 
 const UUID_REG_EXP =

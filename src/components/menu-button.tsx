@@ -5,7 +5,6 @@ import { Spinner } from "./spinner";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { MenuButtonIcon } from "./icons/menu-button-icon";
 import { Button } from "./button";
-import { Maybe } from "purify-ts/Maybe";
 
 export const MenuButton: React.FC<
   {
@@ -47,19 +46,21 @@ export const MenuButton: React.FC<
         }}
         type="button"
       >
-        <MenuButtonIcon />
+        <span className="flex space-x-1">
+          <MenuButtonIcon />
 
-        {children && <span>{children}</span>}
+          {children && <span>{children}</span>}
 
-        {pending && (
-          <Spinner
-            className={cn("animate-in fade-in duration-1000", {
-              "text-zinc-900": variant === "outline",
-              "text-zinc-200": variant === "ghost",
-              "text-zinc-50": variant === "primary",
-            })}
-          />
-        )}
+          {pending && (
+            <Spinner
+              className={cn("animate-in fade-in duration-1000", {
+                "text-zinc-900": variant === "outline",
+                "text-zinc-200": variant === "ghost",
+                "text-zinc-50": variant === "primary",
+              })}
+            />
+          )}
+        </span>
       </Button>
 
       <div
