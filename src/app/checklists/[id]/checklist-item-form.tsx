@@ -12,7 +12,6 @@ import {
   markItemsIncompleteAction,
   updateChecklistItemsAction,
 } from "../checklist.model";
-import { cn } from "@/lib/utils";
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
@@ -109,13 +108,13 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
   return (
     <div className="space-y-4 max-w-prose">
       <div className="flex items-center space-x-2">
-        <Heading level={1} className="flex space-x-1 items-center">
-          {checklist.name}
+        <div className="flex space-x-1 items-center">
+          <Heading level={1}>{checklist.name}</Heading>
 
           {hasCompletedItems && (
             <MenuButton
               menu={
-                <div className="flex flex-col space-y-2">
+                <div className="flex flex-col space-y-2 text-normal">
                   <form
                     action={async () => {
                       Maybe.fromNullable(formRef.current).ifJust(async (x) => {
@@ -142,7 +141,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
               }
             ></MenuButton>
           )}
-        </Heading>
+        </div>
 
         <TimeEstimateBadge
           timeEstimates={checklist.sections.reduce((acc, x) => {
