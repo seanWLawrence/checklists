@@ -14,7 +14,13 @@ import {
   update,
   validateLoggedIn,
 } from "@/lib/db.model";
-import { JournalBase, Journal, CreatedAtLocal, Level } from "./journal.types";
+import {
+  JournalBase,
+  Journal,
+  CreatedAtLocal,
+  Level,
+  JournalLevels,
+} from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
 
@@ -400,4 +406,252 @@ export const deleteJournalAction = async (
   }
 
   return response.toJSON();
+};
+
+/**
+ * Analytics
+ */
+export type JournalLevelsRadarChartDataType = {
+  name: string;
+  average: number;
+  median: number;
+  eightiethPercentile: number;
+  twentiethPercentile: number;
+  levelType: keyof JournalLevels;
+  fullMark: number;
+};
+export type JournalLevelsRadarChartData = JournalLevelsRadarChartDataType[];
+
+interface JournalLevelTypeAndValueCount {
+  total: number;
+  levels: number[];
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+}
+
+const toTenthsDecimal = (num: number): number => Number(num.toFixed(2));
+
+const average = ({ total, num }: { total: number; num: number }): number =>
+  toTenthsDecimal(num / total);
+
+const median = (levels: JournalLevelTypeAndValueCount["levels"]): number => {
+  const medianIndex = Math.floor(levels.length / 2);
+
+  return [...levels.sort()][medianIndex];
+};
+
+const percentile = ({
+  percentile,
+  totals,
+}: {
+  percentile: number;
+  totals: JournalLevelTypeAndValueCount;
+}) => {
+  const sortedNums = [...totals.levels.sort()];
+
+  const rank = percentile * (sortedNums.length - 1);
+  const lowerIndex = Math.floor(rank);
+  const upperIndex = Math.ceil(rank);
+
+  if (lowerIndex === upperIndex) {
+    return sortedNums[lowerIndex];
+  } else {
+    const lowerValue = sortedNums[lowerIndex];
+    const upperValue = sortedNums[upperIndex];
+    return toTenthsDecimal(
+      lowerValue + (upperValue - lowerValue) * (rank - lowerIndex),
+    );
+  }
+};
+
+// Max level
+const fullMark = 5;
+
+export const getJournalLevelsRadarChartData = (): EitherAsync<
+  unknown,
+  JournalLevelsRadarChartData
+> => {
+  const userEither = validateLoggedIn();
+
+  return EitherAsync(async ({ fromPromise, liftEither }) => {
+    const user = await liftEither(userEither);
+
+    const { keys: validatedKeys } = await fromPromise(
+      getAllItemsKeys({
+        existingKeys: [],
+        scanKey: getAllJournalsScanKey({ user }),
+      }),
+    );
+
+    const totalLevelsByTypeAndValue: Record<
+      keyof JournalLevels,
+      JournalLevelTypeAndValueCount
+    > = {
+      energyLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      moodLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      healthLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      creativityLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      relationshipsLevel: {
+        total: 0,
+        levels: [],
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+      },
+    };
+
+    const levels = await fromPromise(
+      getAllObjectsFromKeys({ keys: validatedKeys, decoder: JournalLevels }),
+    );
+
+    for (const {
+      creativityLevel,
+      energyLevel,
+      moodLevel,
+      healthLevel,
+      relationshipsLevel,
+    } of levels) {
+      if (energyLevel) {
+        const num = Number(energyLevel);
+        totalLevelsByTypeAndValue.energyLevel.total += num;
+        totalLevelsByTypeAndValue.energyLevel[energyLevel] += 1;
+        totalLevelsByTypeAndValue.energyLevel.levels.push(num);
+      }
+      if (moodLevel) {
+        const num = Number(moodLevel);
+        totalLevelsByTypeAndValue.moodLevel.total += num;
+        totalLevelsByTypeAndValue.moodLevel[moodLevel] += 1;
+        totalLevelsByTypeAndValue.moodLevel.levels.push(num);
+      }
+
+      if (healthLevel) {
+        const num = Number(healthLevel);
+        totalLevelsByTypeAndValue.healthLevel.total += num;
+        totalLevelsByTypeAndValue.healthLevel[healthLevel] += 1;
+        totalLevelsByTypeAndValue.healthLevel.levels.push(num);
+      }
+
+      if (creativityLevel) {
+        const num = Number(creativityLevel);
+        totalLevelsByTypeAndValue.creativityLevel.total += num;
+        totalLevelsByTypeAndValue.creativityLevel[creativityLevel] += 1;
+        totalLevelsByTypeAndValue.creativityLevel.levels.push(num);
+      }
+
+      if (relationshipsLevel) {
+        const num = Number(relationshipsLevel);
+        totalLevelsByTypeAndValue.relationshipsLevel.total += num;
+        totalLevelsByTypeAndValue.relationshipsLevel[relationshipsLevel] += 1;
+        totalLevelsByTypeAndValue.relationshipsLevel.levels.push(num);
+      }
+    }
+
+    const total = levels.length;
+
+    return [
+      {
+        name: "Energy",
+        levelType: "energyLevel" as const,
+        average: average({
+          total,
+          num: totalLevelsByTypeAndValue.energyLevel.total,
+        }),
+        median: median(totalLevelsByTypeAndValue.energyLevel.levels),
+        eightiethPercentile: percentile({
+          percentile: 0.8,
+          totals: totalLevelsByTypeAndValue.energyLevel,
+        }),
+        twentiethPercentile: percentile({
+          percentile: 0.2,
+          totals: totalLevelsByTypeAndValue.energyLevel,
+        }),
+        fullMark,
+      },
+      {
+        name: "Mood",
+        levelType: "moodLevel" as const,
+        average: average({
+          total,
+          num: totalLevelsByTypeAndValue.moodLevel.total,
+        }),
+        median: median(totalLevelsByTypeAndValue.moodLevel.levels),
+        eightiethPercentile: percentile({
+          percentile: 0.8,
+          totals: totalLevelsByTypeAndValue.moodLevel,
+        }),
+        twentiethPercentile: percentile({
+          percentile: 0.2,
+          totals: totalLevelsByTypeAndValue.moodLevel,
+        }),
+        fullMark,
+      },
+      {
+        name: "Health",
+        levelType: "healthLevel" as const,
+        average: average({
+          total,
+          num: totalLevelsByTypeAndValue.healthLevel.total,
+        }),
+        median: median(totalLevelsByTypeAndValue.healthLevel.levels),
+        eightiethPercentile: percentile({
+          percentile: 0.8,
+          totals: totalLevelsByTypeAndValue.healthLevel,
+        }),
+        twentiethPercentile: percentile({
+          percentile: 0.2,
+          totals: totalLevelsByTypeAndValue.healthLevel,
+        }),
+        fullMark,
+      },
+      {
+        name: "Creativity",
+        levelType: "creativityLevel" as const,
+        average: average({
+          total,
+          num: totalLevelsByTypeAndValue.creativityLevel.total,
+        }),
+        median: median(totalLevelsByTypeAndValue.creativityLevel.levels),
+        eightiethPercentile: percentile({
+          percentile: 0.8,
+          totals: totalLevelsByTypeAndValue.creativityLevel,
+        }),
+        twentiethPercentile: percentile({
+          percentile: 0.2,
+          totals: totalLevelsByTypeAndValue.creativityLevel,
+        }),
+        fullMark,
+      },
+      {
+        name: "Relationships",
+        levelType: "relationshipsLevel" as const,
+        average: average({
+          total,
+          num: totalLevelsByTypeAndValue.relationshipsLevel.total,
+        }),
+        median: median(totalLevelsByTypeAndValue.relationshipsLevel.levels),
+        eightiethPercentile: percentile({
+          percentile: 0.8,
+          totals: totalLevelsByTypeAndValue.relationshipsLevel,
+        }),
+        twentiethPercentile: percentile({
+          percentile: 0.2,
+          totals: totalLevelsByTypeAndValue.relationshipsLevel,
+        }),
+        fullMark,
+      },
+    ];
+  })
+    .ifRight(() => {
+      logger.info(`Successfully loaded all journal levels`);
+      revalidatePath("/journals/data-analytics");
+    })
+    .ifLeft((e) => {
+      logger.error(`Failed to load all journal levels`);
+      logger.error(e);
+    });
 };

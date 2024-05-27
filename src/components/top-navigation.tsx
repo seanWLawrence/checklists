@@ -41,6 +41,12 @@ export const TopNavigation: React.FC<{}> = async () => {
                 </Button>
               </Link>
 
+              <Link href="/journals/analytics">
+                <Button variant="ghost" type="button">
+                  Journal analytics
+                </Button>
+              </Link>
+
               <form action={logout}>
                 <Button variant="ghost">Sign out</Button>
               </form>
