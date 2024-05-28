@@ -100,7 +100,7 @@ const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
   return (
-    <PieChartBase width={600} height={400}>
+    <PieChartBase width={600} height={300}>
       <Pie
         data={data}
         dataKey="count"
@@ -119,6 +119,16 @@ const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
 };
 
 const PieCharts: React.FC<{ data: PieChartData }> = ({ data }) => {
+  const [isClient, setIsClient] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   return (
     <div className="flex space-x-2 flex-wrap space-y-2">
       {data.map((d) => {
