@@ -420,9 +420,13 @@ export type JournalLevelsRadarChartDataType = {
   levelType: keyof JournalLevels;
   fullMark: number;
 };
-export type JournalLevelsRadarChartData = JournalLevelsRadarChartDataType[];
+export type RadarChartData = JournalLevelsRadarChartDataType[];
 
 interface JournalLevelTypeAndValueCount {
+  name: string;
+  /**
+   * @example Energy
+   */
   total: number;
   levels: number[];
   1: number;
@@ -467,12 +471,253 @@ const percentile = ({
   }
 };
 
-// Max level
-const fullMark = 5;
+// Max level, this is what it's called in the Recharts
+const maxLevel = 5;
+
+type TotalLevelsByTypeAndValue = Record<
+  keyof JournalLevels,
+  JournalLevelTypeAndValueCount
+>;
+
+const getTotalLevelsByTypeAndValue = (
+  levels: JournalLevels[],
+): TotalLevelsByTypeAndValue => {
+  const result: TotalLevelsByTypeAndValue = {
+    energyLevel: {
+      name: "Energy",
+      total: 0,
+      levels: [],
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    },
+    moodLevel: {
+      name: "Mood",
+      total: 0,
+      levels: [],
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    },
+    healthLevel: {
+      name: "Health",
+      total: 0,
+      levels: [],
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    },
+    creativityLevel: {
+      name: "Creativity",
+      total: 0,
+      levels: [],
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    },
+    relationshipsLevel: {
+      name: "Relationships",
+      total: 0,
+      levels: [],
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    },
+  };
+
+  for (const {
+    creativityLevel,
+    energyLevel,
+    moodLevel,
+    healthLevel,
+    relationshipsLevel,
+  } of levels) {
+    if (energyLevel) {
+      const num = Number(energyLevel);
+      result.energyLevel.total += num;
+      result.energyLevel[energyLevel] += 1;
+      result.energyLevel.levels.push(num);
+    }
+    if (moodLevel) {
+      const num = Number(moodLevel);
+      result.moodLevel.total += num;
+      result.moodLevel[moodLevel] += 1;
+      result.moodLevel.levels.push(num);
+    }
+
+    if (healthLevel) {
+      const num = Number(healthLevel);
+      result.healthLevel.total += num;
+      result.healthLevel[healthLevel] += 1;
+      result.healthLevel.levels.push(num);
+    }
+
+    if (creativityLevel) {
+      const num = Number(creativityLevel);
+      result.creativityLevel.total += num;
+      result.creativityLevel[creativityLevel] += 1;
+      result.creativityLevel.levels.push(num);
+    }
+
+    if (relationshipsLevel) {
+      const num = Number(relationshipsLevel);
+      result.relationshipsLevel.total += num;
+      result.relationshipsLevel[relationshipsLevel] += 1;
+      result.relationshipsLevel.levels.push(num);
+    }
+  }
+
+  return result;
+};
+
+export type PieChartData = {
+  level: "1" | "2" | "3" | "4" | "5";
+  /**
+   * @example "Energy (Level 1)"
+   */
+  name: string;
+  count: number;
+}[][];
+
+const pieChartData = (levels: JournalLevels[]): PieChartData => {
+  const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
+    getTotalLevelsByTypeAndValue(levels);
+
+  const result: PieChartData = [];
+
+  for (const level of Object.values(totalLevelsByTypeAndValue)) {
+    const levelData: PieChartData[0] = [];
+
+    for (let i = 1; i <= maxLevel; i++) {
+      levelData.push({
+        name: level.name,
+        level: i.toString() as PieChartData[0][0]["level"],
+        count: level[i.toString() as PieChartData[0][0]["level"]],
+      });
+    }
+
+    result.push(levelData);
+  }
+
+  return result;
+};
+
+const radarChartData = (levels: JournalLevels[]): RadarChartData => {
+  const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
+    getTotalLevelsByTypeAndValue(levels);
+
+  const total = levels.length;
+
+  return [
+    {
+      name: "Energy",
+      levelType: "energyLevel" as const,
+      average: average({
+        total,
+        num: totalLevelsByTypeAndValue.energyLevel.total,
+      }),
+      median: median(totalLevelsByTypeAndValue.energyLevel.levels),
+      eightiethPercentile: percentile({
+        percentile: 0.8,
+        totals: totalLevelsByTypeAndValue.energyLevel,
+      }),
+      twentiethPercentile: percentile({
+        percentile: 0.2,
+        totals: totalLevelsByTypeAndValue.energyLevel,
+      }),
+      fullMark: maxLevel,
+    },
+    {
+      name: "Mood",
+      levelType: "moodLevel" as const,
+      average: average({
+        total,
+        num: totalLevelsByTypeAndValue.moodLevel.total,
+      }),
+      median: median(totalLevelsByTypeAndValue.moodLevel.levels),
+      eightiethPercentile: percentile({
+        percentile: 0.8,
+        totals: totalLevelsByTypeAndValue.moodLevel,
+      }),
+      twentiethPercentile: percentile({
+        percentile: 0.2,
+        totals: totalLevelsByTypeAndValue.moodLevel,
+      }),
+      fullMark: maxLevel,
+    },
+    {
+      name: "Health",
+      levelType: "healthLevel" as const,
+      average: average({
+        total,
+        num: totalLevelsByTypeAndValue.healthLevel.total,
+      }),
+      median: median(totalLevelsByTypeAndValue.healthLevel.levels),
+      eightiethPercentile: percentile({
+        percentile: 0.8,
+        totals: totalLevelsByTypeAndValue.healthLevel,
+      }),
+      twentiethPercentile: percentile({
+        percentile: 0.2,
+        totals: totalLevelsByTypeAndValue.healthLevel,
+      }),
+      fullMark: maxLevel,
+    },
+    {
+      name: "Creativity",
+      levelType: "creativityLevel" as const,
+      average: average({
+        total,
+        num: totalLevelsByTypeAndValue.creativityLevel.total,
+      }),
+      median: median(totalLevelsByTypeAndValue.creativityLevel.levels),
+      eightiethPercentile: percentile({
+        percentile: 0.8,
+        totals: totalLevelsByTypeAndValue.creativityLevel,
+      }),
+      twentiethPercentile: percentile({
+        percentile: 0.2,
+        totals: totalLevelsByTypeAndValue.creativityLevel,
+      }),
+      fullMark: maxLevel,
+    },
+    {
+      name: "Relationships",
+      levelType: "relationshipsLevel" as const,
+      average: average({
+        total,
+        num: totalLevelsByTypeAndValue.relationshipsLevel.total,
+      }),
+      median: median(totalLevelsByTypeAndValue.relationshipsLevel.levels),
+      eightiethPercentile: percentile({
+        percentile: 0.8,
+        totals: totalLevelsByTypeAndValue.relationshipsLevel,
+      }),
+      twentiethPercentile: percentile({
+        percentile: 0.2,
+        totals: totalLevelsByTypeAndValue.relationshipsLevel,
+      }),
+      fullMark: maxLevel,
+    },
+  ];
+};
 
 export const getJournalLevelsRadarChartData = (): EitherAsync<
   unknown,
-  JournalLevelsRadarChartData
+  {
+    radar: RadarChartData;
+    pie: PieChartData;
+  }
 > => {
   const userEither = validateLoggedIn();
 
@@ -486,165 +731,11 @@ export const getJournalLevelsRadarChartData = (): EitherAsync<
       }),
     );
 
-    const totalLevelsByTypeAndValue: Record<
-      keyof JournalLevels,
-      JournalLevelTypeAndValueCount
-    > = {
-      energyLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      moodLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      healthLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      creativityLevel: { total: 0, levels: [], 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      relationshipsLevel: {
-        total: 0,
-        levels: [],
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-      },
-    };
-
     const levels = await fromPromise(
       getAllObjectsFromKeys({ keys: validatedKeys, decoder: JournalLevels }),
     );
 
-    for (const {
-      creativityLevel,
-      energyLevel,
-      moodLevel,
-      healthLevel,
-      relationshipsLevel,
-    } of levels) {
-      if (energyLevel) {
-        const num = Number(energyLevel);
-        totalLevelsByTypeAndValue.energyLevel.total += num;
-        totalLevelsByTypeAndValue.energyLevel[energyLevel] += 1;
-        totalLevelsByTypeAndValue.energyLevel.levels.push(num);
-      }
-      if (moodLevel) {
-        const num = Number(moodLevel);
-        totalLevelsByTypeAndValue.moodLevel.total += num;
-        totalLevelsByTypeAndValue.moodLevel[moodLevel] += 1;
-        totalLevelsByTypeAndValue.moodLevel.levels.push(num);
-      }
-
-      if (healthLevel) {
-        const num = Number(healthLevel);
-        totalLevelsByTypeAndValue.healthLevel.total += num;
-        totalLevelsByTypeAndValue.healthLevel[healthLevel] += 1;
-        totalLevelsByTypeAndValue.healthLevel.levels.push(num);
-      }
-
-      if (creativityLevel) {
-        const num = Number(creativityLevel);
-        totalLevelsByTypeAndValue.creativityLevel.total += num;
-        totalLevelsByTypeAndValue.creativityLevel[creativityLevel] += 1;
-        totalLevelsByTypeAndValue.creativityLevel.levels.push(num);
-      }
-
-      if (relationshipsLevel) {
-        const num = Number(relationshipsLevel);
-        totalLevelsByTypeAndValue.relationshipsLevel.total += num;
-        totalLevelsByTypeAndValue.relationshipsLevel[relationshipsLevel] += 1;
-        totalLevelsByTypeAndValue.relationshipsLevel.levels.push(num);
-      }
-    }
-
-    const total = levels.length;
-
-    return [
-      {
-        name: "Energy",
-        levelType: "energyLevel" as const,
-        average: average({
-          total,
-          num: totalLevelsByTypeAndValue.energyLevel.total,
-        }),
-        median: median(totalLevelsByTypeAndValue.energyLevel.levels),
-        eightiethPercentile: percentile({
-          percentile: 0.8,
-          totals: totalLevelsByTypeAndValue.energyLevel,
-        }),
-        twentiethPercentile: percentile({
-          percentile: 0.2,
-          totals: totalLevelsByTypeAndValue.energyLevel,
-        }),
-        fullMark,
-      },
-      {
-        name: "Mood",
-        levelType: "moodLevel" as const,
-        average: average({
-          total,
-          num: totalLevelsByTypeAndValue.moodLevel.total,
-        }),
-        median: median(totalLevelsByTypeAndValue.moodLevel.levels),
-        eightiethPercentile: percentile({
-          percentile: 0.8,
-          totals: totalLevelsByTypeAndValue.moodLevel,
-        }),
-        twentiethPercentile: percentile({
-          percentile: 0.2,
-          totals: totalLevelsByTypeAndValue.moodLevel,
-        }),
-        fullMark,
-      },
-      {
-        name: "Health",
-        levelType: "healthLevel" as const,
-        average: average({
-          total,
-          num: totalLevelsByTypeAndValue.healthLevel.total,
-        }),
-        median: median(totalLevelsByTypeAndValue.healthLevel.levels),
-        eightiethPercentile: percentile({
-          percentile: 0.8,
-          totals: totalLevelsByTypeAndValue.healthLevel,
-        }),
-        twentiethPercentile: percentile({
-          percentile: 0.2,
-          totals: totalLevelsByTypeAndValue.healthLevel,
-        }),
-        fullMark,
-      },
-      {
-        name: "Creativity",
-        levelType: "creativityLevel" as const,
-        average: average({
-          total,
-          num: totalLevelsByTypeAndValue.creativityLevel.total,
-        }),
-        median: median(totalLevelsByTypeAndValue.creativityLevel.levels),
-        eightiethPercentile: percentile({
-          percentile: 0.8,
-          totals: totalLevelsByTypeAndValue.creativityLevel,
-        }),
-        twentiethPercentile: percentile({
-          percentile: 0.2,
-          totals: totalLevelsByTypeAndValue.creativityLevel,
-        }),
-        fullMark,
-      },
-      {
-        name: "Relationships",
-        levelType: "relationshipsLevel" as const,
-        average: average({
-          total,
-          num: totalLevelsByTypeAndValue.relationshipsLevel.total,
-        }),
-        median: median(totalLevelsByTypeAndValue.relationshipsLevel.levels),
-        eightiethPercentile: percentile({
-          percentile: 0.8,
-          totals: totalLevelsByTypeAndValue.relationshipsLevel,
-        }),
-        twentiethPercentile: percentile({
-          percentile: 0.2,
-          totals: totalLevelsByTypeAndValue.relationshipsLevel,
-        }),
-        fullMark,
-      },
-    ];
+    return { radar: radarChartData(levels), pie: pieChartData(levels) };
   })
     .ifRight(() => {
       logger.info(`Successfully loaded all journal levels`);
