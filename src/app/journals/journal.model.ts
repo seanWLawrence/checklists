@@ -692,7 +692,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
       fullMark: maxLevel,
     },
     {
-      name: "Relationships",
+      name: "Relation",
       levelType: "relationshipsLevel" as const,
       average: average({
         total,

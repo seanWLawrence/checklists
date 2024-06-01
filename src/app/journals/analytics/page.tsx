@@ -19,9 +19,11 @@ const AnalyticsPage: React.FC = async () => {
         <div className="space-y-2 text-center flex flex-col items-center">
           <Heading level={2}>Levels</Heading>
 
-          <RadarChart data={radar} />
+          <div className="space-y-8">
+            <RadarChart data={radar} />
 
-          <PieCharts data={pie} />
+            <PieCharts data={pie} />
+          </div>
         </div>
       </section>
     );
