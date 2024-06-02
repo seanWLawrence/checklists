@@ -1,5 +1,5 @@
 import { Either } from "purify-ts/Either";
-import { CreatedAtLocal, Journal } from "./journal.types";
+import { CreatedAtLocal } from "./journal.types";
 import { NonEmptyList } from "purify-ts/NonEmptyList";
 
 export const months = [
@@ -43,30 +43,32 @@ export const prettyDate = (
     .orDefault(createdAtLocal);
 };
 
-interface JournalGroup {
-  [year: number]: Record<number /* month */, Journal[]>;
+interface CreatedAtLocalGroup {
+  [year: number]: Record<number /* month */, CreatedAtLocal[]>;
 }
 
-export const groupJournals = (journals: Journal[]): JournalGroup => {
-  const result: JournalGroup = {};
+export const groupCreatedAtLocals = (
+  createdAtLocals: CreatedAtLocal[],
+): CreatedAtLocalGroup => {
+  const result: CreatedAtLocalGroup = {};
 
-  for (const journal of journals) {
-    const dateInfo = getDateInfo(journal.createdAtLocal);
+  for (const createdAtLocal of createdAtLocals) {
+    const dateInfo = getDateInfo(createdAtLocal);
 
     if (dateInfo.isRight()) {
       const { year, month } = dateInfo.extract();
 
       if (!result[year]) {
-        result[year] = { [month]: [journal] };
+        result[year] = { [month]: [createdAtLocal] };
         continue;
       }
 
       if (!result[year][month]) {
-        result[year][month] = [journal];
+        result[year][month] = [createdAtLocal];
         continue;
       }
 
-      result[year][month] = result[year][month].concat(journal);
+      result[year][month] = result[year][month].concat(createdAtLocal);
     }
   }
 

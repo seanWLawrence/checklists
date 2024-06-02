@@ -49,12 +49,12 @@ const validateDateIsUnique = (
   createdAtLocal: CreatedAtLocal,
 ): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const existingKeys = await fromPromise(getAllJournals());
+    const existingKeys = await fromPromise(getAllCreatedAtLocals());
 
     await liftEither(
       Either.sequence(
-        existingKeys.map((x) => {
-          const dateAlreadyExists = x.createdAtLocal === createdAtLocal;
+        existingKeys.map((existingCreatedAtLocal) => {
+          const dateAlreadyExists = existingCreatedAtLocal === createdAtLocal;
 
           if (dateAlreadyExists) {
             return Left(`Journal with date ${createdAtLocal} already exists`);
@@ -155,7 +155,13 @@ export const createJournalAction = async (
  * Read
  */
 
-export const getAllJournals = (): EitherAsync<unknown, Journal[]> => {
+/**
+ * Returns all journal dates
+ */
+export const getAllCreatedAtLocals = (): EitherAsync<
+  unknown,
+  CreatedAtLocal[]
+> => {
   const userEither = validateLoggedIn();
 
   return EitherAsync(async ({ fromPromise, liftEither }) => {
@@ -168,16 +174,22 @@ export const getAllJournals = (): EitherAsync<unknown, Journal[]> => {
       }),
     );
 
-    return fromPromise(
-      getAllObjectsFromKeys({ keys: validatedKeys, decoder: Journal }),
+    return liftEither(
+      Either.sequence(
+        validatedKeys.map((key) => {
+          const createdAtLocal = key.match(/\d{4,}-\d{2,}-\d{2,}$/)?.[0];
+          console.log({ createdAtLocal });
+          return CreatedAtLocal.decode(createdAtLocal);
+        }),
+      ),
     );
   })
     .ifRight(() => {
-      logger.info(`Successfully loaded all journals`);
+      logger.info(`Successfully loaded all createdAtLocal dates`);
       revalidatePath("/journals");
     })
     .ifLeft((e) => {
-      logger.error(`Failed to load all journals`);
+      logger.error(`Failed to load all createdAtLocal dates`);
       logger.error(e);
     });
 };

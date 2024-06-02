@@ -8,8 +8,6 @@ import {
   Radar,
   Tooltip,
   ResponsiveContainer,
-  Text,
-  Label,
 } from "recharts";
 import { RadarChartData } from "../journal.model";
 import { colors } from "@/lib/chart-colors";

@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getAllJournals } from "./journal.model";
+import { getAllCreatedAtLocals as getAllCreatedAtLocals } from "./journal.model";
 import { Heading } from "@/components/heading";
-import { groupJournals, prettyDate } from "./journal.lib";
-import { Journal } from "./journal.types";
+import { groupCreatedAtLocals, prettyDate } from "./journal.lib";
+import { CreatedAtLocal } from "./journal.types";
 import { Button } from "@/components/button";
 
 const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
   const node = await EitherAsync(async ({ fromPromise }) => {
-    const journals = await fromPromise(getAllJournals().run());
-    const groupedJournals = Object.entries(groupJournals(journals));
+    const createdAtLocals = await fromPromise(getAllCreatedAtLocals().run());
+    const groupedJournals = Object.entries(
+      groupCreatedAtLocals(createdAtLocals),
+    );
 
     return (
       <main className="space-y-2">
@@ -26,43 +28,48 @@ const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
                 <Heading level={2}>{year}</Heading>
 
                 <div className="space-y-1">
-                  {Object.entries(monthMap).map(([month, journals], index) => {
-                    return (
-                      <div key={month}>
-                        <div className="flex flex-wrap">
-                          {[...(journals as Journal[])]
-                            .sort(
-                              (a, b) =>
-                                new Date(a.createdAtLocal).getTime() -
-                                new Date(b.createdAtLocal).getTime(),
-                            )
-                            .map((j) => (
-                              <Link
-                                href={`/journals/${j.createdAtLocal}`}
-                                key={j.createdAtIso.toISOString()}
-                              >
-                                <Button variant="outline" className="mr-2 mb-2">
-                                  {prettyDate(j.createdAtLocal, {
-                                    withYear: false,
-                                  })}
-                                </Button>
-                              </Link>
-                            ))}
-                        </div>
+                  {Object.entries(monthMap).map(
+                    ([month, createdAtLocals], index) => {
+                      return (
+                        <div key={month}>
+                          <div className="flex flex-wrap">
+                            {[...(createdAtLocals as CreatedAtLocal[])]
+                              .sort(
+                                (createdAtLocalA, createdAtLocalB) =>
+                                  new Date(createdAtLocalA).getTime() -
+                                  new Date(createdAtLocalB).getTime(),
+                              )
+                              .map((createdAtLocal) => (
+                                <Link
+                                  href={`/journals/${createdAtLocal}`}
+                                  key={createdAtLocal}
+                                >
+                                  <Button
+                                    variant="outline"
+                                    className="mr-2 mb-2"
+                                  >
+                                    {prettyDate(createdAtLocal, {
+                                      withYear: false,
+                                    })}
+                                  </Button>
+                                </Link>
+                              ))}
+                          </div>
 
-                        {index < lastMonthIndex && hasMoreThanOneMonth && (
-                          <hr className="border-t-2 border-t-zinc-300 mt-2 mb-4 max-w-10" />
-                        )}
-                      </div>
-                    );
-                  })}
+                          {index < lastMonthIndex && hasMoreThanOneMonth && (
+                            <hr className="border-t-2 border-t-zinc-300 mt-2 mb-4 max-w-10" />
+                          )}
+                        </div>
+                      );
+                    },
+                  )}
                 </div>
               </section>
             );
           })}
         </div>
 
-        {journals.length === 0 && <p>No journals found.</p>}
+        {createdAtLocals.length === 0 && <p>No journals found.</p>}
       </main>
     );
   })
