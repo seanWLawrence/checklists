@@ -99,11 +99,3 @@ export type ExperienceBase = GetType<typeof ExperienceBase>;
 export const Experience = intersect(Metadata, ExperienceBase);
 
 export type Experience = GetType<typeof Experience>;
-
-/**
- *
- * Idea is to build a form within the journal for creating and updating multiple experiences
- * They get saved separately and have a relationship witht he journal entry based on the date
- * Loading a journal, should show the experiences.
- * There should also be a dedicated experiences page to see them all sorted by date with their categories
- */
