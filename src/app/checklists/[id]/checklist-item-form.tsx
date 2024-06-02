@@ -125,14 +125,14 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                       });
                     }}
                   >
-                    <Button type="submit" variant="outline">
+                    <Button type="submit" variant="ghost">
                       Reset completed
                     </Button>
                   </form>
 
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={toggleShowCompleted}
                   >
                     {showCompleted ? "Hide completed" : "Show completed"}

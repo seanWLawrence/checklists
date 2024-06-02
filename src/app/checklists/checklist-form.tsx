@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useReducer, useTransition } from "react";
+import {
+  useCallback,
+  useMemo,
+  useReducer,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Maybe } from "purify-ts/Maybe";
 import { NonEmptyList } from "purify-ts/NonEmptyList";
@@ -75,6 +81,8 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
 }) => {
   const [, startTransition] = useTransition();
   const router = useRouter();
+
+  const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const [state, dispatch] = useReducer(
     (state: State, action: Action) => {
@@ -238,6 +246,10 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
     [],
   );
 
+  const onToggleCompleted = useCallback(() => {
+    setShowCompleted((prev) => !prev);
+  }, []);
+
   const sectionsArray = Object.values(state.sections);
   const hasItems = Object.values(state.items).length;
   const shouldShowMenuButton = hasItems || variant === "edit";
@@ -276,6 +288,16 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                       }}
                     >
                       Clear completed items
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        startTransition(() => onToggleCompleted());
+                      }}
+                    >
+                      {showCompleted ? "Hide" : "Show"} completed items
                     </Button>
                   </>
                 ) : null}
@@ -354,6 +376,12 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       )}
 
       {sectionsArray.map((section) => {
+        const items = itemsBySectionId[section.id];
+
+        const visibleItems = !showCompleted
+          ? items.filter((item) => !item.completed)
+          : items;
+
         return (
           <fieldset
             key={section.id}
@@ -398,14 +426,17 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                     <span>Items</span>
                   </Heading>
 
-                  {!itemsBySectionId[section.id]?.length && (
+                  {!visibleItems.length && (
                     <p className="text-zinc-700 text-xs">(No items)</p>
                   )}
 
-                  {itemsBySectionId[section.id]?.map((item) => {
+                  {items.map((item) => {
                     return (
                       <div
-                        className="flex items-start space-x-1 max-w-prose w-full animate-in fade-in duration-300"
+                        className={cn(
+                          "flex items-start space-x-1 max-w-prose w-full animate-in fade-in duration-300",
+                          { hidden: !showCompleted && item.completed },
+                        )}
                         key={item.id}
                       >
                         <div className="flex flex-col space-y-2 w-full">
