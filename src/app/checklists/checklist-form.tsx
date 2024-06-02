@@ -376,7 +376,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
       )}
 
       {sectionsArray.map((section) => {
-        const items = itemsBySectionId[section.id];
+        const items = itemsBySectionId[section.id] ?? [];
 
         const visibleItems = !showCompleted
           ? items.filter((item) => !item.completed)
