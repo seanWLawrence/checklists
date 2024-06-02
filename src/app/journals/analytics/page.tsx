@@ -1,5 +1,5 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { getJournalLevelsRadarChartData } from "../journal.model";
+import { getJournalLevelsAnalytics } from "../journal.model";
 import { RadarChart } from "./radar-chart";
 import { Heading } from "@/components/heading";
 import dynamic from "next/dynamic";
@@ -8,9 +8,7 @@ const PieCharts = dynamic(() => import("./pie-charts"), { ssr: false });
 
 const AnalyticsPage: React.FC = async () => {
   const node = await EitherAsync(async ({ fromPromise }) => {
-    const { radar, pie } = await fromPromise(
-      getJournalLevelsRadarChartData().run(),
-    );
+    const { radar, pie } = await fromPromise(getJournalLevelsAnalytics().run());
 
     return (
       <section className="space-y-2 text-center">

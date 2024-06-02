@@ -712,7 +712,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
   ];
 };
 
-export const getJournalLevelsRadarChartData = (): EitherAsync<
+export const getJournalLevelsAnalytics = (): EitherAsync<
   unknown,
   {
     radar: RadarChartData;
