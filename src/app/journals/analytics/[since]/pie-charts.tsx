@@ -5,7 +5,7 @@ import {
   ResponsiveContainer,
   Sector,
 } from "recharts";
-import { PieChartData } from "../journal.model";
+import { PieChartData } from "../../journal.model";
 import { colors } from "@/lib/chart-colors";
 import { useEffect, useState } from "react";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";

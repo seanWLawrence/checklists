@@ -17,9 +17,9 @@ import {
 import {
   JournalBase,
   Journal,
-  CreatedAtLocal,
   Level,
   JournalLevels,
+  CreatedAtLocal,
 } from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
@@ -427,6 +427,7 @@ export type JournalLevelsRadarChartDataType = {
   name: string;
   average: number;
   median: number;
+  mode: number;
   eightiethPercentile: number;
   twentiethPercentile: number;
   levelType: keyof JournalLevels;
@@ -457,6 +458,25 @@ const median = (levels: JournalLevelTypeAndValueCount["levels"]): number => {
   const medianIndex = Math.floor(levels.length / 2);
 
   return [...levels.sort()][medianIndex];
+};
+
+const mode = (
+  levelTypeAndValueCount: JournalLevelTypeAndValueCount,
+): number => {
+  let highestLevelCount = levelTypeAndValueCount[1];
+  let highestLevel = 1;
+
+  for (let i = 2; i <= 5; i++) {
+    const level = i as 2 | 3 | 4 | 5;
+    const count = levelTypeAndValueCount[level];
+
+    if (count > highestLevelCount) {
+      highestLevelCount = count;
+      highestLevel = level;
+    }
+  }
+
+  return highestLevel;
 };
 
 const percentile = ({
@@ -639,6 +659,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
         num: totalLevelsByTypeAndValue.energyLevel.total,
       }),
       median: median(totalLevelsByTypeAndValue.energyLevel.levels),
+      mode: mode(totalLevelsByTypeAndValue.energyLevel),
       eightiethPercentile: percentile({
         percentile: 0.8,
         totals: totalLevelsByTypeAndValue.energyLevel,
@@ -657,6 +678,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
         num: totalLevelsByTypeAndValue.moodLevel.total,
       }),
       median: median(totalLevelsByTypeAndValue.moodLevel.levels),
+      mode: mode(totalLevelsByTypeAndValue.moodLevel),
       eightiethPercentile: percentile({
         percentile: 0.8,
         totals: totalLevelsByTypeAndValue.moodLevel,
@@ -675,6 +697,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
         num: totalLevelsByTypeAndValue.healthLevel.total,
       }),
       median: median(totalLevelsByTypeAndValue.healthLevel.levels),
+      mode: mode(totalLevelsByTypeAndValue.healthLevel),
       eightiethPercentile: percentile({
         percentile: 0.8,
         totals: totalLevelsByTypeAndValue.healthLevel,
@@ -693,6 +716,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
         num: totalLevelsByTypeAndValue.creativityLevel.total,
       }),
       median: median(totalLevelsByTypeAndValue.creativityLevel.levels),
+      mode: mode(totalLevelsByTypeAndValue.creativityLevel),
       eightiethPercentile: percentile({
         percentile: 0.8,
         totals: totalLevelsByTypeAndValue.creativityLevel,
@@ -711,6 +735,7 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
         num: totalLevelsByTypeAndValue.relationshipsLevel.total,
       }),
       median: median(totalLevelsByTypeAndValue.relationshipsLevel.levels),
+      mode: mode(totalLevelsByTypeAndValue.relationshipsLevel),
       eightiethPercentile: percentile({
         percentile: 0.8,
         totals: totalLevelsByTypeAndValue.relationshipsLevel,
@@ -724,7 +749,13 @@ const radarChartData = (levels: JournalLevels[]): RadarChartData => {
   ];
 };
 
-export const getJournalLevelsAnalytics = (): EitherAsync<
+export const getJournalLevelsAnalytics = ({
+  from,
+  to,
+}: {
+  from?: CreatedAtLocal;
+  to?: CreatedAtLocal;
+}): EitherAsync<
   unknown,
   {
     radar: RadarChartData;
@@ -744,10 +775,32 @@ export const getJournalLevelsAnalytics = (): EitherAsync<
     );
 
     const levels = await fromPromise(
-      getAllObjectsFromKeys({ keys: validatedKeys, decoder: JournalLevels }),
+      getAllObjectsFromKeys({ keys: validatedKeys, decoder: Journal }),
     );
 
-    return { radar: radarChartData(levels), pie: pieChartData(levels) };
+    const filteredLevels =
+      from || to
+        ? levels.filter((x) => {
+            const createdAt = new Date(x.createdAtLocal).getTime();
+
+            const conditions: ((dateNum: number) => boolean)[] = [];
+
+            if (from) {
+              conditions.push(() => new Date(from).getTime() <= createdAt);
+            }
+
+            if (to) {
+              conditions.push(() => new Date(to).getTime() >= createdAt);
+            }
+
+            return conditions.every((fn) => fn(createdAt));
+          })
+        : levels;
+
+    return {
+      radar: radarChartData(filteredLevels),
+      pie: pieChartData(filteredLevels),
+    };
   })
     .ifRight(() => {
       logger.info(`Successfully loaded all journal levels`);

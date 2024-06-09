@@ -17,9 +17,23 @@ export type CreatedAtLocal =
 
 export const CreatedAtLocal = Codec.custom<CreatedAtLocal>({
   decode: (input) =>
-    typeof input === "string" && input.match(/^\d{4,}-\d{2,}-\d{2,}/)?.[0]
+    typeof input === "string" && input.match(/^\d{4,}-\d{2,}-\d{2,}$/)?.[0]
       ? Right(input as CreatedAtLocal)
       : Left(`Invalid createdAtLocal '${input}'`),
+  encode: (input) => input,
+});
+
+/**
+ * YYYY-MM-DDtoYYYY-MM-DD
+ */
+export type Since = `${CreatedAtLocal}to${CreatedAtLocal}`;
+
+export const Since = Codec.custom<Since>({
+  decode: (input) =>
+    typeof input === "string" &&
+    input.match(/^\d{4,}-\d{2,}-\d{2,}to\d{4,}-\d{2,}-\d{2,}$/)?.[0]
+      ? Right(input as Since)
+      : Left(`Invalid since '${input}'`),
   encode: (input) => input,
 });
 

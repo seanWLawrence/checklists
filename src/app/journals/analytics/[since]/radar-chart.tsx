@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { RadarChartData } from "../journal.model";
+import { RadarChartData } from "../../journal.model";
 import { colors } from "@/lib/chart-colors";
 import { useEffect, useState } from "react";
 
@@ -47,6 +47,13 @@ export const RadarChart: React.FC<{
           fillOpacity={opacity}
         />
         <Radar
+          name="Mode"
+          dataKey="mode"
+          stroke={colors.purple}
+          fill={colors.purple}
+          fillOpacity={opacity}
+        />
+        <Radar
           name="80th percentile"
           dataKey="eightiethPercentile"
           stroke={colors.fuschia}
@@ -56,15 +63,15 @@ export const RadarChart: React.FC<{
         <Radar
           name="20th percentile"
           dataKey="twentiethPercentile"
-          stroke={colors.teal}
-          fill={colors.teal}
+          stroke={colors.coral}
+          fill={colors.coral}
           fillOpacity={opacity}
         />
         <Radar
           name="Average"
           dataKey="average"
-          stroke={colors.coral}
-          fill={colors.coral}
+          stroke={colors.teal}
+          fill={colors.teal}
           fillOpacity={opacity}
         />
         <Legend />
