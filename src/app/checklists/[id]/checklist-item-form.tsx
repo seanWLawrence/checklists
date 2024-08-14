@@ -15,6 +15,7 @@ import {
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
+import { convertChecklistSectionsToTextContent } from "./convert-checlist-to-text";
 
 const unitToMinutes = { h: 60, m: 1 };
 
@@ -88,6 +89,10 @@ const filterCompletedItemsIfHidden = ({
   }
 
   return items;
+};
+
+const copyToClipboard = (content: string): void => {
+  navigator.clipboard.writeText(content);
 };
 
 export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
@@ -251,7 +256,27 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
           })}
         </form>
 
-        <div className="justify-end flex">
+        <div className="justify-between flex">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const checklistAsText =
+                convertChecklistSectionsToTextContent(checklist);
+
+              if (!checklistAsText.length) {
+                alert("Nothing to copy to clipboard. Skipping.");
+                return;
+              }
+
+              copyToClipboard(checklistAsText);
+
+              alert("Successfully copied checklist to clipboard.");
+            }}
+          >
+            Copy to clipboard
+          </Button>
+
           <form
             action={() => {
               Maybe.fromNullable(formRef.current).ifJust(async (x) => {
