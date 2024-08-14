@@ -1,6 +1,5 @@
 import React from "react";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { NonEmptyList } from "purify-ts/NonEmptyList";
 import Link from "next/link";
 
 import { Heading } from "@/components/heading";
@@ -8,43 +7,15 @@ import { getJournal } from "../journal.model";
 import { prettyDate } from "../journal.lib";
 import { CreatedAtLocal } from "../journal.types";
 import { Label } from "@/components/label";
+import { groupJournalContentSections } from "./group-journal-content-sections";
 
 const prettyContent = (content: string): React.ReactNode => {
-  return NonEmptyList.fromArray(content.split("\n"))
-    .map((list) => {
-      const sections: {
-        heading: string;
-        children: string[];
-      }[] = [];
-
-      for (let i = 0; i < list.length; i++) {
-        const row = list[i].trim();
-
-        const isEmpty = row.length === 0;
-        if (isEmpty) {
-          continue;
-        }
-
-        const isHeading = row.startsWith("## ");
-        if (isHeading) {
-          const heading = NonEmptyList.fromArray(row.split("## "))
-            .map((list) => list[1])
-            .orDefault(list[0]);
-
-          sections.push({ heading, children: [] });
-          continue;
-        }
-
-        const lastSectionsIndex = sections.length - 1;
-        if (lastSectionsIndex < 0) {
-          continue;
-        }
-
-        sections[lastSectionsIndex].children.push(row);
-      }
-
+  return groupJournalContentSections(content)
+    .map((sections) => {
       return (
-        <div key={JSON.stringify(list)} className="space-y-3">
+        // Not actually an iterator, "map" in this context is different
+        // eslint-disable-next-line react/jsx-key
+        <div className="space-y-3">
           {sections.map((section, index) => {
             return (
               <div key={`${section.heading}-${index}`} className="space-y-1">
