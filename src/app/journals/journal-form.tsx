@@ -13,8 +13,6 @@ const DEFAULT_TEMPLATE =
   "\n\n" +
   "## What could make today great?" +
   "\n\n" +
-  "## Daily affirmation" +
-  "\n\n" +
   "## Highlights of the day" +
   "\n\n" +
   "## What did I learn today?";
