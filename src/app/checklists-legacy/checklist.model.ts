@@ -51,12 +51,12 @@ export const createChecklistAction = async (
       logger.info(
         `Successfully created checklist with ID '${checklist.id}' ('${checklist.name}')`,
       );
-      revalidatePath("/checklists");
+      revalidatePath("/checklists-legacy");
     })
     .run();
 
   if (response.isRight()) {
-    redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+    redirect(`/checklists-legacy/${response.extract().id}`, RedirectType.push);
   }
 
   return response.toJSON();
@@ -85,7 +85,7 @@ export const getAllChecklists = (): EitherAsync<unknown, Checklist[]> => {
   })
     .ifRight(() => {
       logger.info(`Successfully loaded all checklists`);
-      revalidatePath("/checklists");
+      revalidatePath("/checklists-legacy");
     })
     .ifLeft((e) => {
       logger.error(`Failed to load all checklists`);
@@ -108,8 +108,8 @@ export const getChecklist = (id: UUID): EitherAsync<unknown, Checklist> => {
       logger.info(
         `Successfully loaded checklist with ID '${x.id}' ('${x.name}')`,
       );
-      revalidatePath(`/checklists/${x.id}`);
-      revalidatePath(`/checklists/${x.id}/edit`);
+      revalidatePath(`/checklists-legacy/${x.id}`);
+      revalidatePath(`/checklists-legacy/${x.id}/edit`);
     })
     .ifLeft((e) => {
       logger.error(`Failed to load checklist with ID '${id}'`);
@@ -133,9 +133,9 @@ export const updateChecklist_serverOnly = (
       logger.info(
         `Successfully updated checklist with ID '${x.id}' ('${x.name}')`,
       );
-      revalidatePath("/checklists");
-      revalidatePath(`/checklists/${x.id}`);
-      revalidatePath(`/checklists/${x.id}/edit`);
+      revalidatePath("/checklists-legacy");
+      revalidatePath(`/checklists-legacy/${x.id}`);
+      revalidatePath(`/checklists-legacy/${x.id}/edit`);
     })
     .ifLeft((e) => {
       logger.error(
@@ -151,7 +151,7 @@ export const updateChecklistAction = async (
   const response = await updateChecklist_serverOnly(checklist).run();
 
   if (response.isRight()) {
-    redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+    redirect(`/checklists-legacy/${response.extract().id}`, RedirectType.push);
   }
 
   return response.toJSON();
@@ -205,8 +205,8 @@ export const markItemsIncompleteAction = async (
         `Successfully marked items incomplete for ID '${x.id}' ('${x.name}')`,
       );
       logger.info(x);
-      revalidatePath(`/checklists/${x.id}`);
-      revalidatePath(`/checklists/${x.id}/edit`);
+      revalidatePath(`/checklists-legacy/${x.id}`);
+      revalidatePath(`/checklists-legacy/${x.id}/edit`);
     })
     .ifLeft((e) => {
       getChecklistFromFormData(formData)
@@ -266,8 +266,8 @@ export const updateChecklistItemsAction = async (
       logger.info(`Successfully updated items for ID '${x.id}' ('${x.name}')`);
       logger.info(x);
 
-      revalidatePath(`/checklists/${x.id}`);
-      revalidatePath(`/checklists/${x.id}/edit`);
+      revalidatePath(`/checklists-legacy/${x.id}`);
+      revalidatePath(`/checklists-legacy/${x.id}/edit`);
     })
     .ifLeft((e) => {
       getChecklistFromFormData(formData)
@@ -300,9 +300,9 @@ export const deleteChecklistAction = async (
   ])
     .ifRight(() => {
       logger.info(`Successfully deleted checklist with ID '${checklist.id}'`);
-      revalidatePath("/checklists");
-      revalidatePath(`/checklists/${checklist.id}`);
-      revalidatePath(`/checklists/${checklist.id}/edit`);
+      revalidatePath("/checklists-legacy");
+      revalidatePath(`/checklists-legacy/${checklist.id}`);
+      revalidatePath(`/checklists-legacy/${checklist.id}/edit`);
     })
     .ifLeft((e) => {
       logger.error(`Failed to delete checklist with ID '${checklist.id}'`);

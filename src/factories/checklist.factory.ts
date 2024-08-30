@@ -5,7 +5,7 @@ import {
   Checklist,
   ChecklistItem,
   ChecklistSection,
-} from "@/app/checklists/checklist.types";
+} from "@/app/checklists-legacy/checklist.types";
 
 export const checklistItem = (
   overrides?: Partial<ChecklistItem>,

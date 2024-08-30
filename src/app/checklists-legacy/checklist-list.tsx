@@ -64,7 +64,7 @@ export const ChecklistList: React.FC = async () => {
               <div className="flex flex-wrap" key={firstChar}>
                 {checklists.map(({ id, name }) => {
                   return (
-                    <Link href={`/checklists/${id}`} key={id}>
+                    <Link href={`/checklists-legacy/${id}`} key={id}>
                       <Button variant="outline" className="mr-2 mb-2">
                         {name}
                       </Button>

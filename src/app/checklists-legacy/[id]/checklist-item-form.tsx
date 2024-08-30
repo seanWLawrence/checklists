@@ -160,7 +160,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
         />
 
         <Link
-          href={`/checklists/${checklist.id}/edit`}
+          href={`/checklists-legacy/${checklist.id}/edit`}
           className="underline underline-offset-2"
         >
           <Button type="button" variant="ghost">

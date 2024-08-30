@@ -22,13 +22,13 @@ export const TopNavigation: React.FC<{}> = async () => {
         <MenuButton
           menu={
             <div className="flex flex-col space-y-2">
-              <Link href="/checklists">
+              <Link href="/checklists-legacy">
                 <Button variant="ghost" type="button">
                   Checklists
                 </Button>
               </Link>
 
-              <Link href="/checklists/new">
+              <Link href="/checklists-legacy/new">
                 <Button variant="ghost" type="button">
                   New checklist
                 </Button>

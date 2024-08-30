@@ -1,5 +1,5 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { getChecklist } from "@/app/checklists/checklist.model";
+import { getChecklist } from "@/app/checklists-legacy/checklist.model";
 import { UUID } from "@/lib/types";
 import { ChecklistItemForm } from "./checklist-item-form";
 

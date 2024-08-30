@@ -9,7 +9,7 @@ const Login: React.FC = () => {
   const user = getUser();
 
   if (user.isJust()) {
-    redirect("/checklists");
+    redirect("/checklists-legacy");
   }
 
   return (
