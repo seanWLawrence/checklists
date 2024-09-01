@@ -30,125 +30,131 @@ export const ChecklistV2Form: React.FC<{
   return (
     <div className="space-y-2 max-w-prose">
       <div className="flex space-x-1 items-center">
-        <Heading level={1}>{checklist ? "Edit" : "New"} checklist</Heading>
+        <Heading level={1}>{isEdit ? "Edit" : "New"} checklist</Heading>
 
-        <MenuButton
-          variant="ghost"
-          menu={
-            <div className="flex flex-col space-y-2">
-              {checklist?.content && (
-                <>
+        {isEdit && (
+          <MenuButton
+            variant="ghost"
+            menu={
+              <div className="flex flex-col space-y-2">
+                {checklist?.content && (
+                  <>
+                    <form
+                      action={async () => {
+                        Maybe.fromNullable(contentRef.current).ifJust(
+                          (contentRef) => {
+                            const content = contentRef.value;
+
+                            const checklist =
+                              structureChecklistContent(content);
+
+                            for (const section of checklist.sections) {
+                              section.items = [];
+                            }
+
+                            const newContent = checklistV2TaskFormToContent({
+                              checklist,
+                              getIsCompleted:
+                                getIsCompletedFromStructuredChecklist({
+                                  checklist,
+                                }),
+                            });
+
+                            contentRef.value = newContent;
+                          },
+                        );
+                      }}
+                    >
+                      <Button type="submit" variant="ghost">
+                        Clear items
+                      </Button>
+                    </form>
+
+                    <form
+                      action={async () => {
+                        Maybe.fromNullable(contentRef.current).ifJust(
+                          (contentRef) => {
+                            const content = contentRef.value;
+
+                            const checklist =
+                              structureChecklistContent(content);
+
+                            for (const section of checklist.sections) {
+                              section.items = section.items.filter(
+                                (i) => !i.completed,
+                              );
+                            }
+
+                            const newContent = checklistV2TaskFormToContent({
+                              checklist,
+                              getIsCompleted:
+                                getIsCompletedFromStructuredChecklist({
+                                  checklist,
+                                }),
+                            });
+
+                            contentRef.value = newContent;
+                          },
+                        );
+                      }}
+                    >
+                      <Button type="submit" variant="ghost">
+                        Clear completed items
+                      </Button>
+                    </form>
+                  </>
+                )}
+
+                {isEdit && (
                   <form
-                    action={async () => {
-                      Maybe.fromNullable(contentRef.current).ifJust(
-                        (contentRef) => {
-                          const content = contentRef.value;
+                    action={() => {
+                      const name = Maybe.fromNullable(
+                        window.prompt("New name?"),
+                      );
 
-                          const checklist = structureChecklistContent(content);
+                      const content = Maybe.fromNullable(
+                        contentRef.current,
+                      ).map(($el) => $el.value);
 
-                          for (const section of checklist.sections) {
-                            section.items = [];
-                          }
+                      Maybe.sequence([name, content]).map(
+                        async ([name, content]) => {
+                          const formData = new FormData();
 
-                          const newContent = checklistV2TaskFormToContent({
-                            checklist,
-                            getIsCompleted:
-                              getIsCompletedFromStructuredChecklist({
-                                checklist,
-                              }),
-                          });
+                          formData.set("name", name);
+                          formData.set("content", content);
 
-                          contentRef.value = newContent;
+                          await createChecklistV2Action(formData);
                         },
                       );
                     }}
                   >
                     <Button type="submit" variant="ghost">
-                      Clear items
+                      Duplicate
                     </Button>
                   </form>
+                )}
 
+                {isEdit && (
                   <form
                     action={async () => {
-                      Maybe.fromNullable(contentRef.current).ifJust(
-                        (contentRef) => {
-                          const content = contentRef.value;
+                      Maybe.fromFalsy(window.confirm("Delete?"))
+                        .chain(() => Maybe.fromNullable(checklist))
+                        .ifJust(async (checklist) => {
+                          await deleteChecklistV2Action(checklist.id);
 
-                          const checklist = structureChecklistContent(content);
-
-                          for (const section of checklist.sections) {
-                            section.items = section.items.filter(
-                              (i) => !i.completed,
-                            );
-                          }
-
-                          const newContent = checklistV2TaskFormToContent({
-                            checklist,
-                            getIsCompleted:
-                              getIsCompletedFromStructuredChecklist({
-                                checklist,
-                              }),
-                          });
-
-                          contentRef.value = newContent;
-                        },
-                      );
+                          router.push("/checklists");
+                        });
                     }}
                   >
                     <Button type="submit" variant="ghost">
-                      Clear completed items
+                      Delete
                     </Button>
                   </form>
-                </>
-              )}
-
-              {isEdit && (
-                <form
-                  action={() => {
-                    const name = Maybe.fromNullable(window.prompt("New name?"));
-
-                    const content = Maybe.fromNullable(contentRef.current).map(
-                      ($el) => $el.value,
-                    );
-
-                    Maybe.sequence([name, content]).map(
-                      async ([name, content]) => {
-                        const formData = new FormData();
-
-                        formData.set("name", name);
-                        formData.set("content", content);
-
-                        await createChecklistV2Action(formData);
-                      },
-                    );
-                  }}
-                >
-                  <Button type="submit" variant="ghost">
-                    Duplicate
-                  </Button>
-                </form>
-              )}
-
-              {isEdit && (
-                <form
-                  action={async () => {
-                    Maybe.fromFalsy(window.confirm("Delete?"))
-                      .chain(() => Maybe.fromNullable(checklist))
-                      .ifJust(async (checklist) => {
-                        await deleteChecklistV2Action(checklist.id);
-
-                        router.push("/checklists");
-                      });
-                  }}
-                >
-                  <Button type="submit" variant="ghost">
-                    Delete
-                  </Button>
-                </form>
-              )}
-            </div>
-          }
-        />
+                )}
+              </div>
+            }
+          />
+        )}
       </div>
 
       <form
