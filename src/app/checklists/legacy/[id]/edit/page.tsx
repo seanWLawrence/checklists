@@ -6,7 +6,7 @@ import { EitherAsync } from "purify-ts";
 const EditChecklist: React.FC<{
   params: { id: string };
 }> = async ({ params }) => {
-  const node = await EitherAsync(async ({ liftEither, fromPromise }) => {
+  const page = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const id = await liftEither(UUID.decode(params.id));
 
     const checklist = await fromPromise(getChecklist(id).run());
@@ -23,7 +23,7 @@ const EditChecklist: React.FC<{
     })
     .run();
 
-  return node.toJSON();
+  return page.extract();
 };
 
 export default EditChecklist;

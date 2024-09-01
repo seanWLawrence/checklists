@@ -40,7 +40,7 @@ const prettyContent = (content: string): React.ReactNode => {
 const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
   params,
 }) => {
-  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
+  const page = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const createdAtLocal = await liftEither(
       CreatedAtLocal.decode(params.createdAtLocal),
     );
@@ -119,7 +119,7 @@ const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
     })
     .run();
 
-  return response.toJSON();
+  return page.extract();
 };
 
 export default Journal;

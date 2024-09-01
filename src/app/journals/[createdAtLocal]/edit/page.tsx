@@ -7,7 +7,7 @@ import { CreatedAtLocal } from "../../journal.types";
 const EditJournal: React.FC<{ params: { createdAtLocal: string } }> = async ({
   params,
 }) => {
-  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
+  const page = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const createdAtLocal = await liftEither(
       CreatedAtLocal.decode(params.createdAtLocal),
     );
@@ -21,7 +21,7 @@ const EditJournal: React.FC<{ params: { createdAtLocal: string } }> = async ({
     })
     .run();
 
-  return response.toJSON();
+  return page.extract();
 };
 
 export default EditJournal;

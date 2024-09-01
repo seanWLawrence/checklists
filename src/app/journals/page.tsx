@@ -8,7 +8,7 @@ import { CreatedAtLocal } from "./journal.types";
 import { Button } from "@/components/button";
 
 const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
-  const node = await EitherAsync(async ({ fromPromise }) => {
+  const page = await EitherAsync(async ({ fromPromise }) => {
     const createdAtLocals = await fromPromise(getAllCreatedAtLocals().run());
     const groupedJournals = Object.entries(
       groupCreatedAtLocals(createdAtLocals),
@@ -83,7 +83,7 @@ const Journals: React.FC<{ params: { createdAtIso: string } }> = async ({}) => {
     })
     .run();
 
-  return node.toJSON();
+  return page.extract();
 };
 
 export default Journals;

@@ -8,9 +8,7 @@ import {
   deleteAll,
   getAllItemsKeys,
   getAllObjectsFromKeys,
-  getJsonFromFormData,
   getObjectFromKey,
-  getStringFromFormData,
   update,
   validateLoggedIn,
 } from "@/lib/db.model";
@@ -23,6 +21,7 @@ import {
 } from "./journal.types";
 import { Key, Metadata, User } from "@/lib/types";
 import { logger } from "@/lib/logger";
+import { getStringFromFormData, getJsonFromFormData } from "@/lib/form-data";
 
 /**
  * Gets all journal keys for a given user

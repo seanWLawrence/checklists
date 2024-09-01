@@ -19,7 +19,7 @@ const PieCharts = dynamic(() => import("./pie-charts"), { ssr: false });
 const AnalyticsPage: React.FC<{ params: { since: string } }> = async ({
   params,
 }) => {
-  const node = await EitherAsync(async ({ fromPromise, liftEither }) => {
+  const page = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const since = await liftEither(Since.decode(params.since));
 
     const [fromRaw, toRaw] = since.split("to");
@@ -83,7 +83,7 @@ const AnalyticsPage: React.FC<{ params: { since: string } }> = async ({
     })
     .run();
 
-  return node.toJSON();
+  return page.extract();
 };
 
 export default AnalyticsPage;

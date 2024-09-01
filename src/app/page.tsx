@@ -5,9 +5,15 @@ import { Button } from "@/components/button";
 const Home: React.FC = () => {
   return (
     <main className="flex space-x-1">
-      <Link href="/checklists-legacy">
+      <Link href="/checklists">
         <Button variant="outline" className="mr-2 mb-2">
           Checklists
+        </Button>
+      </Link>
+
+      <Link href="/checklists/legacy">
+        <Button variant="outline" className="mr-2 mb-2">
+          Checklists (Legacy version)
         </Button>
       </Link>
 

@@ -1,4 +1,4 @@
-import { Metadata, UUID } from "@/lib/types";
+import { Metadata, TimeEstimate, UUID } from "@/lib/types";
 import {
   Codec,
   GetType,
@@ -10,28 +10,13 @@ import {
 } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 
-type ChecklistItemTimeEstimateValue = `${number}m` | `${number}h`;
-
-export const ChecklistItemTimeEstimate =
-  Codec.custom<ChecklistItemTimeEstimateValue>({
-    decode: (input) =>
-      typeof input === "string" && input.match(/^\d+(m|h)$/)
-        ? Right(input as ChecklistItemTimeEstimateValue)
-        : Left(`Invalid ChecklistItemTimeEstimateValue. Received: '${input}'`),
-    encode: (input) => input, // strings have no serialization logic
-  });
-
-export type ChecklistItemTimeEstimate = GetType<
-  typeof ChecklistItemTimeEstimate
->;
-
 export const ChecklistItem = Codec.interface({
   id: UUID,
   checklistSectionId: UUID,
   name: string,
   completed: boolean,
   note: optional(string),
-  timeEstimate: optional(ChecklistItemTimeEstimate),
+  timeEstimate: optional(TimeEstimate),
 });
 
 export type ChecklistItem = GetType<typeof ChecklistItem>;

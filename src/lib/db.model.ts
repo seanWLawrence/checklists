@@ -101,10 +101,8 @@ export const update = <T extends Metadata & object>({
   item: T;
   decoder: Codec<T>;
 }): EitherAsync<unknown, T> => {
-  const userEither = validateLoggedIn();
-
   return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(userEither);
+    const user = await liftEither(validateLoggedIn());
 
     const itemToUpdate = await liftEither(
       intersect(Metadata, decoder).decode({
@@ -280,36 +278,4 @@ export const getAllItemsKeys = ({
       }),
     );
   });
-};
-
-export const getStringFromFormData = ({
-  name,
-  formData,
-}: {
-  name: string;
-  formData: FormData;
-}): Either<string, string> => {
-  return Maybe.fromNullable(formData.get(name))
-    .toEither(`Missing ${name}`)
-    .chain((x) =>
-      typeof x === "string" ? Right(x) : Left(`'${name}' is wrong type`),
-    );
-};
-
-export const getJsonFromFormData = <T extends object>({
-  name,
-  formData,
-  decoder,
-}: {
-  name: string;
-  formData: FormData;
-  decoder: Codec<T>;
-}): Either<unknown, T> => {
-  return Maybe.fromNullable(formData.get(name))
-    .toEither(`Missing ${name}`)
-    .chain((x) =>
-      typeof x === "string" ? Right(x) : Left(`'${name}' is wrong type`),
-    )
-    .chain((x) => Either.encase(() => JSON.parse(x)))
-    .chain(decoder.decode);
 };

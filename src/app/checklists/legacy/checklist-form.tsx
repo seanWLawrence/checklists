@@ -345,7 +345,7 @@ export const ChecklistForm: React.FC<ChecklistFormProps> = ({
                       if (confirmed) {
                         await deleteChecklistAction(state.checklist);
 
-                        router.push("/checklists-legacy");
+                        router.push("/checklists/legacy");
                       }
                     }}
                   >

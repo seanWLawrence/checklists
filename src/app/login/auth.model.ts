@@ -57,7 +57,7 @@ export const login = (formData: FormData) => {
         expires: Date.now() + oneYear,
       });
 
-      redirect("/checklists-legacy");
+      redirect("/checklists/legacy");
     });
 };
 

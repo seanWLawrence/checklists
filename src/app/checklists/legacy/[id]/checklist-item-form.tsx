@@ -3,11 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
-import {
-  Checklist,
-  ChecklistItem,
-  ChecklistItemTimeEstimate,
-} from "../checklist.types";
+import { Checklist, ChecklistItem } from "../checklist.types";
 import {
   markItemsIncompleteAction,
   updateChecklistItemsAction,
@@ -16,66 +12,8 @@ import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
 import { convertChecklistSectionsToTextContent } from "./convert-checlist-to-text";
-
-const unitToMinutes = { h: 60, m: 1 };
-
-const getTimeEstimateInMinutes = (timeEstimate: ChecklistItemTimeEstimate) => {
-  return Maybe.fromNullable(timeEstimate.match(/^\d+/)?.[0])
-    .map(Number)
-    .chain((num) => {
-      return Maybe.fromNullable(timeEstimate.match(/(m|h)$/)?.[0]).map(
-        (unit) => {
-          return { unit, num };
-        },
-      );
-    })
-    .map(({ unit, num }) => {
-      return unitToMinutes[unit as keyof typeof unitToMinutes] * num;
-    })
-    .orDefault(0);
-};
-
-const roundToNearestHalf = (num: number): number => {
-  return Math.round(num * 2) / 2;
-};
-
-const roundToNearestFive = (num: number): number => {
-  return Math.round(num / 5) * 5;
-};
-
-const getTimeEstimateFromMinutes = (
-  minutes: number,
-): ChecklistItemTimeEstimate => {
-  if (minutes >= 60) {
-    return `${roundToNearestHalf(minutes / 60)}h`;
-  }
-
-  return `${roundToNearestFive(minutes)}m`;
-};
-
-const sumTimeEstimates = (
-  timeEstimates: (ChecklistItemTimeEstimate | undefined)[],
-): ChecklistItemTimeEstimate => {
-  const sumInMinutes = timeEstimates.reduce((acc, x) => {
-    acc += x ? getTimeEstimateInMinutes(x) : 0;
-
-    return acc;
-  }, 0);
-
-  return getTimeEstimateFromMinutes(sumInMinutes);
-};
-
-const TimeEstimateBadge: React.FC<{
-  timeEstimates: (ChecklistItemTimeEstimate | undefined)[];
-}> = ({ timeEstimates }) => {
-  return (
-    <span>
-      <span className="text-xs bg-zinc-200 text-zinc-900 rounded py-1 px-1.5">
-        {sumTimeEstimates(timeEstimates)}
-      </span>
-    </span>
-  );
-};
+import { TimeEstimate } from "@/lib/types";
+import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 
 const filterCompletedItemsIfHidden = ({
   items,
@@ -156,11 +94,11 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
               }
             });
             return acc;
-          }, [] as ChecklistItemTimeEstimate[])}
+          }, [] as TimeEstimate[])}
         />
 
         <Link
-          href={`/checklists-legacy/${checklist.id}/edit`}
+          href={`/checklists/legacy/${checklist.id}/edit`}
           className="underline underline-offset-2"
         >
           <Button type="button" variant="ghost">
@@ -199,7 +137,7 @@ export const ChecklistItemForm: React.FC<{ checklist: Checklist }> = ({
                             acc.push(x.timeEstimate);
                           }
                           return acc;
-                        }, [] as ChecklistItemTimeEstimate[])}
+                        }, [] as TimeEstimate[])}
                       />
                     </div>
                   </Heading>
