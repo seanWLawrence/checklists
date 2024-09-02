@@ -10,7 +10,7 @@ import {
   getAllObjectsFromKeys,
   getObjectFromKey,
   update,
-  validateLoggedIn,
+  getUserAsEither,
 } from "@/lib/db.model";
 import {
   ChecklistV2Base,
@@ -24,7 +24,6 @@ import {
   getIsCompletedFromFormData,
 } from "./[id]/checklist-v2-task-form-to-content";
 import { getStringFromFormData, getJsonFromFormData } from "@/lib/form-data";
-import { Maybe } from "purify-ts/Maybe";
 
 /**
  * Gets all checklist keys for a given user
@@ -89,8 +88,8 @@ export const createChecklistV2Action = async (
  */
 
 export const getAllChecklistsV2 = (): EitherAsync<unknown, ChecklistV2[]> => {
-  return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
 
     const { keys: validatedKeys } = await fromPromise(
       getAllItemsKeys({
@@ -114,8 +113,8 @@ export const getAllChecklistsV2 = (): EitherAsync<unknown, ChecklistV2[]> => {
 };
 
 export const getChecklistV2 = (id: UUID): EitherAsync<unknown, ChecklistV2> => {
-  return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
     const key = getChecklistV2Key({ id, user });
 
     return fromPromise(
@@ -216,8 +215,8 @@ export const updateChecklistV2Action = async (
 export const deleteChecklistV2Action = async (
   id: UUID,
 ): Promise<unknown | void> => {
-  const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(validateLoggedIn());
+  const response = await EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
 
     return fromPromise(
       deleteAll([

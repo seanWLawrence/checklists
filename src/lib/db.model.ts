@@ -6,7 +6,7 @@ import { kv } from "@vercel/kv";
 import { Redis } from "@upstash/redis";
 
 import { Key, Metadata, User } from "./types";
-import { getUser } from "@/app/login/auth.model";
+import { getUser } from "@/lib/auth.model";
 import { id } from "@/factories/id.factory";
 import { logger } from "./logger";
 import { Tuple } from "purify-ts/Tuple";
@@ -43,8 +43,10 @@ export const validateUserFromKey = ({
 /**
  * Ensures there's a logged in user and returns the user if true
  */
-export const validateLoggedIn = (): Either<string, User> => {
-  return getUser().toEither("Not logged in").ifLeft(logger.error);
+export const getUserAsEither = async (): Promise<Either<string, User>> => {
+  const user = await getUser();
+
+  return user.toEither("Not logged in").ifLeft(logger.error);
 };
 
 /**
@@ -71,10 +73,9 @@ export const create = <T extends object>({
   item: T;
   decoder: Codec<T>;
 }): EitherAsync<unknown, T & Metadata> => {
-  const userEither = validateLoggedIn();
+  return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
+    const user = await fromPromise(getUserAsEither());
 
-  return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(userEither);
     const itemToCreate = await liftEither(
       intersect(Metadata, decoder).decode({ ...item, ...createMetadata(user) }),
     );
@@ -101,8 +102,8 @@ export const update = <T extends Metadata & object>({
   item: T;
   decoder: Codec<T>;
 }): EitherAsync<unknown, T> => {
-  return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(validateLoggedIn());
+  return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
+    const user = await fromPromise(getUserAsEither());
 
     const itemToUpdate = await liftEither(
       intersect(Metadata, decoder).decode({
@@ -131,10 +132,8 @@ export const update = <T extends Metadata & object>({
  * Deletes all items with matching keys in the key value store
  */
 export const deleteAll = (keys: Key[]): EitherAsync<unknown, void> => {
-  const userEither = validateLoggedIn();
-
-  return EitherAsync(async ({ liftEither, throwE }) => {
-    const user = await liftEither(userEither);
+  return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
+    const user = await fromPromise(getUserAsEither());
 
     await liftEither(
       Either.sequence(
@@ -187,10 +186,8 @@ export const getAllObjectsFromKeys = <T extends object>({
   keys: Key[];
   decoder: Codec<T>;
 }): EitherAsync<unknown, T[]> => {
-  const userEither = validateLoggedIn();
-
-  return EitherAsync(async ({ liftEither, fromPromise }) => {
-    const user = await liftEither(userEither);
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
 
     const promises = keys.map((key) => {
       return getObjectFromKey({ user, decoder, key });
@@ -248,10 +245,8 @@ export const getAllItemsKeys = ({
   existingKeys: Key[];
   scanKey: Key;
 }): EitherAsync<unknown, { cursor?: number; keys: Key[] }> => {
-  const userEither = validateLoggedIn();
-
-  return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(userEither);
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
 
     return fromPromise(
       getItemsKeysBatch({ user, cursor, scanKey }).map(async (response) => {

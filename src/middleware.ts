@@ -1,20 +1,19 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { AUTH_COOKIE_NAME } from "@/lib/constants";
+import { getUser } from "./lib/auth.model";
 
-export function middleware(request: NextRequest) {
-  const authCookie = request.cookies.get(AUTH_COOKIE_NAME);
-
-  const authCookieContainsSecret =
-    authCookie?.value &&
-    JSON.parse(authCookie.value)?.password === process.env.AUTH_SECRET;
-
+export async function middleware(request: NextRequest) {
   const isLogin = request.url.includes("/login");
 
-  if (authCookieContainsSecret || isLogin) {
+  if (isLogin) {
     return NextResponse.next();
   }
 
+  const user = await getUser();
+
+  if (user.isJust()) {
+    return NextResponse.next();
+  }
   return NextResponse.redirect(new URL("/login", request.url));
 }
 

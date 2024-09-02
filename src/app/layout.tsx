@@ -1,4 +1,4 @@
-import { TopNavigation } from "@/components/top-navigation";
+import TopNavigation from "@/components/top-navigation";
 
 import type { Metadata, Viewport } from "next";
 

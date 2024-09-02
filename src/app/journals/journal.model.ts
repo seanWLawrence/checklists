@@ -10,7 +10,7 @@ import {
   getAllObjectsFromKeys,
   getObjectFromKey,
   update,
-  validateLoggedIn,
+  getUserAsEither,
 } from "@/lib/db.model";
 import {
   JournalBase,
@@ -161,10 +161,10 @@ export const getAllCreatedAtLocals = (): EitherAsync<
   unknown,
   CreatedAtLocal[]
 > => {
-  const userEither = validateLoggedIn();
+  const userEither = getUserAsEither();
 
   return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(userEither);
+    const user = await fromPromise(userEither);
 
     const { keys: validatedKeys } = await fromPromise(
       getAllItemsKeys({
@@ -177,7 +177,6 @@ export const getAllCreatedAtLocals = (): EitherAsync<
       Either.sequence(
         validatedKeys.map((key) => {
           const createdAtLocal = key.match(/\d{4,}-\d{2,}-\d{2,}$/)?.[0];
-          console.log({ createdAtLocal });
           return CreatedAtLocal.decode(createdAtLocal);
         }),
       ),
@@ -196,10 +195,8 @@ export const getAllCreatedAtLocals = (): EitherAsync<
 export const getJournal = (
   createdAtLocal: CreatedAtLocal,
 ): EitherAsync<unknown, Journal> => {
-  const userEither = validateLoggedIn();
-
-  return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(userEither);
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(getUserAsEither());
     const key = getJournalKey({ createdAtLocal, user });
 
     return fromPromise(getObjectFromKey({ key, decoder: Journal, user }).run());
@@ -223,9 +220,9 @@ export const getJournal = (
 export const updateJournalAction = async (
   formData: FormData,
 ): Promise<unknown | Journal> => {
-  const userEither = validateLoggedIn();
-
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
+    const user = await fromPromise(getUserAsEither());
+
     const metadata = await liftEither(
       getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
     );
@@ -279,8 +276,6 @@ export const updateJournalAction = async (
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
-      const user = await liftEither(userEither);
-
       await fromPromise(
         deleteAll([
           getJournalKey({ user, createdAtLocal: existingCreatedAtLocal }),
@@ -761,10 +756,10 @@ export const getJournalLevelsAnalytics = ({
     pie: PieChartData;
   }
 > => {
-  const userEither = validateLoggedIn();
+  const userEither = getUserAsEither();
 
-  return EitherAsync(async ({ fromPromise, liftEither }) => {
-    const user = await liftEither(userEither);
+  return EitherAsync(async ({ fromPromise }) => {
+    const user = await fromPromise(userEither);
 
     const { keys: validatedKeys } = await fromPromise(
       getAllItemsKeys({

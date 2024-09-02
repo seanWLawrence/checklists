@@ -1,11 +1,12 @@
+"use server";
 import Link from "next/link";
 
 import { Button } from "./button";
-import { getUser, logout } from "@/app/login/auth.model";
+import { getUser, logout } from "@/lib/auth.model";
 import { MenuButton } from "./menu-button";
 
-export const TopNavigation: React.FC<{}> = async () => {
-  const user = getUser();
+const TopNavigation: React.FC<{}> = async () => {
+  const user = await getUser();
 
   const now = new Date();
   const defaultJournalAnalyticsSince = `2020-01-01to${now.getFullYear()}-${String(
@@ -18,7 +19,7 @@ export const TopNavigation: React.FC<{}> = async () => {
         App
       </Link>
 
-      {user && (
+      {user.isJust() && (
         <MenuButton
           menu={
             <div className="flex flex-col space-y-2">
@@ -70,3 +71,5 @@ export const TopNavigation: React.FC<{}> = async () => {
     </nav>
   );
 };
+
+export default TopNavigation;
