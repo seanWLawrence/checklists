@@ -42,9 +42,7 @@ export const login = async (formData: FormData) => {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "strict",
-      domain: Maybe.fromNullable(
-        process.env.VERCEL_PROJECT_PRODUCTION_URL,
-      ).extract(),
+      path: "/",
     });
   });
 };

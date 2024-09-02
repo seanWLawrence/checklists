@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getUser } from "./lib/auth.model";
 
-export async function middleware(request: NextRequest) {
+const handleAuth = async (request: NextRequest) => {
   const isLogin = request.url.includes("/login");
 
   if (isLogin) {
@@ -14,7 +14,12 @@ export async function middleware(request: NextRequest) {
   if (user.isJust()) {
     return NextResponse.next();
   }
+
   return NextResponse.redirect(new URL("/login", request.url));
+};
+
+export async function middleware(request: NextRequest) {
+  await handleAuth(request);
 }
 
 export const config = {

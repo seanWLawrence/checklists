@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Sean | App",
-  description: "Cool stuff .",
+  description: "Cool stuff",
 };
 
 export const viewport: Viewport = {

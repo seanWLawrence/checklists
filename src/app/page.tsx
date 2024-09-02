@@ -4,7 +4,7 @@ import { Button } from "@/components/button";
 
 const Home: React.FC = () => {
   return (
-    <main className="flex space-x-1">
+    <main className="flex flex-wrap mr-1">
       <Link href="/checklists">
         <Button variant="outline" className="mr-2 mb-2">
           Checklists
