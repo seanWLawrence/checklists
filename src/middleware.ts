@@ -5,21 +5,15 @@ import { getUser } from "./lib/auth.model";
 const handleAuth = async (request: NextRequest) => {
   const isLogin = request.url.includes("/login");
 
-  if (isLogin) {
-    return NextResponse.next();
+  const user = await getUser(request);
+
+  if (!isLogin && user.isNothing()) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  const user = await getUser();
-
-  if (user.isJust()) {
-    return NextResponse.next();
-  }
-
-  return NextResponse.redirect(new URL("/login", request.url));
 };
 
 export async function middleware(request: NextRequest) {
-  await handleAuth(request);
+  return handleAuth(request);
 }
 
 export const config = {

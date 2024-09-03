@@ -7,7 +7,10 @@ const cspHeader = `
     style-src 'self';
     img-src 'self';
     font-src 'self';
+    connect-src 'self';
+    frame-src 'none';
     object-src 'none';
+    media-src 'self';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
@@ -16,16 +19,44 @@ const cspHeader = `
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
+  crossOrigin: "anonymous",
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
+          { key: "x-Frame-Options", value: "DENY" },
+          { key: "x-Content-Type-Options", value: "nosniff" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST" },
+          // None
+          { key: "Access-Control-Allow-Headers", value: "" },
+          process.env.VERCEL_PROJECT_PRODUCTION_URL && {
+            key: "Access-Control-Allow-Origin",
+            value: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+          },
+          { key: "Access-Control-Allow-Max-Age", value: "31536000" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          // One year
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
           {
             key: "Content-Security-Policy",
             value: cspHeader.replace(/\n/g, ""),
           },
-        ],
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+          { key: "Access-Control-Max-Age", value: "" },
+        ].filter(Boolean),
       },
     ];
   },
