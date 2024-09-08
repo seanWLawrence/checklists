@@ -3,8 +3,10 @@ const {
   PHASE_PRODUCTION_BUILD,
 } = require("next/constants");
 
+// TODO: remove need for unsafe-inline for the PWA to work
+
 const scriptSrcDevOnly =
-  process.env.NODE_ENV === "development" ? "'unsafe-eval' 'unsafe-inline'" : "";
+  process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
 
 const cspHeader = `
     default-src 'self';
@@ -48,19 +50,6 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: cspHeader.replace(/\n/g, ""),
           },
-          {
-            key: "Access-Control-Allow-Origin",
-            value: "",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, DELETE, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
-          },
-          { key: "Access-Control-Max-Age", value: "" },
         ].filter(Boolean),
       },
     ];
@@ -69,9 +58,6 @@ const nextConfig = {
 
 /** @type {(phase: string, defaultConfig: import("next").NextConfig) => Promise<import("next").NextConfig>} */
 module.exports = async (phase) => {
-  /** @type {import("next").NextConfig} */
-  const nextConfig = {};
-
   if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
     const withSerwist = (await import("@serwist/next")).default({
       swSrc: "src/app/sw.ts",
