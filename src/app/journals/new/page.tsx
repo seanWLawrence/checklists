@@ -1,4 +1,4 @@
-import { JournalForm } from "../journal-form";
+import { JournalForm } from "../components/journal-form";
 
 const NewJournal: React.FC = () => {
   return <JournalForm />;

@@ -1,4 +1,4 @@
-export const fillArray = <T extends unknown>({
+export const fillArray = <T>({
   length,
   factory,
 }: {

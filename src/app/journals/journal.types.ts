@@ -113,3 +113,34 @@ export type ExperienceBase = GetType<typeof ExperienceBase>;
 export const Experience = intersect(Metadata, ExperienceBase);
 
 export type Experience = GetType<typeof Experience>;
+
+export type JournalLevelsRadarChartDataType = {
+  name: string;
+  average: number;
+  median: number;
+  mode: number;
+  eightiethPercentile: number;
+  twentiethPercentile: number;
+  levelType: keyof JournalLevels;
+  fullMark: number;
+};
+export type RadarChartData = JournalLevelsRadarChartDataType[];
+
+export interface JournalLevelTypeAndValueCount {
+  name: string;
+  /**
+   * @example Energy
+   */
+  total: number;
+  levels: number[];
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+}
+
+export type TotalLevelsByTypeAndValue = Record<
+  keyof JournalLevels,
+  JournalLevelTypeAndValueCount
+>;

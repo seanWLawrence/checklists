@@ -1,14 +1,5 @@
-import { type UUID } from "crypto";
-
-const isNode =
-  typeof process !== "undefined" &&
-  process.versions != null &&
-  process.versions.node != null;
+import { UUID } from "@/lib/types";
 
 export const id = (): UUID => {
-  if (isNode) {
-    return require("crypto").randomUUID();
-  }
-
-  return window.crypto.randomUUID() as UUID;
+  return crypto.randomUUID() as UUID;
 };

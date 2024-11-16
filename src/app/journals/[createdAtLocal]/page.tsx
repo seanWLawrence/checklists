@@ -3,18 +3,17 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import Link from "next/link";
 
 import { Heading } from "@/components/heading";
-import { getJournal } from "../journal.model";
-import { prettyDate } from "../journal.lib";
 import { CreatedAtLocal } from "../journal.types";
 import { Label } from "@/components/label";
 import { groupJournalContentSections } from "./group-journal-content-sections";
+import { getJournal } from "../model/get-journal.model";
+import { prettyDate } from "../lib/pretty-date.lib";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
     .map((sections) => {
       return (
         // Not actually an iterator, "map" in this context is different
-        // eslint-disable-next-line react/jsx-key
         <div className="space-y-3">
           {sections.map((section, index) => {
             return (
@@ -37,9 +36,11 @@ const prettyContent = (content: string): React.ReactNode => {
     .extract();
 };
 
-const Journal: React.FC<{ params: { createdAtLocal: string } }> = async ({
-  params,
-}) => {
+type Params = Promise<{ createdAtLocal: string }>;
+
+const Journal: React.FC<{ params: Params }> = async (props) => {
+  const params = await props.params;
+
   const page = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const createdAtLocal = await liftEither(
       CreatedAtLocal.decode(params.createdAtLocal),

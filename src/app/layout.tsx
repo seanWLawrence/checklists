@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
 
 import TopNavigation from "@/components/top-navigation";
 
 import "./globals.css";
+import { Maybe } from "purify-ts";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -11,6 +11,12 @@ const APP_TITLE_TEMPLATE = "%s - App";
 const APP_DESCRIPTION = "Lifestyle app";
 
 export const metadata: Metadata = {
+  metadataBase: Maybe.fromNullable(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ).mapOrDefault(
+    (url) => new URL(`https://${url}`),
+    new URL("http://localhost:3000"),
+  ),
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
@@ -48,7 +54,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#FFFFFF"
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({

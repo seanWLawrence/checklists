@@ -1,6 +1,6 @@
 "use client";
 import { useFormStatus } from "react-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { Spinner } from "./spinner";
 
 export const Button: React.FC<

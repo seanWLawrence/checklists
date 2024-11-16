@@ -5,7 +5,7 @@ export const groupJournalContentSections = (
   content: JournalBase["content"],
 ) => {
   return NonEmptyList.fromArray(content.split("\n")).map((list) => {
-    let sections: {
+    const sections: {
       heading: string;
       children: string[];
     }[] = [];

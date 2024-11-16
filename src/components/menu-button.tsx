@@ -1,6 +1,6 @@
 "use client";
 import { useFormStatus } from "react-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { Spinner } from "./spinner";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { MenuButtonIcon } from "./icons/menu-button-icon";

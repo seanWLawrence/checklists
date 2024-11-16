@@ -1,8 +1,8 @@
 "use client";
 import { Button } from "@/components/button";
-import { deleteJournalAction } from "../../journal.model";
 import { Journal } from "../../journal.types";
 import { MenuButton } from "@/components/menu-button";
+import { deleteJournalAction } from "../../actions/delete-journal.action";
 
 export const DeleteJournalForm: React.FC<{ journal: Journal }> = ({
   journal,

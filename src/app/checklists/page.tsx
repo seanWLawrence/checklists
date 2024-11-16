@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 
-import { getAllChecklistsV2 } from "./checklist-v2.model";
 import { ChecklistV2 } from "./checklist-v2.types";
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { getAllChecklistsV2 } from "./model/get-all-checklists-v2.model";
 
 const ChecklistsV2: React.FC = async () => {
   const page = await EitherAsync(async ({ fromPromise }) => {

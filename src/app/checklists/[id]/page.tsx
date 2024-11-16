@@ -1,12 +1,14 @@
 import { EitherAsync } from "purify-ts";
-import { getChecklistV2 } from "../checklist-v2.model";
 import { UUID } from "@/lib/types";
 import { structureChecklistContent } from "./structure-checklist-content";
 import { ChecklistV2TaskForm } from "./checklist-v2-task-form";
+import { getChecklistV2 } from "../model/get-checklist-v2.model";
 
-const ChecklistV2View: React.FC<{ params: { id: string } }> = async ({
-  params: { id },
-}) => {
+type Params = Promise<{ id: string }>;
+
+const ChecklistV2View: React.FC<{ params: Params }> = async (props) => {
+  const { id } = await props.params;
+
   const page = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const validId = await liftEither(UUID.decode(id));
     const checklist = await fromPromise(getChecklistV2(validId));

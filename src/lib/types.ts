@@ -5,7 +5,7 @@ import { Left, Right } from "purify-ts/Either";
 const UUID_REG_EXP =
   /[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}/;
 
-const IKEY_REG_EXP = new RegExp(`^user#.*#.*`);
+const IKEY_REG_EXP = /(^user#.*#.*|^refreshToken#.*)/;
 
 export const User = Codec.interface({
   username: string,
@@ -32,7 +32,9 @@ export const Metadata = Codec.interface({
 
 export type Metadata = GetType<typeof Metadata>;
 
-export type Key = `user#${string /* username */}#${string}`;
+export type Key =
+  | `user#${string /* username */}#${string}`
+  | `refreshToken#${string}`;
 
 export const Key = Codec.custom<Key>({
   decode: (input) =>

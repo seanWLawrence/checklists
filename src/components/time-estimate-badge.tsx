@@ -1,4 +1,4 @@
-import { sumTimeEstimates } from "@/lib/time-estimate";
+import { sumTimeEstimates } from "@/app/checklists/lib/sum-time-estimates";
 import { TimeEstimate } from "@/lib/types";
 
 export const TimeEstimateBadge: React.FC<{

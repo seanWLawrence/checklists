@@ -1,20 +1,18 @@
-"use server";
 import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
-import { getUser, login } from "@/lib/auth.model";
+import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { redirect } from "next/navigation";
+import { loginAction } from "./actions";
 
 const Login: React.FC = async () => {
-  const user = await getUser();
-
-  if (user.isJust()) {
+  await validateUserLoggedIn({}).ifLeft(() => {
     redirect("/checklists");
-  }
+  });
 
   return (
-    <form className="space-y-2" action={login}>
+    <form className="space-y-2" action={loginAction}>
       <Heading level={1}>Log in</Heading>
 
       <Label label="Username">

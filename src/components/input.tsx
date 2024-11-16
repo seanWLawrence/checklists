@@ -1,9 +1,10 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
+import React from "react";
 
-export const Input: React.FC<
-  {} & React.InputHTMLAttributes<HTMLInputElement>
-> = ({ children, ...rest }) => {
+export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
+  ...rest
+}) => {
   return (
     <input
       {...rest}

@@ -11,12 +11,6 @@ const Home: React.FC = () => {
         </Button>
       </Link>
 
-      <Link href="/checklists/legacy">
-        <Button variant="outline" className="mr-2 mb-2">
-          Checklists (Legacy version)
-        </Button>
-      </Link>
-
       <Link href="/journals">
         <Button variant="outline" className="mr-2 mb-2">
           Journals

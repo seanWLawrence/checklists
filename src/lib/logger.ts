@@ -1,6 +1,14 @@
-import winston from "winston";
+import logger, { LogLevelDesc } from "loglevel";
+import prefixer from "loglevel-plugin-prefix";
 
-export const logger = winston.createLogger({
-  transports: [new winston.transports.Console()],
-  format: winston.format.cli(),
-});
+const DEFAULT_LOG_LEVEL = "info";
+
+logger.setLevel(
+  (process.env.LOG_LEVEL?.toLocaleLowerCase() as LogLevelDesc) ??
+    DEFAULT_LOG_LEVEL,
+);
+
+prefixer.reg(logger);
+prefixer.apply(logger);
+
+export { logger };

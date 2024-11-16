@@ -8,12 +8,12 @@ import {
   ChecklistV2Structured,
   ChecklistV2StructuredItem,
 } from "../checklist-v2.types";
-import { updateChecklistV2Action } from "../checklist-v2.model";
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
 import { TimeEstimate } from "@/lib/types";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
+import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
 
 const filterCompletedItemsIfHidden = ({
   items,

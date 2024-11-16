@@ -1,4 +1,4 @@
-import { ChecklistV2Form } from "../checklist-v2-form";
+import { ChecklistV2Form } from "../components/checklist-v2-form";
 
 const NewChecklistV2: React.FC = () => {
   return (

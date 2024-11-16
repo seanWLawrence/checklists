@@ -1,19 +1,11 @@
-import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { getUser } from "./lib/auth.model";
-
-const handleAuth = async (request: NextRequest) => {
-  const isLogin = request.url.includes("/login");
-
-  const user = await getUser(request);
-
-  if (!isLogin && user.isNothing()) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-};
+import { handleAuth } from "./middleware/handle-auth";
+import { AUTH_SECRET } from "./lib/auth/auth.constants";
 
 export async function middleware(request: NextRequest) {
-  return handleAuth(request);
+  const authResult = await handleAuth({ request, authSecret: AUTH_SECRET });
+
+  return authResult;
 }
 
 export const config = {

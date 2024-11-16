@@ -1,6 +1,6 @@
 import { Heading } from "@/components/heading";
 
-const ButtonSkeleton: React.FC<{}> = () => {
+const ButtonSkeleton: React.FC = () => {
   return (
     <div className="text-zinc-200 bg-zinc-200 border-2 border-zinc-900 rounded-lg py-1 px-2 text-sm animate-pulse duration-1000 mr-2 mb-2">
       Checklist

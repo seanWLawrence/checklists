@@ -1,12 +1,16 @@
-"use server";
 import Link from "next/link";
 
 import { Button } from "./button";
-import { getUser, logout } from "@/lib/auth.model";
 import { MenuButton } from "./menu-button";
+import { getUser } from "@/lib/auth/get-user";
+import { logoutAction } from "./actions/logout.action";
 
-const TopNavigation: React.FC<{}> = async () => {
-  const user = await getUser();
+const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
+  getUserFn = getUser,
+}) => {
+  const user = await getUserFn({});
+
+  const safeUser = user.mapLeft(() => null).extract();
 
   const now = new Date();
   const defaultJournalAnalyticsSince = `2020-01-01to${now.getFullYear()}-${String(
@@ -19,10 +23,13 @@ const TopNavigation: React.FC<{}> = async () => {
         App
       </Link>
 
-      {user.isJust() && (
+      {safeUser && (
         <MenuButton
           menu={
-            <div className="flex flex-col space-y-2">
+            <div
+              className="flex flex-col space-y-2"
+              data-testid="top-navigation-links"
+            >
               <Link href="/checklists">
                 <Button variant="ghost" type="button">
                   Checklists
@@ -55,13 +62,7 @@ const TopNavigation: React.FC<{}> = async () => {
                 </Button>
               </Link>
 
-              <Link href="/checklists/legacy">
-                <Button variant="ghost" type="button">
-                  Checklists (Legacy version)
-                </Button>
-              </Link>
-
-              <form action={logout}>
+              <form action={logoutAction}>
                 <Button variant="ghost">Sign out</Button>
               </form>
             </div>
