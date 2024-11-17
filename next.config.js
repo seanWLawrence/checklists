@@ -46,7 +46,7 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "no-referrer" },
           // One year
           { key: "Strict-Transport-Security", value: "max-age=31536000" },
-          {
+          process.env.NODE_ENV !== "development" && {
             key: "Content-Security-Policy",
             value: cspHeader.replace(/\n/g, ""),
           },
