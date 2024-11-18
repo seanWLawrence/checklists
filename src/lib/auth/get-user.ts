@@ -15,7 +15,7 @@ export const getUser = ({
   getAccessCookieFn = getAccessCookie,
   validateAccessJwtFn = validateAccessJwt,
 }: {
-  request?: NextRequest;
+  request?: Pick<NextRequest, "url"> & { cookies: NextRequest["cookies"] };
   authSecret?: Either<unknown, string>;
   getAccessCookieFn?: typeof getAccessCookie;
   validateAccessJwtFn?: typeof validateAccessJwt;

@@ -10,7 +10,7 @@ export const getAccessCookie = ({
   request,
   getCookieFn = getCookie,
 }: {
-  request?: NextRequest;
+  request?: { cookies: NextRequest["cookies"] };
   getCookieFn?: typeof getCookie;
 }): MaybeAsync<RequestCookie> => {
   logger.debug("Getting access cookie");
