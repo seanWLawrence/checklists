@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import TopNavigation from "@/components/top-navigation";
 
 import "./globals.css";
-import { Maybe } from "purify-ts";
+import { BASE_URL } from "@/lib/constants";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -11,12 +11,7 @@ const APP_TITLE_TEMPLATE = "%s - App";
 const APP_DESCRIPTION = "Lifestyle app";
 
 export const metadata: Metadata = {
-  metadataBase: Maybe.fromNullable(
-    process.env.VERCEL_PROJECT_PRODUCTION_URL,
-  ).mapOrDefault(
-    (url) => new URL(`https://${url}`),
-    new URL("http://localhost:3000"),
-  ),
+  metadataBase: BASE_URL,
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
