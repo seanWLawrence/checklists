@@ -14,6 +14,7 @@ export const validateUserLoggedIn = ({
 
     if (user === null) {
       logger.debug("User not found");
+
       return throwE("No user found");
     }
 

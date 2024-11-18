@@ -52,7 +52,7 @@ export const setAuthTokensAndCookies = ({
 
     const refreshTokenKey = getRefreshTokenKey({ token });
 
-    logger.debug("Creating refresh token item in database");
+    logger.debug("Generated token, creating refresh token item in database");
 
     const refreshToken = await liftEither(
       RefreshToken.decode({
@@ -70,6 +70,8 @@ export const setAuthTokensAndCookies = ({
       }),
     );
 
+    logger.debug("Created refresh token item, expiring in 30 days");
+
     await fromPromise(
       expireFn({
         key: refreshTokenKey,
@@ -77,7 +79,7 @@ export const setAuthTokensAndCookies = ({
       }),
     );
 
-    logger.debug("Setting auth cookies");
+    logger.debug("Exiration set, setting auth cookies");
 
     setAccessJwtCookieFn({ jwt: accessJwt });
 

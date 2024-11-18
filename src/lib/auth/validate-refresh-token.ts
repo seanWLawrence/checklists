@@ -7,6 +7,8 @@ import { User } from "../types";
 import { THIRTY_DAYS_IN_MILLISECONDS } from "./auth.constants";
 import { secureHash } from "./secure-hash";
 import { Either } from "purify-ts/Either";
+import { logger } from "../logger";
+import { constantTimeStringComparison } from "./constant-time-string-comparison";
 
 export interface ValidateRefreshTokenParams {
   token: string;
@@ -20,6 +22,8 @@ export const validateRefreshToken = ({
   secureHashFn = secureHash,
 }: ValidateRefreshTokenParams): EitherAsync<unknown, User> => {
   return EitherAsync(async ({ fromPromise, throwE }) => {
+    logger.debug("Validating refresh token");
+
     const refreshTokenFromDb = await fromPromise(
       getSingleItemFn({
         key: getRefreshTokenKey({ token }),
@@ -34,7 +38,12 @@ export const validateRefreshToken = ({
       }),
     );
 
-    if (hashedToken.hash !== refreshTokenFromDb.hash) {
+    const hashesMatch = constantTimeStringComparison(
+      hashedToken.hash,
+      refreshTokenFromDb.hash,
+    );
+
+    if (!hashesMatch) {
       return throwE("Refresh token hash doesn't match");
     }
 

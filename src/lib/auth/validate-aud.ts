@@ -1,5 +1,6 @@
 import { Either, Left, Right } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
+import { logger } from "../logger";
 
 export interface ValidateAudParams {
   expectedAudMaybe: Maybe<string>;
@@ -10,6 +11,8 @@ export const validateAud = ({
   expectedAudMaybe,
   actualAud,
 }: ValidateAudParams): Either<string, string> => {
+  logger.debug("Validating aud claim");
+
   if (expectedAudMaybe.isNothing()) {
     return Right(expectedAudMaybe.extract());
   }

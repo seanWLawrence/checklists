@@ -14,8 +14,6 @@ export const expire = ({
   numSecondsToExpire: number;
 }): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
-    logger.debug("Setting expiration");
-
     const client = await liftEither(getClientFn({}));
 
     logger.debug(
@@ -24,8 +22,6 @@ export const expire = ({
 
     try {
       const result = await client.expire(key, numSecondsToExpire);
-
-      logger.debug({ result });
 
       if (result === 0) {
         return throwE(`Failed to expire '${key}'`);

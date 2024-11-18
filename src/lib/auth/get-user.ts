@@ -21,11 +21,9 @@ export const getUser = ({
   validateAccessJwtFn?: typeof validateAccessJwt;
 }): EitherAsync<unknown, User | null> => {
   return EitherAsync(async ({ liftEither, fromPromise }) => {
-    logger.getLogger("getUser").debug("Getting auth secret");
+    logger.debug("Getting user");
 
     const authSecret = await liftEither(authSecretEither);
-
-    logger.debug("Auth secret found, getting accessJwt cookie");
 
     const accessJwtCookie = await getAccessCookieFn({ request });
 
@@ -34,8 +32,6 @@ export const getUser = ({
         .map((cookie) => cookie.value)
         .toEither("No access cookie"),
     );
-
-    logger.debug("Access cookie found, validating");
 
     const accessJwtPayload = await fromPromise(
       validateAccessJwtFn({
@@ -46,6 +42,8 @@ export const getUser = ({
 
     const username = await liftEither(
       Either.encase(() => {
+        logger.debug("Jwt validated, getting username");
+
         invariant(accessJwtPayload.sub, "No sub");
 
         return accessJwtPayload.sub;

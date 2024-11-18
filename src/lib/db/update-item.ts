@@ -2,6 +2,7 @@ import { EitherAsync } from "purify-ts";
 
 import { Key } from "../types";
 import { hmset } from "./hmset";
+import { logger } from "../logger";
 
 export const updateItem = <T extends object>({
   item,
@@ -14,6 +15,8 @@ export const updateItem = <T extends object>({
 }): EitherAsync<unknown, T> => {
   return EitherAsync(async ({ fromPromise }) => {
     const key = getKeyFn(item);
+
+    logger.debug(`Updating item with key: ${key}`);
 
     await fromPromise(hmsetFn({ key, item }));
 

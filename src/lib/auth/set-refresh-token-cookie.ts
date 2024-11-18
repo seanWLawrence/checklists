@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 import {
   REFRESH_TOKEN_COOKIE_NAME,
   THIRTY_DAYS_IN_MILLISECONDS,
@@ -11,6 +12,8 @@ export const setRefreshTokenCookie = ({
   token: string;
   setCookieFn?: typeof setCookie;
 }) => {
+  logger.debug("Setting refresh token cookie");
+
   setCookieFn({
     cookieName: REFRESH_TOKEN_COOKIE_NAME,
     value: token,

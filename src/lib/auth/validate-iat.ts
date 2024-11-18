@@ -1,4 +1,5 @@
 import { Either, Left, Right } from "purify-ts/Either";
+import { logger } from "../logger";
 
 export interface ValidateIssuedAtParams {
   iat?: number;
@@ -9,6 +10,8 @@ export const validateIssuedAt = ({
   iat,
   maxValidMilliIssuedFromNow,
 }: ValidateIssuedAtParams): Either<string, number> => {
+  logger.debug("Validating iat claim");
+
   if (!iat) {
     return Left("No iat");
   }

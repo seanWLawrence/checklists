@@ -6,6 +6,7 @@ import { AUTH_SECRET } from "./auth.constants";
 import { getStringFromFormData } from "../form-data/get-string-from-form-data";
 import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-tokens-and-cookies";
+import { constantTimeStringComparison } from "./constant-time-string-comparison";
 
 export const login = async ({
   formData,
@@ -34,13 +35,17 @@ export const login = async ({
 
       const authSecret = await liftEither(authSecretEither);
 
-      if (authSecret !== password) {
+      logger.debug("Checking password");
+
+      const passwordValid = constantTimeStringComparison(authSecret, password);
+
+      if (!passwordValid) {
         logger.debug("Invalid password");
 
         return throwE("Invalid credentials");
       }
 
-      logger.debug("Valid password, setting auth tokens and cookies");
+      logger.debug("Password correct");
 
       const user = { username };
 

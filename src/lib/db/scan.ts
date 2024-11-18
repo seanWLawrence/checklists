@@ -34,8 +34,6 @@ export const scan = ({
         ),
       );
 
-      logger.debug("Keys valid");
-
       const allKeysSoFar = [...previousKeys, ...validKeys];
 
       const done = newCursor === "0";

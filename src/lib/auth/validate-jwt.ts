@@ -3,6 +3,7 @@ import { JWTPayload } from "jose";
 import { EitherAsync } from "purify-ts";
 
 import { JWT_ALGORITHM } from "./auth.constants";
+import { logger } from "../logger";
 
 export interface ValidateJwtParams {
   authSecret?: string;
@@ -14,6 +15,8 @@ export const validateJwt = ({
   authSecret,
 }: ValidateJwtParams): EitherAsync<unknown, JWTPayload> => {
   return EitherAsync(async ({ throwE }) => {
+    logger.debug("Validating jwt");
+
     try {
       const { payload } = await jwtVerify(
         jwt,

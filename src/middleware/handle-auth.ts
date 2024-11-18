@@ -35,7 +35,7 @@ export const handleAuth = async ({
 }): Promise<NextResponse> => {
   const result = await EitherAsync<unknown, NextResponse>(
     async ({ fromPromise }) => {
-      logger.debug("Handle auth for", request.url);
+      logger.debug("Handle auth middleware");
 
       const isLoginPage = request.url.includes("/login");
 

@@ -13,13 +13,9 @@ export const createItem = <T extends object>({
   hmsetFn?: typeof hmset;
 }): EitherAsync<unknown, T> => {
   return EitherAsync(async ({ fromPromise }) => {
-    logger.debug("Creating item");
-
     const key = getKeyFn(item);
 
-    logger.debug(`Key to create: ${key}`);
-
-    logger.debug(`Creating item: ${JSON.stringify(item, null, 2)}`);
+    logger.debug(`Creating item with key: '${key}'`);
 
     await fromPromise(hmsetFn({ key, item }));
 

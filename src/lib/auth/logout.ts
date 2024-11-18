@@ -5,6 +5,7 @@ import { getUser } from "./get-user";
 import { revokeRefreshToken } from "./revoke-refresh-token";
 import { revokeAccessToken } from "./revoke-access-token";
 import { getRefreshCookie } from "./get-refresh-cookie";
+import { logger } from "../logger";
 
 export const logout = async ({
   getUserFn = getUser,
@@ -20,12 +21,14 @@ export const logout = async ({
   redirectFn?: (path: string) => never;
 }): Promise<void> => {
   await EitherAsync(async ({ fromPromise }) => {
+    logger.debug("Logging out");
+
     const user = await fromPromise(getUserFn({}));
 
     if (user) {
       const refreshCookie = await fromPromise(
         getRefreshCookieFn({}).toEitherAsync(
-          "Couldnt find refresh token cookie",
+          "Couldn't find refresh token cookie",
         ),
       );
 
