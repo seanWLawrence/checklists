@@ -5,7 +5,7 @@ import { Either } from "purify-ts/Either";
 import { AUTH_SECRET } from "./auth.constants";
 import { getStringFromFormData } from "../form-data/get-string-from-form-data";
 import { logger } from "../logger";
-import { setAuthTokensAndCookies } from "./set-tokens-and-cookies";
+import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
 
 export const login = async ({

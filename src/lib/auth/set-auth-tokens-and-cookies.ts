@@ -79,7 +79,7 @@ export const setAuthTokensAndCookies = ({
       }),
     );
 
-    logger.debug("Exiration set, setting auth cookies");
+    logger.debug("Expiration set, setting auth cookies");
 
     setAccessJwtCookieFn({ jwt: accessJwt });
 

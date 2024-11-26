@@ -1,11 +1,14 @@
 import { NextRequest } from "next/server";
 import { handleAuth } from "./middleware/handle-auth";
 import { AUTH_SECRET } from "./lib/auth/auth.constants";
+import { applySetCookie } from "./lib/auth/apply-set-cookie";
 
 export async function middleware(request: NextRequest) {
-  const authResult = await handleAuth({ request, authSecret: AUTH_SECRET });
+  const authResponse = await handleAuth({ request, authSecret: AUTH_SECRET });
 
-  return authResult;
+  applySetCookie(request, authResponse);
+
+  return authResponse;
 }
 
 export const config = {

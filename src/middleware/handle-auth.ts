@@ -7,7 +7,7 @@ import {
 import { getRefreshCookie } from "@/lib/auth/get-refresh-cookie";
 import { getSecureCookieParams } from "@/lib/auth/get-secure-cookie-params";
 import { revokeRefreshToken } from "@/lib/auth/revoke-refresh-token";
-import { setAuthTokensAndCookies } from "@/lib/auth/set-tokens-and-cookies";
+import { setAuthTokensAndCookies } from "@/lib/auth/set-auth-tokens-and-cookies";
 import { validateRefreshToken } from "@/lib/auth/validate-refresh-token";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { logger } from "@/lib/logger";
@@ -25,7 +25,9 @@ export const handleAuth = async ({
   setAuthTokensAndCookiesFn = setAuthTokensAndCookies,
 }: {
   authSecret: Either<unknown, string>;
-  request: Pick<NextRequest, "url"> & { cookies: NextRequest["cookies"] };
+  request: Pick<NextRequest, "url" | "headers"> & {
+    cookies: NextRequest["cookies"];
+  };
   redirectFn?: typeof NextResponse.redirect;
   validateUserLoggedInFn?: typeof validateUserLoggedIn;
   getRefreshCookieFn?: typeof getRefreshCookie;
@@ -70,14 +72,20 @@ export const handleAuth = async ({
       logger.debug("Refresh cookie is valid, revoking");
 
       await fromPromise(
-        revokeRefreshTokenFn({ token: refreshTokenCookie.value }),
+        revokeRefreshTokenFn({
+          token: refreshTokenCookie.value,
+          // When deleting the cookies here in the middleware it causes problems. It'll expire it, but not remove it, making the new cookie with the same name not get set properly
+          deleteCookieFn: () => Promise.resolve(void 0),
+        }),
       );
 
       logger.debug(
         "Refresh token revoked, generating and setting new auth cookies",
       );
 
-      const response = NextResponse.next();
+      const response = NextResponse.next({
+        request: { headers: request.headers },
+      });
 
       await fromPromise(
         setAuthTokensAndCookiesFn({
@@ -113,7 +121,7 @@ export const handleAuth = async ({
   if (result.isRight()) {
     return result.extract();
   } else {
-    logger.debug("User not logged in, trying to get new access token");
+    logger.debug("Redirecting to login page", result.extract());
 
     return redirectFn(new URL("/login", request.url));
   }
