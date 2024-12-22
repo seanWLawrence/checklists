@@ -1,4 +1,6 @@
 import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
+import { DOMAIN } from "../constants";
+import { isProduction } from "../environment";
 
 export const getSecureCookieParams = ({
   expires,
@@ -7,9 +9,10 @@ export const getSecureCookieParams = ({
 }): Partial<ResponseCookie> => {
   return {
     expires,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     httpOnly: true,
     sameSite: "strict",
     path: "/",
+    domain: isProduction ? DOMAIN : undefined,
   };
 };

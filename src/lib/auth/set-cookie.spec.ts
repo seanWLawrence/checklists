@@ -1,5 +1,6 @@
 import { test, vi } from "vitest";
 import { setCookie } from "./set-cookie";
+import { DOMAIN } from "../constants";
 
 const cookieName = "cookie name";
 const value = "some value";
@@ -28,11 +29,12 @@ test("sets cookie with expected secure params in production", async ({
       httpOnly: true,
       sameSite: "strict",
       path: "/",
+      domain: DOMAIN,
     },
   });
 });
 
-test("sets cookie with expected secure params in production", ({ expect }) => {
+test("sets cookie with expected secure params in development", ({ expect }) => {
   const setCookieFn = vi.fn();
 
   vi.stubEnv("NODE_ENV", "development");
@@ -53,6 +55,7 @@ test("sets cookie with expected secure params in production", ({ expect }) => {
       httpOnly: true,
       sameSite: "strict",
       path: "/",
+      domain: DOMAIN,
     },
   });
 });

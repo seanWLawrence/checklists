@@ -1,16 +1,8 @@
-import { id } from "@/factories/id.factory";
-import { Metadata } from "../types";
-
-export const toDatabaseDto = <T extends object>(item: T & Metadata): T => {
-  return {
-    ...item,
-    createdAtIso: item.createdAtIso.toISOString(),
-    updatedAtIso: item.updatedAtIso.toISOString(),
-  };
-};
-
 import { test } from "vitest";
 import { user } from "@/factories/user.factory";
+import { id } from "@/factories/id.factory";
+import { metadataToDatabaseDto } from "./metadata-to-database-dto";
+import { Metadata } from "../types";
 
 test("converts metadata dates into ISO strings", ({ expect }) => {
   const createdAtIso = new Date();
@@ -23,7 +15,7 @@ test("converts metadata dates into ISO strings", ({ expect }) => {
     user: user(),
   };
 
-  expect(toDatabaseDto(metadataOnlyItem)).toEqual({
+  expect(metadataToDatabaseDto(metadataOnlyItem)).toEqual({
     ...metadataOnlyItem,
     createdAtIso: createdAtIso.toISOString(),
     updatedAtIso: updatedAtIso.toISOString(),
@@ -37,7 +29,7 @@ test("converts metadata dates into ISO strings", ({ expect }) => {
     hello: "world",
   };
 
-  expect(toDatabaseDto(fullItem)).toEqual({
+  expect(metadataToDatabaseDto(fullItem)).toEqual({
     ...fullItem,
     createdAtIso: createdAtIso.toISOString(),
     updatedAtIso: updatedAtIso.toISOString(),
