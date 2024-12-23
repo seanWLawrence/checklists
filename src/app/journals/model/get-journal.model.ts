@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { EitherAsync } from "purify-ts";
 
 import { Key, User } from "@/lib/types";

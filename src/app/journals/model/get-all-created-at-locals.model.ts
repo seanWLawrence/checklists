@@ -1,5 +1,4 @@
 import { logger } from "@/lib/logger";
-import { revalidatePath } from "next/cache";
 import { EitherAsync, Either } from "purify-ts";
 import { CreatedAtLocal } from "../journal.types";
 import { getAllJournalsScanKey } from "./get-all-journals.model";

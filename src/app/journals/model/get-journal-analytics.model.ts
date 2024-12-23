@@ -1,5 +1,4 @@
 import { logger } from "@/lib/logger";
-import { revalidatePath } from "next/cache";
 import { EitherAsync } from "purify-ts";
 import { CreatedAtLocal, RadarChartData, Journal } from "../journal.types";
 import { PieChartData, getPieChartData } from "../lib/get-pie-chart-data.lib";

@@ -1,6 +1,5 @@
 import { test, vi } from "vitest";
 import { setCookie } from "./set-cookie";
-import { DOMAIN } from "../constants";
 
 const cookieName = "cookie name";
 const value = "some value";

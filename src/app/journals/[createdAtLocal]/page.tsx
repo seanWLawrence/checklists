@@ -14,6 +14,7 @@ const prettyContent = (content: string): React.ReactNode => {
     .map((sections) => {
       return (
         // Not actually an iterator, "map" in this context is different
+        // eslint-disable-next-line react/jsx-key
         <div className="space-y-3">
           {sections.map((section, index) => {
             return (
