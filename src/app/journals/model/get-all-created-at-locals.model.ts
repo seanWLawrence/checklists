@@ -1,9 +1,13 @@
 import { logger } from "@/lib/logger";
 import { EitherAsync, Either } from "purify-ts";
 import { CreatedAtLocal } from "../journal.types";
-import { getAllJournalsScanKey } from "./get-all-journals.model";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { scan } from "@/lib/db/scan";
+
+import { Key, User } from "@/lib/types";
+
+export const getAllJournalsScanKey = ({ user }: { user: User }): Key =>
+  `user#${user.username}#journal#*`;
 
 export const getAllCreatedAtLocals = (): EitherAsync<
   unknown,

@@ -2,11 +2,11 @@ import { logger } from "@/lib/logger";
 import { EitherAsync } from "purify-ts";
 import { CreatedAtLocal, RadarChartData, Journal } from "../journal.types";
 import { PieChartData, getPieChartData } from "../lib/get-pie-chart-data.lib";
-import { getAllJournalsScanKey } from "./get-all-journals.model";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { scan } from "@/lib/db/scan";
 import { getAllItems } from "@/lib/db/get-all-items";
 import { getRadarChartData } from "../lib/get-radar-chart-data.lib";
+import { getAllJournalsScanKey } from "./get-all-created-at-locals.model";
 
 export const getJournalLevelsAnalytics = ({
   from,

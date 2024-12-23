@@ -35,6 +35,7 @@ test("fails if cant get username or password", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
+    // @ts-expect-error just for testing
     redirectFn,
   });
 
