@@ -9,10 +9,8 @@ import { getChecklistV2Key } from "../model/get-checklist-v2.model";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 
-export const deleteChecklistV2Action = async (
-  id: UUID,
-): Promise<unknown | void> => {
-  const response = await EitherAsync(async ({ fromPromise }) => {
+export const deleteChecklistV2Action = async (id: UUID): Promise<void> => {
+  await EitherAsync(async ({ fromPromise }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
 
     return fromPromise(
@@ -36,6 +34,4 @@ export const deleteChecklistV2Action = async (
         }),
     );
   });
-
-  return response.toJSON();
 };

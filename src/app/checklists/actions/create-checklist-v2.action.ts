@@ -7,7 +7,7 @@ import { EitherAsync, intersect } from "purify-ts";
 import { createItem } from "@/lib/db/create-item";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { ChecklistV2, ChecklistV2Base } from "../checklist-v2.types";
+import { ChecklistV2Base } from "../checklist-v2.types";
 import { getChecklistV2Key } from "../model/get-checklist-v2.model";
 import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/db/metadata.factory";
@@ -15,7 +15,7 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const createChecklistV2Action = async (
   formData: FormData,
-): Promise<unknown | ChecklistV2> => {
+): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
 
@@ -56,6 +56,4 @@ export const createChecklistV2Action = async (
   if (response.isRight()) {
     redirect(`/checklists/${response.extract().id}`, RedirectType.push);
   }
-
-  return response.toJSON();
 };

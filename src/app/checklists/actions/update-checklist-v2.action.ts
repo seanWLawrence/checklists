@@ -19,7 +19,7 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const updateChecklistV2Action = async (
   formData: FormData,
-): Promise<unknown | ChecklistV2> => {
+): Promise<void> => {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
 
@@ -84,6 +84,4 @@ export const updateChecklistV2Action = async (
     logger.error("Failed to update checklist");
     logger.error(response.extract());
   }
-
-  return response.toJSON();
 };

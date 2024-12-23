@@ -13,7 +13,7 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const deleteJournalAction = async (
   formData: FormData,
-): Promise<unknown | void> => {
+): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
 
@@ -51,6 +51,4 @@ export const deleteJournalAction = async (
   if (response.isRight()) {
     redirect("/journals", RedirectType.push);
   }
-
-  return response.toJSON();
 };
