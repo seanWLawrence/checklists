@@ -9,14 +9,12 @@ test("sets cookie with expected secure params in production", async ({
   expect,
 }) => {
   const setCookieFn = vi.fn();
-  const domain = "example.com";
 
   await setCookie({
     setCookieFn,
     cookieName,
     value,
     expires,
-    domain,
     isProductionFn: () => true,
   });
 
@@ -29,7 +27,6 @@ test("sets cookie with expected secure params in production", async ({
       httpOnly: true,
       sameSite: "strict",
       path: "/",
-      domain,
     },
   });
 });
@@ -54,7 +51,6 @@ test("sets cookie with expected secure params in development", ({ expect }) => {
       httpOnly: true,
       sameSite: "strict",
       path: "/",
-      domain: undefined,
     },
   });
 });

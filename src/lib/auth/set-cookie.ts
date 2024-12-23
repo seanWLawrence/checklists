@@ -1,7 +1,6 @@
 import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
-import { DOMAIN } from "../constants";
 import { isProduction } from "../environment";
 
 export const defaultSetCookie = async ({
@@ -23,7 +22,6 @@ export const setCookie = ({
   value,
   expires,
   setCookieFn = defaultSetCookie,
-  domain = DOMAIN,
   isProductionFn = isProduction,
 }: {
   cookieName: string;
@@ -36,6 +34,6 @@ export const setCookie = ({
   return setCookieFn({
     cookieName,
     value,
-    options: getSecureCookieParams({ expires, domain, isProductionFn }),
+    options: getSecureCookieParams({ expires, isProductionFn }),
   });
 };
