@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
-import TopNavigation from "@/components/top-navigation";
-
 import "./globals.css";
 import { BASE_URL } from "@/lib/constants";
+import TopNavigation from "@/components/top-navigation";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";

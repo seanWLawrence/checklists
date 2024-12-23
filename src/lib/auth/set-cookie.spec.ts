@@ -10,14 +10,15 @@ test("sets cookie with expected secure params in production", async ({
   expect,
 }) => {
   const setCookieFn = vi.fn();
-
-  vi.stubEnv("NODE_ENV", "production");
+  const domain = "example.com";
 
   await setCookie({
     setCookieFn,
     cookieName,
     value,
     expires,
+    domain,
+    isProductionFn: () => true,
   });
 
   expect(setCookieFn).toHaveBeenCalledWith({
@@ -29,7 +30,7 @@ test("sets cookie with expected secure params in production", async ({
       httpOnly: true,
       sameSite: "strict",
       path: "/",
-      domain: DOMAIN,
+      domain,
     },
   });
 });
@@ -37,13 +38,12 @@ test("sets cookie with expected secure params in production", async ({
 test("sets cookie with expected secure params in development", ({ expect }) => {
   const setCookieFn = vi.fn();
 
-  vi.stubEnv("NODE_ENV", "development");
-
   setCookie({
     setCookieFn,
     cookieName,
     value,
     expires,
+    isProductionFn: () => false,
   });
 
   expect(setCookieFn).toHaveBeenCalledWith({
@@ -55,7 +55,7 @@ test("sets cookie with expected secure params in development", ({ expect }) => {
       httpOnly: true,
       sameSite: "strict",
       path: "/",
-      domain: DOMAIN,
+      domain: undefined,
     },
   });
 });

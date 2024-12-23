@@ -98,6 +98,7 @@ test("redirects to home on success", async ({ expect }) => {
   const getStringFromFormDataFn = vi.fn().mockReturnValue(Right("some value"));
 
   const redirectFn = vi.fn();
+  const revalidatePathFn = vi.fn();
 
   await login({
     formData: new FormData(),
@@ -105,8 +106,10 @@ test("redirects to home on success", async ({ expect }) => {
     authSecret: Right("some value"),
     setAuthTokensAndCookiesFn: vi.fn().mockResolvedValue(Right(void 0)),
     redirectFn: redirectFn as unknown as typeof redirect,
+    revalidatePathFn,
   });
 
   expect(redirectFn).toHaveBeenCalledTimes(1);
   expect(redirectFn).toHaveBeenCalledWith("/");
+  expect(revalidatePathFn).toHaveBeenCalledWith("/", "layout");
 });

@@ -6,6 +6,7 @@ import { revokeRefreshToken } from "./revoke-refresh-token";
 import { revokeAccessToken } from "./revoke-access-token";
 import { getRefreshCookie } from "./get-refresh-cookie";
 import { logger } from "../logger";
+import { revalidatePath } from "next/cache";
 
 export const logout = async ({
   getUserFn = getUser,
@@ -13,12 +14,14 @@ export const logout = async ({
   revokeRefreshTokenFn = revokeRefreshToken,
   revokeAccessTokenFn = revokeAccessToken,
   redirectFn = redirect,
+  revalidatePathFn = revalidatePath,
 }: {
   getUserFn?: typeof getUser;
   getRefreshCookieFn?: typeof getRefreshCookie;
   revokeRefreshTokenFn?: typeof revokeRefreshToken;
   revokeAccessTokenFn?: typeof revokeAccessToken;
   redirectFn?: (path: string) => never;
+  revalidatePathFn?: typeof revalidatePath;
 }): Promise<void> => {
   await EitherAsync(async ({ fromPromise }) => {
     logger.debug("Logging out");
@@ -38,5 +41,6 @@ export const logout = async ({
     }
   });
 
+  revalidatePathFn("/", "layout");
   redirectFn("/login");
 };

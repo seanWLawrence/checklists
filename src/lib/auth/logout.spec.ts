@@ -8,6 +8,7 @@ test("skips revoking and redirects if user isnt found", async ({ expect }) => {
   const revokeRefreshTokenFn = vi.fn();
   const revokeAccessTokenFn = vi.fn();
   const redirectFn = vi.fn();
+  const revalidatePathFn = vi.fn();
 
   await logout({
     getUserFn,
@@ -15,6 +16,7 @@ test("skips revoking and redirects if user isnt found", async ({ expect }) => {
     revokeAccessTokenFn,
     // @ts-expect-error just for testing
     redirectFn,
+    revalidatePathFn,
   });
 
   expect(revokeRefreshTokenFn).not.toHaveBeenCalled();
@@ -31,6 +33,7 @@ test("fails if revokeRefreshTokenFn fails", async ({ expect }) => {
   const revokeRefreshTokenFn = vi.fn().mockResolvedValue(Left("some error"));
   const revokeAccessTokenFn = vi.fn();
   const redirectFn = vi.fn();
+  const revalidatePathFn = vi.fn();
 
   await logout({
     getUserFn,
@@ -39,6 +42,7 @@ test("fails if revokeRefreshTokenFn fails", async ({ expect }) => {
     revokeAccessTokenFn,
     // @ts-expect-error just for testing
     redirectFn,
+    revalidatePathFn,
   });
 
   expect(getRefreshCookieFn).toHaveBeenCalled();
@@ -59,6 +63,7 @@ test("deletes access and refresh cookies and redirects to login when user is fou
   const revokeRefreshTokenFn = vi.fn().mockResolvedValue(Right(undefined));
   const revokeAccessTokenFn = vi.fn();
   const redirectFn = vi.fn();
+  const revalidatePathFn = vi.fn();
 
   await logout({
     getUserFn,
@@ -67,6 +72,7 @@ test("deletes access and refresh cookies and redirects to login when user is fou
     revokeAccessTokenFn,
     // @ts-expect-error just for testing
     redirectFn,
+    revalidatePathFn,
   });
 
   expect(getRefreshCookieFn).toHaveBeenCalled();
@@ -74,4 +80,5 @@ test("deletes access and refresh cookies and redirects to login when user is fou
   expect(revokeRefreshTokenFn).toHaveBeenCalledWith({ token: "some token" });
   expect(revokeAccessTokenFn).toHaveBeenCalled();
   expect(redirectFn).toHaveBeenCalledWith("/login");
+  expect(revalidatePathFn).toHaveBeenCalledWith("/", "layout");
 });

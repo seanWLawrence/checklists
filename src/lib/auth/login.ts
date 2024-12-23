@@ -7,6 +7,7 @@ import { getStringFromFormData } from "../form-data/get-string-from-form-data";
 import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
+import { revalidatePath } from "next/cache";
 
 export const login = async ({
   formData,
@@ -14,12 +15,14 @@ export const login = async ({
   getStringFromFormDataFn = getStringFromFormData,
   setAuthTokensAndCookiesFn = setAuthTokensAndCookies,
   redirectFn = redirect,
+  revalidatePathFn = revalidatePath,
 }: {
   formData: FormData;
   authSecret?: Either<unknown, string>;
   getStringFromFormDataFn?: typeof getStringFromFormData;
   setAuthTokensAndCookiesFn?: typeof setAuthTokensAndCookies;
   redirectFn?: typeof redirect;
+  revalidatePathFn?: typeof revalidatePath;
 }): Promise<void> => {
   const result = await EitherAsync(
     async ({ liftEither, fromPromise, throwE }) => {
@@ -56,6 +59,7 @@ export const login = async ({
   ).ifLeft((e) => logger.error(e));
 
   if (result.isRight()) {
+    revalidatePathFn("/", "layout");
     redirectFn("/");
   }
 };
