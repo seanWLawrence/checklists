@@ -17,6 +17,7 @@ import { Either, EitherAsync } from "purify-ts";
 export const handleAuth = async ({
   authSecret,
   request,
+  nextFn = NextResponse.next,
   redirectFn = NextResponse.redirect,
   validateUserLoggedInFn = validateUserLoggedIn,
   getRefreshCookieFn = getRefreshCookie,
@@ -28,6 +29,7 @@ export const handleAuth = async ({
   request: Pick<NextRequest, "url" | "headers"> & {
     cookies: NextRequest["cookies"];
   };
+  nextFn?: typeof NextResponse.next;
   redirectFn?: typeof NextResponse.redirect;
   validateUserLoggedInFn?: typeof validateUserLoggedIn;
   getRefreshCookieFn?: typeof getRefreshCookie;
@@ -39,20 +41,27 @@ export const handleAuth = async ({
     async ({ fromPromise }) => {
       logger.debug("Handle auth middleware");
 
-      const isLoginPage = request.url.includes("/login");
-
-      if (isLoginPage) {
-        return NextResponse.next();
-      }
-
-      logger.debug("Not login page, validating user logged in");
-
       const loggedInUser = await validateUserLoggedInFn({}).toMaybeAsync();
 
-      if (loggedInUser.isJust()) {
-        logger.debug("User logged in", loggedInUser.extract());
+      const isLoginPage = request.url.includes("/login");
 
-        return NextResponse.next();
+      const needsToBeRedirectedToHome = isLoginPage && loggedInUser.isJust();
+
+      if (needsToBeRedirectedToHome) {
+        logger.debug("User is logged in, redirecting to home");
+
+        return redirectFn(new URL("/", request.url));
+      }
+
+      const tryingToLogin = isLoginPage && loggedInUser.isNothing();
+
+      const shouldContinueUninterrupted =
+        loggedInUser.isJust() || tryingToLogin;
+
+      if (shouldContinueUninterrupted) {
+        logger.debug("Request is valid. No intervention needed.");
+
+        return nextFn();
       }
 
       logger.debug("User not logged in, checking for refresh token cookie");
@@ -83,7 +92,7 @@ export const handleAuth = async ({
         "Refresh token revoked, generating and setting new auth cookies",
       );
 
-      const response = NextResponse.next({
+      const response = nextFn({
         request: { headers: request.headers },
       });
 
@@ -121,7 +130,7 @@ export const handleAuth = async ({
   if (result.isRight()) {
     return result.extract();
   } else {
-    logger.debug("Redirecting to login page", result.extract());
+    logger.error("Redirecting to login page", result.extract());
 
     return redirectFn(new URL("/login", request.url));
   }

@@ -9,20 +9,87 @@ import { user } from "@/factories/user.factory";
 
 const authSecret = Either.of("authSecret");
 
-test("does nothing if request is on login page", async ({ expect }) => {
+test("should continue uninterrupted if trying to log in", async ({
+  expect,
+}) => {
+  const validateUserLoggedInFn = vi
+    .fn()
+    .mockReturnValue(
+      EitherAsync(async ({ throwE }) => throwE("not logged in")),
+    );
+
+  const nextFn = vi.fn();
   const redirectFn = vi.fn();
 
   await handleAuth({
     authSecret,
     request: {
-      url: "/login",
+      url: "http://localhost:3000/login",
       // We're not using the cookies here
       cookies: {} as NextRequest["cookies"],
     },
-    redirectFn: redirectFn,
+    validateUserLoggedInFn,
+    nextFn,
+    redirectFn,
+  });
+
+  expect(nextFn).toHaveBeenCalled();
+  expect(redirectFn).not.toHaveBeenCalled();
+});
+
+test("should continue uninterrupted if already logged in and doing a request outside of the login page", async ({
+  expect,
+}) => {
+  const redirectFn = vi.fn();
+  const nextFn = vi.fn();
+
+  const validateUserLoggedInFn = vi
+    .fn()
+    .mockReturnValue(
+      EitherAsync(async ({ liftEither }) => liftEither(Either.of(user()))),
+    );
+
+  await handleAuth({
+    authSecret,
+    request: {
+      url: "http://localhost:3000/not-login",
+      // We're not using the cookies here
+      cookies: {} as NextRequest["cookies"],
+    },
+    validateUserLoggedInFn,
+    redirectFn,
+    nextFn,
   });
 
   expect(redirectFn).not.toHaveBeenCalled();
+  expect(nextFn).toHaveBeenCalled();
+});
+
+test("redirects to home if request is on login page but user is logged in", async ({
+  expect,
+}) => {
+  const redirectFn = vi.fn();
+
+  const validateUserLoggedInFn = vi
+    .fn()
+    .mockReturnValue(
+      EitherAsync(async ({ liftEither }) => liftEither(Either.of(user()))),
+    );
+
+  await handleAuth({
+    authSecret,
+    request: {
+      url: "http://localhost:3000/login",
+      // We're not using the cookies here
+      cookies: {} as NextRequest["cookies"],
+    },
+    redirectFn,
+    validateUserLoggedInFn,
+  });
+
+  expect(redirectFn).toHaveBeenCalledWith(
+    new URL("/", "http://localhost:3000"),
+  );
 });
 
 test("redirects to login page if not logged in and viewing a page other than login", async ({
@@ -47,28 +114,9 @@ test("redirects to login page if not logged in and viewing a page other than log
     validateUserLoggedInFn,
   });
 
-  expect(redirectFn).toHaveBeenCalled();
-});
-
-test("does nothing if logged in", async ({ expect }) => {
-  const redirectFn = vi.fn();
-
-  const validateUserLoggedInFn = vi
-    .fn()
-    .mockResolvedValue(Right({ username: "username" }));
-
-  await handleAuth({
-    authSecret,
-    request: {
-      url: "http://localhost:3000/login",
-      // We're not using the cookies here
-      cookies: {} as NextRequest["cookies"],
-    },
-    redirectFn: redirectFn,
-    validateUserLoggedInFn,
-  });
-
-  expect(redirectFn).not.toHaveBeenCalled();
+  expect(redirectFn).toHaveBeenCalledWith(
+    new URL("/login", "http://localhost:3000"),
+  );
 });
 
 test("redirects to login if no refresh token", async ({ expect }) => {
@@ -92,10 +140,12 @@ test("redirects to login if no refresh token", async ({ expect }) => {
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
-    redirectFn: redirectFn,
+    redirectFn,
   });
 
-  expect(redirectFn).toHaveBeenCalled();
+  expect(redirectFn).toHaveBeenCalledWith(
+    new URL("/login", "http://localhost:3000"),
+  );
 });
 
 test("redirects to login if refresh token isnt valid", async ({ expect }) => {
@@ -124,10 +174,12 @@ test("redirects to login if refresh token isnt valid", async ({ expect }) => {
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
     validateRefreshTokenFn,
-    redirectFn: redirectFn,
+    redirectFn,
   });
 
-  expect(redirectFn).toHaveBeenCalled();
+  expect(redirectFn).toHaveBeenCalledWith(
+    new URL("/login", "http://localhost:3000"),
+  );
 });
 
 test("redirects to login if revokeRefreshTokenFn fails", async ({ expect }) => {
@@ -207,7 +259,7 @@ test("redirects to login if setAuthTokensAndCookiesFn fails", async ({
   expect(redirectFn).toHaveBeenCalled();
 });
 
-test("succeeds and returns user if all functions succeed", async ({
+test("succeeds and returns user if wasnt logged in, but has refresh token and succeeds with getting an access token", async ({
   expect,
 }) => {
   const validateUserLoggedInFn = vi
@@ -228,6 +280,7 @@ test("succeeds and returns user if all functions succeed", async ({
   const setAuthTokensAndCookiesFn = vi.fn().mockResolvedValue(Right({}));
 
   const redirectFn = vi.fn();
+  const nextFn = vi.fn();
 
   await handleAuth({
     authSecret,
@@ -242,7 +295,9 @@ test("succeeds and returns user if all functions succeed", async ({
     revokeRefreshTokenFn,
     setAuthTokensAndCookiesFn,
     redirectFn,
+    nextFn,
   });
 
+  expect(nextFn).toHaveBeenCalled();
   expect(redirectFn).not.toHaveBeenCalled();
 });
