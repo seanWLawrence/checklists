@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
+import "highlight.js/styles/tokyo-night-dark.css";
 import { BASE_URL } from "@/lib/constants";
 import TopNavigation from "@/components/top-navigation";
 

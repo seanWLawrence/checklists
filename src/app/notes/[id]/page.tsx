@@ -4,6 +4,7 @@ import { getNote } from "../model/get-note.model";
 import { Heading } from "@/components/heading";
 import { Button } from "@/components/button";
 import Link from "next/link";
+import { PrettyContent } from "./pretty-content.client";
 
 type Params = Promise<{ id: string }>;
 
@@ -31,9 +32,7 @@ const NoteView: React.FC<{ params: Params }> = async (props) => {
           </Link>
         </div>
 
-        <div>
-          <p>{note.content}</p>
-        </div>
+        <PrettyContent content={note.content} />
       </div>
     );
   })
