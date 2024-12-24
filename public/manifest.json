@@ -3,7 +3,7 @@
   "short_name": "Sean",
   "description": "Cool stuff.",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#fff",
   "theme_color": "#fff",
   "icons": [
