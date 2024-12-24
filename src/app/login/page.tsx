@@ -16,11 +16,16 @@ const Login: React.FC = async () => {
       <Heading level={1}>Log in</Heading>
 
       <Label label="Username">
-        <Input type="text" required name="username" />
+        <Input type="text" required name="username" autoComplete="username" />
       </Label>
 
       <Label label="Password">
-        <Input type="password" required name="password" />
+        <Input
+          type="password"
+          required
+          name="password"
+          autoComplete="password"
+        />
       </Label>
 
       <Button variant="primary">Log in</Button>
