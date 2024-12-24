@@ -16,6 +16,12 @@ const Home: React.FC = () => {
           Journals
         </Button>
       </Link>
+
+      <Link href="/notes">
+        <Button variant="outline" className="mr-2 mb-2">
+          Notes
+        </Button>
+      </Link>
     </main>
   );
 };

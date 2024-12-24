@@ -62,6 +62,18 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 </Button>
               </Link>
 
+              <Link href="/notes">
+                <Button variant="ghost" type="button">
+                  Notes
+                </Button>
+              </Link>
+
+              <Link href="/notes/new">
+                <Button variant="ghost" type="button">
+                  New note
+                </Button>
+              </Link>
+
               <form action={logoutAction}>
                 <Button variant="ghost">Sign out</Button>
               </form>
