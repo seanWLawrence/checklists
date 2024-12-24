@@ -30,49 +30,63 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               className="flex flex-col space-y-2"
               data-testid="top-navigation-links"
             >
-              <Link href="/checklists">
-                <Button variant="ghost" type="button">
-                  Checklists
-                </Button>
-              </Link>
+              <div className="flex space-x-1 items-center">
+                <Link href="/checklists">
+                  <Button variant="ghost" type="button">
+                    Checklists
+                  </Button>
+                </Link>
 
-              <Link href="/checklists/new">
-                <Button variant="ghost" type="button">
-                  New checklist
-                </Button>
-              </Link>
+                <span>/</span>
 
-              <Link href="/journals">
-                <Button variant="ghost" type="button">
-                  Journals
-                </Button>
-              </Link>
+                <Link href="/checklists/new">
+                  <Button variant="ghost" type="button">
+                    New checklist
+                  </Button>
+                </Link>
+              </div>
 
-              <Link href="/journals/new">
-                <Button variant="ghost" type="button">
-                  New journal
-                </Button>
-              </Link>
+              <div className="flex space-x-1 items-center">
+                <Link href="/journals">
+                  <Button variant="ghost" type="button">
+                    Journals
+                  </Button>
+                </Link>
 
-              <Link
-                href={`/journals/analytics/${defaultJournalAnalyticsSince}`}
-              >
-                <Button variant="ghost" type="button">
-                  Journal analytics
-                </Button>
-              </Link>
+                <span>/</span>
 
-              <Link href="/notes">
-                <Button variant="ghost" type="button">
-                  Notes
-                </Button>
-              </Link>
+                <Link href="/journals/new">
+                  <Button variant="ghost" type="button">
+                    New journal
+                  </Button>
+                </Link>
 
-              <Link href="/notes/new">
-                <Button variant="ghost" type="button">
-                  New note
-                </Button>
-              </Link>
+                <span>/</span>
+
+                <Link
+                  href={`/journals/analytics/${defaultJournalAnalyticsSince}`}
+                >
+                  <Button variant="ghost" type="button">
+                    Analytics
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="flex space-x-1 items-center">
+                <Link href="/notes">
+                  <Button variant="ghost" type="button">
+                    Notes
+                  </Button>
+                </Link>
+
+                <span>/</span>
+
+                <Link href="/notes/new">
+                  <Button variant="ghost" type="button">
+                    New note
+                  </Button>
+                </Link>
+              </div>
 
               <form action={logoutAction}>
                 <Button variant="ghost">Sign out</Button>
