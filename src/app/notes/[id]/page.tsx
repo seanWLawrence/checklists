@@ -18,22 +18,22 @@ const NoteView: React.FC<{ params: Params }> = async (props) => {
 
     return (
       <div className="space-y-4 max-w-prose">
-        <div className="flex items-center space-x-2">
-          <div className="flex flex-col space-y-1">
+        <div className="flex flex-col space-y-1">
+          <div className="flex items-center space-x-2">
             <Heading level={1}>{note.name}</Heading>
 
-            <RelativeTime date={note.updatedAtIso} />
+            <Link
+              href={`/notes/${note.id}/edit`}
+              className="underline underline-offset-2"
+            >
+              <Button type="button" variant="ghost">
+                Edit
+              </Button>
+            </Link>
           </div>
-
-          <Link
-            href={`/notes/${note.id}/edit`}
-            className="underline underline-offset-2"
-          >
-            <Button type="button" variant="ghost">
-              Edit
-            </Button>
-          </Link>
         </div>
+
+        <RelativeTime date={note.updatedAtIso} />
 
         <PrettyContent content={note.content} />
       </div>
