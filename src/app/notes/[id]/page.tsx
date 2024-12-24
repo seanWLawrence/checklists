@@ -5,6 +5,7 @@ import { Heading } from "@/components/heading";
 import { Button } from "@/components/button";
 import Link from "next/link";
 import { PrettyContent } from "./pretty-content.client";
+import { RelativeTime } from "@/components/relative-time";
 
 type Params = Promise<{ id: string }>;
 
@@ -18,8 +19,10 @@ const NoteView: React.FC<{ params: Params }> = async (props) => {
     return (
       <div className="space-y-4 max-w-prose">
         <div className="flex items-center space-x-2">
-          <div className="flex space-x-1 items-center">
+          <div className="flex flex-col space-y-1">
             <Heading level={1}>{note.name}</Heading>
+
+            <RelativeTime date={note.updatedAtIso} />
           </div>
 
           <Link

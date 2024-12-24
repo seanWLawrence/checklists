@@ -8,6 +8,7 @@ import { Label } from "@/components/label";
 import { groupJournalContentSections } from "./group-journal-content-sections";
 import { getJournal } from "../model/get-journal.model";
 import { prettyDate } from "../lib/pretty-date.lib";
+import { RelativeTime } from "@/components/relative-time";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -51,15 +52,19 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
 
     return (
       <main className="space-y-2 max-w-prose">
-        <div className="flex space-x-2 items-center">
-          <Heading level={1}>{prettyDate(journal.createdAtLocal)}</Heading>
+        <div className="flex flex-col space-y-1 pb-4">
+          <div className="flex space-x-2 items-center">
+            <Heading level={1}>{prettyDate(journal.createdAtLocal)}</Heading>
 
-          <Link
-            className="underline underline-offset-2 text-xs"
-            href={`/journals/${journal.createdAtLocal}/edit`}
-          >
-            Edit
-          </Link>
+            <Link
+              className="underline underline-offset-2 text-xs"
+              href={`/journals/${journal.createdAtLocal}/edit`}
+            >
+              Edit
+            </Link>
+          </div>
+
+          <RelativeTime date={journal.updatedAtIso} />
         </div>
 
         <Label label="Energy level (low to high)">

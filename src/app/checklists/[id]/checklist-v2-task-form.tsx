@@ -14,6 +14,7 @@ import { MenuButton } from "@/components/menu-button";
 import { TimeEstimate } from "@/lib/types";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
+import { RelativeTime } from "@/components/relative-time";
 
 const filterCompletedItemsIfHidden = ({
   items,
@@ -30,7 +31,8 @@ const filterCompletedItemsIfHidden = ({
 };
 
 export const ChecklistV2TaskForm: React.FC<{
-  structuredChecklist: ChecklistV2Structured & Pick<ChecklistV2, "id" | "name">;
+  structuredChecklist: ChecklistV2Structured &
+    Pick<ChecklistV2, "id" | "name" | "updatedAtIso">;
 }> = ({ structuredChecklist }) => {
   const hasCompletedItems = structuredChecklist.sections.some((section) => {
     return section.items.some((item) => item.completed);
@@ -46,68 +48,74 @@ export const ChecklistV2TaskForm: React.FC<{
 
   return (
     <div className="space-y-4 max-w-prose">
-      <div className="flex items-center space-x-2">
-        <div className="flex space-x-1 items-center">
-          <Heading level={1}>{structuredChecklist.name}</Heading>
+      <div className="flex flex-col space-y-1">
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1 items-center">
+            <Heading level={1}>{structuredChecklist.name}</Heading>
 
-          {hasCompletedItems && (
-            <MenuButton
-              menu={
-                <div className="flex flex-col space-y-2 text-normal">
-                  <form
-                    action={async () => {
-                      Maybe.fromNullable(formRef.current).ifJust(async (x) => {
-                        const formData = new FormData(x);
+            {hasCompletedItems && (
+              <MenuButton
+                menu={
+                  <div className="flex flex-col space-y-2 text-normal">
+                    <form
+                      action={async () => {
+                        Maybe.fromNullable(formRef.current).ifJust(
+                          async (x) => {
+                            const formData = new FormData(x);
 
-                        for (const [key, value] of Array.from(
-                          formData.entries(),
-                        )) {
-                          if (key.startsWith("item__") && value === "on") {
-                            formData.set(key, "off");
-                          }
-                        }
+                            for (const [key, value] of Array.from(
+                              formData.entries(),
+                            )) {
+                              if (key.startsWith("item__") && value === "on") {
+                                formData.set(key, "off");
+                              }
+                            }
 
-                        await updateChecklistV2Action(formData);
-                      });
-                    }}
-                  >
-                    <Button type="submit" variant="ghost">
-                      Reset completed
+                            await updateChecklistV2Action(formData);
+                          },
+                        );
+                      }}
+                    >
+                      <Button type="submit" variant="ghost">
+                        Reset completed
+                      </Button>
+                    </form>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={toggleShowCompleted}
+                    >
+                      {showCompleted ? "Hide completed" : "Show completed"}
                     </Button>
-                  </form>
+                  </div>
+                }
+              ></MenuButton>
+            )}
+          </div>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={toggleShowCompleted}
-                  >
-                    {showCompleted ? "Hide completed" : "Show completed"}
-                  </Button>
-                </div>
-              }
-            ></MenuButton>
-          )}
+          <TimeEstimateBadge
+            timeEstimates={structuredChecklist.sections.reduce((acc, x) => {
+              x.items.forEach((item) => {
+                if (!item.completed && item.timeEstimate) {
+                  acc.push(item.timeEstimate);
+                }
+              });
+              return acc;
+            }, [] as TimeEstimate[])}
+          />
+
+          <Link
+            href={`/checklists/${structuredChecklist.id}/edit`}
+            className="underline underline-offset-2"
+          >
+            <Button type="button" variant="ghost">
+              Edit
+            </Button>
+          </Link>
         </div>
 
-        <TimeEstimateBadge
-          timeEstimates={structuredChecklist.sections.reduce((acc, x) => {
-            x.items.forEach((item) => {
-              if (!item.completed && item.timeEstimate) {
-                acc.push(item.timeEstimate);
-              }
-            });
-            return acc;
-          }, [] as TimeEstimate[])}
-        />
-
-        <Link
-          href={`/checklists/${structuredChecklist.id}/edit`}
-          className="underline underline-offset-2"
-        >
-          <Button type="button" variant="ghost">
-            Edit
-          </Button>
-        </Link>
+        <RelativeTime date={structuredChecklist.updatedAtIso} />
       </div>
 
       <div className="space-y-4">
