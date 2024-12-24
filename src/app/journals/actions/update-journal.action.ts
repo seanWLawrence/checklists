@@ -89,7 +89,7 @@ export const updateJournalAction = async (
 
       const journal = await liftEither(
         Journal.decode({
-          ...metadataToDatabaseDto(metadata),
+          ...metadataToDatabaseDto({ ...metadata, updatedAtIso: new Date() }),
           user,
           createdAtLocal,
           content,
@@ -137,7 +137,7 @@ export const updateJournalAction = async (
 
     const journal = await liftEither(
       Journal.decode({
-        ...metadataToDatabaseDto(metadata),
+        ...metadataToDatabaseDto({ ...metadata, updatedAtIso: new Date() }),
         user,
         createdAtLocal,
         content,

@@ -34,7 +34,7 @@ export const updateNoteAction = async (formData: FormData): Promise<void> => {
         ...metadata,
         user,
         createdAtIso: metadata.createdAtIso.toISOString(),
-        updatedAtIso: metadata.updatedAtIso.toISOString(),
+        updatedAtIso: new Date().toISOString(),
         name,
         content,
       }),

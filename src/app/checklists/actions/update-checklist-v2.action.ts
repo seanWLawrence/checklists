@@ -51,7 +51,7 @@ export const updateChecklistV2Action = async (
         ...metadata,
         user,
         createdAtIso: metadata.createdAtIso.toISOString(),
-        updatedAtIso: metadata.updatedAtIso.toISOString(),
+        updatedAtIso: new Date().toISOString(),
         name,
         content,
       }),
