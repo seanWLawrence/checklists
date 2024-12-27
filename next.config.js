@@ -11,7 +11,7 @@ const scriptSrcDevOnly =
 const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' ${scriptSrcDevOnly};
-    style-src 'self';
+    style-src 'self' 'unsafe-inline';
     img-src 'self';
     font-src 'self';
     connect-src 'self';
