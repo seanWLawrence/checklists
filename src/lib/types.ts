@@ -13,6 +13,13 @@ export const User = Codec.interface({
 
 export type User = GetType<typeof User>;
 
+export const UserCredentials = Codec.interface({
+  passwordHash: string,
+  salt: string,
+});
+
+export type UserCredentials = GetType<typeof UserCredentials>;
+
 export const UUID = Codec.custom<IUUID>({
   decode: (input) =>
     typeof input === "string" && input.match(UUID_REG_EXP)

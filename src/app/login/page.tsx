@@ -1,10 +1,11 @@
+import { redirect } from "next/navigation";
+
 import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { redirect } from "next/navigation";
-import { loginAction } from "./actions";
+import { loginAction } from "./actions/login.action";
 
 const Login: React.FC = async () => {
   await validateUserLoggedIn({}).ifLeft(() => {

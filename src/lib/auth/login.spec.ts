@@ -3,6 +3,7 @@ import { Left, Right } from "purify-ts/Either";
 
 import { login } from "./login";
 import { redirect } from "next/navigation";
+import { UserCredentials } from "../types";
 
 const succeededAndCalledRedirectToHome = ({
   redirectFn,
@@ -57,11 +58,13 @@ test("fails if cant get auth secret", async ({ expect }) => {
   expect(succeededAndCalledRedirectToHome({ redirectFn })).toBe(false);
 });
 
-test("fails if password doesnt match auth secret", async ({ expect }) => {
+test("fails if user credentials arent found", async ({ expect }) => {
   const getStringFromFormDataFn = vi
     .fn()
     .mockReturnValueOnce(Right("some value"))
     .mockReturnValueOnce(Right("some other secret"));
+
+  const getSingleItemFn = vi.fn().mockResolvedValue(Left("not found"));
 
   const redirectFn = vi.fn();
 
@@ -69,6 +72,71 @@ test("fails if password doesnt match auth secret", async ({ expect }) => {
     formData: new FormData(),
     getStringFromFormDataFn,
     authSecret: Right("some secret"),
+    getSingleItemFn,
+    redirectFn: redirectFn as unknown as typeof redirect,
+  });
+
+  expect(succeededAndCalledRedirectToHome({ redirectFn })).toBe(false);
+});
+
+test("fails if password hash fails", async ({ expect }) => {
+  const getStringFromFormDataFn = vi
+    .fn()
+    .mockReturnValueOnce(Right("some value"))
+    .mockReturnValueOnce(Right("some other secret"));
+
+  const getSingleItemFn = vi.fn().mockResolvedValue(
+    Right({
+      passwordHash: "some hash",
+      salt: "some salt",
+    } satisfies UserCredentials),
+  );
+
+  const secureHashFn = vi.fn().mockResolvedValue(Left("some error"));
+
+  const redirectFn = vi.fn();
+
+  await login({
+    formData: new FormData(),
+    getStringFromFormDataFn,
+    authSecret: Right("some secret"),
+    getSingleItemFn,
+    secureHashFn,
+    redirectFn: redirectFn as unknown as typeof redirect,
+  });
+
+  expect(succeededAndCalledRedirectToHome({ redirectFn })).toBe(false);
+});
+
+test("fails if passwordHash doesnt match user credentials password hash", async ({
+  expect,
+}) => {
+  const getStringFromFormDataFn = vi
+    .fn()
+    .mockReturnValueOnce(Right("some value"))
+    .mockReturnValueOnce(Right("some other secret"));
+
+  const getSingleItemFn = vi.fn().mockResolvedValue(
+    Right({
+      passwordHash: "some hash",
+      salt: "some salt",
+    } satisfies UserCredentials),
+  );
+
+  const secureHashFn = vi
+    .fn()
+    .mockResolvedValue(
+      Right({ hash: "some different hash", salt: "some salt" }),
+    );
+
+  const redirectFn = vi.fn();
+
+  await login({
+    formData: new FormData(),
+    getStringFromFormDataFn,
+    authSecret: Right("some secret"),
+    getSingleItemFn,
+    secureHashFn,
     redirectFn: redirectFn as unknown as typeof redirect,
   });
 
@@ -77,6 +145,17 @@ test("fails if password doesnt match auth secret", async ({ expect }) => {
 
 test("fails if setAuthTokensAndCookies fails", async ({ expect }) => {
   const getStringFromFormDataFn = vi.fn().mockReturnValue(Right("some value"));
+
+  const getSingleItemFn = vi.fn().mockResolvedValue(
+    Right({
+      passwordHash: "some hash",
+      salt: "some salt",
+    } satisfies UserCredentials),
+  );
+
+  const secureHashFn = vi
+    .fn()
+    .mockResolvedValue(Right({ hash: "some hash", salt: "some salt" }));
 
   const setAuthTokensAndCookiesFn = vi
     .fn()
@@ -88,6 +167,8 @@ test("fails if setAuthTokensAndCookies fails", async ({ expect }) => {
     formData: new FormData(),
     getStringFromFormDataFn,
     authSecret: Right("some value"),
+    getSingleItemFn,
+    secureHashFn,
     setAuthTokensAndCookiesFn,
     redirectFn: redirectFn as unknown as typeof redirect,
   });
@@ -96,7 +177,21 @@ test("fails if setAuthTokensAndCookies fails", async ({ expect }) => {
 });
 
 test("redirects to home on success", async ({ expect }) => {
-  const getStringFromFormDataFn = vi.fn().mockReturnValue(Right("some value"));
+  const getStringFromFormDataFn = vi
+    .fn()
+    .mockReturnValueOnce(Right("some value"))
+    .mockReturnValueOnce(Right("some password"));
+
+  const getSingleItemFn = vi.fn().mockResolvedValue(
+    Right({
+      passwordHash: "some hash",
+      salt: "some salt",
+    } satisfies UserCredentials),
+  );
+
+  const secureHashFn = vi
+    .fn()
+    .mockResolvedValue(Right({ hash: "some hash", salt: "some salt" }));
 
   const redirectFn = vi.fn();
   const revalidatePathFn = vi.fn();
@@ -105,6 +200,8 @@ test("redirects to home on success", async ({ expect }) => {
     formData: new FormData(),
     getStringFromFormDataFn,
     authSecret: Right("some value"),
+    getSingleItemFn,
+    secureHashFn,
     setAuthTokensAndCookiesFn: vi.fn().mockResolvedValue(Right(void 0)),
     redirectFn: redirectFn as unknown as typeof redirect,
     revalidatePathFn,

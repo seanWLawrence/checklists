@@ -8,11 +8,19 @@ import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
 import { revalidatePath } from "next/cache";
+import { getSingleItem } from "../db/get-single-item";
+import { Key, UserCredentials } from "../types";
+import { secureHash } from "./secure-hash";
+
+const getUserCredentialsKey = ({ username }: { username: string }): Key =>
+  `user#${username}#credentials`;
 
 export const login = async ({
   formData,
   authSecret: authSecretEither = AUTH_SECRET,
   getStringFromFormDataFn = getStringFromFormData,
+  getSingleItemFn = getSingleItem,
+  secureHashFn = secureHash,
   setAuthTokensAndCookiesFn = setAuthTokensAndCookies,
   redirectFn = redirect,
   revalidatePathFn = revalidatePath,
@@ -20,6 +28,8 @@ export const login = async ({
   formData: FormData;
   authSecret?: Either<unknown, string>;
   getStringFromFormDataFn?: typeof getStringFromFormData;
+  getSingleItemFn?: typeof getSingleItem;
+  secureHashFn?: typeof secureHash;
   setAuthTokensAndCookiesFn?: typeof setAuthTokensAndCookies;
   redirectFn?: typeof redirect;
   revalidatePathFn?: typeof revalidatePath;
@@ -36,11 +46,32 @@ export const login = async ({
         getStringFromFormDataFn({ name: "password", formData }),
       );
 
-      const authSecret = await liftEither(authSecretEither);
+      logger.debug("Getting user credentials from database");
+
+      const userCredentialsFromDatabase = await fromPromise(
+        getSingleItemFn({
+          key: getUserCredentialsKey({ username }),
+          decoder: UserCredentials,
+        }),
+      );
+
+      logger.debug(
+        "Got user credentials from database, hashing password for comparison",
+      );
+
+      const { hash: inputPasswordHash } = await fromPromise(
+        secureHashFn({
+          value: password,
+          saltFn: () => Either.of(userCredentialsFromDatabase.salt),
+        }),
+      );
 
       logger.debug("Checking password");
 
-      const passwordValid = constantTimeStringComparison(authSecret, password);
+      const passwordValid = constantTimeStringComparison(
+        inputPasswordHash,
+        userCredentialsFromDatabase.passwordHash,
+      );
 
       if (!passwordValid) {
         logger.debug("Invalid password");
