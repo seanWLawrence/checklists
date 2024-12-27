@@ -18,11 +18,11 @@ export const Button: React.FC<
         className={cn(
           "rounded-lg py-1 px-2 text-sm space-x-2 flex items-center text-nowrap whitespace-nowrap",
           {
-            "border-2 border-zinc-900 hover:border-r-4 hover:border-b-4 transition-all duration-100":
+            "border-2 border-zinc-900 shadow-[rgb(0,0,0)_2px_2px_0px] active:shadow-none transition-all duration-100":
               variant === "outline",
-            "border-2 border-transparent hover:border-r-4 hover:border-b-4 hover:border-zinc-200 transition-all duration-100":
+            "border-2 border-transparent hover:bg-zinc-100 active:bg-zinc-200 transition-all duration-100":
               variant === "ghost",
-            "border-2 border-zinc-900 bg-zinc-900 text-zinc-50 hover:border-r-4 hover:border-b-4 hover:border-b-zinc-600 hover:border-r-zinc-600 transition-all duration-100":
+            "border-2 border-zinc-900 bg-zinc-900 text-zinc-50 shadow-[rgba(0,0,0,.25)_3px_3px_0px] active:shadow-none transition-all duration-100":
               variant === "primary",
           },
           rest.className,

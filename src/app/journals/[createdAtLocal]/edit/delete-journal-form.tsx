@@ -28,7 +28,7 @@ export const DeleteJournalForm: React.FC<{ journal: Journal }> = ({
       <MenuButton
         menu={
           <div>
-            <Button type="submit" variant="outline">
+            <Button type="submit" variant="ghost">
               Delete
             </Button>
           </div>
