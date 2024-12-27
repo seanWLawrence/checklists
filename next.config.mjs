@@ -1,7 +1,7 @@
-const {
+import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_PRODUCTION_BUILD,
-} = require("next/constants");
+} from "next/constants";
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
