@@ -88,6 +88,12 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 </Link>
               </div>
 
+              <Link href="/user-credential-generator">
+                <Button variant="ghost" type="button">
+                  Generate credentials
+                </Button>
+              </Link>
+
               <form action={logoutAction}>
                 <Button variant="ghost">Sign out</Button>
               </form>
