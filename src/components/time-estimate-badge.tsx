@@ -14,7 +14,7 @@ export const TimeEstimateBadge: React.FC<{
 
   return (
     <span>
-      <span className="text-xs bg-zinc-200 text-zinc-900 rounded py-1 px-1.5">
+      <span className="text-xs bg-zinc-200 text-zinc-900 rounded-sm py-1 px-1.5">
         {sum}
       </span>
     </span>
