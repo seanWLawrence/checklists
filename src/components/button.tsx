@@ -33,10 +33,9 @@ export const Button: React.FC<
       >
         <span className="text-nowrap whitespace-nowrap">{children}</span>
 
+        {!pending && (
         <div
-          className={cn("animate-in fade-in duration-1000", {
-            hidden: !pending,
-          })}
+          className={cn("animate-in fade-in duration-1000")}
         >
           <Spinner
             className={cn({
@@ -46,6 +45,7 @@ export const Button: React.FC<
             })}
           />
         </div>
+        )}
       </button>
     </div>
   );
