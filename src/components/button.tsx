@@ -33,7 +33,7 @@ export const Button: React.FC<
       >
         <span className="text-nowrap whitespace-nowrap">{children}</span>
 
-        {!pending && (
+        {pending && (
         <div
           className={cn("animate-in fade-in duration-1000")}
         >
