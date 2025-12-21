@@ -2,13 +2,10 @@ import { test, vi } from "vitest";
 import { deleteAllItems } from "./delete-all-items";
 import { Left, Right } from "purify-ts/Either";
 
-const user = { username: "username" };
-
 test("fails if getClientFn fails", async ({ expect }) => {
   const getClientFn = vi.fn().mockReturnValue(Left("some error"));
 
   const result = await deleteAllItems({
-    user,
     getClientFn,
     keys: ["user#username#value1"],
   });
@@ -27,7 +24,6 @@ test("fails is client.del fails", async ({ expect }) => {
   );
 
   const result = await deleteAllItems({
-    user,
     getClientFn,
     keys: ["user#username#value1"],
   });
@@ -46,7 +42,6 @@ test("returns void if succeeds", async ({ expect }) => {
   );
 
   const result = await deleteAllItems({
-    user,
     getClientFn,
     keys: ["user#username#value1"],
   });
@@ -59,7 +54,6 @@ test("doesnt do anything if no keys", async ({ expect }) => {
   const getClientFn = vi.fn().mockReturnValue(Right({}));
 
   const result = await deleteAllItems({
-    user,
     keys: [],
     getClientFn,
   });

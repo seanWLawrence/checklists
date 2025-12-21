@@ -3,6 +3,7 @@ import { Left, Right } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
 
 import { getUser } from "./get-user";
+import { User } from "../types";
 
 test("returns null if auth secret isnt set", async ({ expect }) => {
   const result = await getUser({ authSecret: Left("some error") });
@@ -71,5 +72,5 @@ test("returns user if has valid access jwt and sub", async ({ expect }) => {
   });
 
   expect(result.isRight()).toBe(true);
-  expect(result.extract().username).toBe(username);
+  expect((result.extract() as User).username).toBe(username);
 });

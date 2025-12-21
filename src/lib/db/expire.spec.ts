@@ -29,7 +29,7 @@ test("fails if expire calls fails", async ({ expect }) => {
 
   expect(result.isLeft()).toBe(true);
   expect(result.extract()).toBeInstanceOf(Error);
-  expect(result.extract().message).toBe("some error");
+  expect((result.extract() as Error).message).toBe("some error");
   expect(expireMock).toBeCalledWith(key, 10);
 });
 

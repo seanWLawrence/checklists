@@ -26,13 +26,10 @@ const item: Dummy = {
   user: { username: "username" },
 };
 
-const user = item.user;
-
 test("fails if hmsetFn fails", async ({ expect }) => {
   const hmsetFn = vi.fn().mockResolvedValue(Left("some error"));
 
   const result = await updateItem({
-    user,
     hmsetFn,
     getKeyFn,
     item,
@@ -46,7 +43,6 @@ test("succeeds if nothing fails", async ({ expect }) => {
   const hmsetFn = vi.fn().mockResolvedValue(Right(void 0));
 
   const result = await updateItem({
-    user,
     hmsetFn,
     getKeyFn,
     item,

@@ -27,6 +27,7 @@ test("should continue uninterrupted if trying to log in", async ({
       url: "http://localhost:3000/login",
       // We're not using the cookies here
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     nextFn,
@@ -55,6 +56,7 @@ test("should continue uninterrupted if already logged in and doing a request out
       url: "http://localhost:3000/not-login",
       // We're not using the cookies here
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     redirectFn,
@@ -82,6 +84,7 @@ test("redirects to home if request is on login page but user is logged in", asyn
       url: "http://localhost:3000/login",
       // We're not using the cookies here
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     redirectFn,
     validateUserLoggedInFn,
@@ -109,6 +112,7 @@ test("redirects to login page if not logged in and viewing a page other than log
       url: "http://localhost:3000/not-login",
       // We're not using the cookies here
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     redirectFn,
     validateUserLoggedInFn,
@@ -137,6 +141,7 @@ test("redirects to login if no refresh token", async ({ expect }) => {
       url: "http://localhost:3000/protected-page",
       // We're not using the cookies here since we're stubbing the get logic
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
@@ -170,6 +175,7 @@ test("redirects to login if refresh token isnt valid", async ({ expect }) => {
       url: "http://localhost:3000/protected-page",
       // We're not using the cookies here since we're stubbing the get logic
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
@@ -206,6 +212,7 @@ test("redirects to login if revokeRefreshTokenFn fails", async ({ expect }) => {
       url: "http://localhost:3000/protected-page",
       // We're not using the cookies here since we're stubbing the get logic
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
@@ -247,6 +254,7 @@ test("redirects to login if setAuthTokensAndCookiesFn fails", async ({
       url: "http://localhost:3000/protected-page",
       // We're not using the cookies here since we're stubbing the get logic
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
@@ -288,6 +296,7 @@ test("succeeds and returns user if wasnt logged in, but has refresh token and su
       url: "http://localhost:3000/protected-page",
       // We're not using the cookies here since we're stubbing the get logic
       cookies: {} as NextRequest["cookies"],
+      headers: {} as NextRequest["headers"],
     },
     validateUserLoggedInFn,
     getRefreshCookieFn: getRefreshCookieFn as typeof getRefreshCookie,
