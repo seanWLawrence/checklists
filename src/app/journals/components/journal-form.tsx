@@ -6,6 +6,7 @@ import { Input } from "@/components/input";
 import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form";
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
+import { getTodayLocal } from "../lib/get-today-local";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -21,6 +22,8 @@ const DEFAULT_TEMPLATE =
 export const JournalForm: React.FC<{
   journal?: Journal;
 }> = ({ journal }) => {
+  const todayLocal = getTodayLocal();
+
   return (
     <div className="space-y-2 max-w-prose">
       <div className="flex space-x-1 items-center">
@@ -111,7 +114,7 @@ export const JournalForm: React.FC<{
         <Label label="Date" className="max-w-prose">
           <Input
             type="date"
-            defaultValue={journal?.createdAtLocal}
+            defaultValue={journal?.createdAtLocal ?? todayLocal}
             name="createdAtLocal"
             required
           />
