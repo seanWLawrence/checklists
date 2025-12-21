@@ -1,4 +1,4 @@
-import { JournalLevels, TotalLevelsByTypeAndValue } from "../journal.types";
+import { Journal, TotalLevelsByTypeAndValue } from "../journal.types";
 import {
   getTotalLevelsByTypeAndValue,
   maxLevel,
@@ -13,9 +13,9 @@ export type PieChartData = {
   count: number;
 }[][];
 
-export const getPieChartData = (levels: JournalLevels[]): PieChartData => {
+export const getPieChartData = (journals: Journal[]): PieChartData => {
   const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
-    getTotalLevelsByTypeAndValue(levels);
+    getTotalLevelsByTypeAndValue(journals);
 
   const result: PieChartData = [];
 

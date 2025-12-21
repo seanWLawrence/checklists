@@ -78,7 +78,7 @@ const ActiveShape: React.FC<PieSectorDataItem> = ({
 };
 
 const renderPieShape = (props: PieSectorShapeProps) => {
-  const { isActive, index, ...sectorProps } = props;
+  const { isActive, ...sectorProps } = props;
 
   if (isActive) {
     return <ActiveShape {...sectorProps} />;

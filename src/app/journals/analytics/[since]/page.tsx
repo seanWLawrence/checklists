@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { CreatedAtLocal, Since } from "../../journal.types";
 import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analytics.model";
 import PieCharts from "./pie-charts";
+import LineCharts from "./line-charts";
 
 /**
  * Get the date range from the route, default to last week
@@ -26,7 +27,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
     const from = await liftEither(CreatedAtLocal.decode(fromRaw));
     const to = await liftEither(CreatedAtLocal.decode(toRaw));
 
-    const { radar, pie } = await fromPromise(
+    const { radar, pie, line } = await fromPromise(
       getJournalLevelsAnalytics({ from, to }).run(),
     );
 
@@ -66,6 +67,8 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
             <RadarChart data={radar} />
 
             <PieCharts data={pie} />
+
+            <LineCharts data={line} />
           </div>
         </div>
       </section>

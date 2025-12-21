@@ -1,6 +1,7 @@
 import {
+  Journal,
   JournalLevelTypeAndValueCount,
-  JournalLevels,
+  Level,
   TotalLevelsByTypeAndValue,
 } from "../journal.types";
 
@@ -19,7 +20,7 @@ export const median = (
 ): number => {
   const medianIndex = Math.floor(levels.length / 2);
 
-  return [...levels.sort()][medianIndex];
+  return [...levels.map((l) => l.level).sort()][medianIndex];
 };
 
 export const mode = (
@@ -48,7 +49,9 @@ export const percentile = ({
   percentile: number;
   totals: JournalLevelTypeAndValueCount;
 }) => {
-  const sortedNums = [...totals.levels.sort()];
+  const sortedNums = [
+    ...totals.levels.sort((a, b) => (a.level < b.level ? -1 : 1)),
+  ].map((l) => l.level);
 
   const rank = percentile * (sortedNums.length - 1);
   const lowerIndex = Math.floor(rank);
@@ -66,7 +69,7 @@ export const percentile = ({
 };
 
 export const getTotalLevelsByTypeAndValue = (
-  levels: JournalLevels[],
+  journals: Journal[],
 ): TotalLevelsByTypeAndValue => {
   const result: TotalLevelsByTypeAndValue = {
     energyLevel: {
@@ -127,39 +130,55 @@ export const getTotalLevelsByTypeAndValue = (
     moodLevel,
     healthLevel,
     relationshipsLevel,
-  } of levels) {
+    updatedAtIso,
+  } of journals) {
     if (energyLevel) {
       const num = Number(energyLevel);
       result.energyLevel.total += num;
       result.energyLevel[energyLevel] += 1;
-      result.energyLevel.levels.push(num);
+      result.energyLevel.levels.push({
+        level: Level.unsafeDecode(num),
+        updatedAtIso,
+      });
     }
     if (moodLevel) {
       const num = Number(moodLevel);
       result.moodLevel.total += num;
       result.moodLevel[moodLevel] += 1;
-      result.moodLevel.levels.push(num);
+      result.moodLevel.levels.push({
+        level: Level.unsafeDecode(num),
+        updatedAtIso,
+      });
     }
 
     if (healthLevel) {
       const num = Number(healthLevel);
       result.healthLevel.total += num;
       result.healthLevel[healthLevel] += 1;
-      result.healthLevel.levels.push(num);
+      result.healthLevel.levels.push({
+        level: Level.unsafeDecode(num),
+        updatedAtIso,
+      });
     }
 
     if (creativityLevel) {
       const num = Number(creativityLevel);
       result.creativityLevel.total += num;
       result.creativityLevel[creativityLevel] += 1;
-      result.creativityLevel.levels.push(num);
+      result.creativityLevel.levels.push({
+        level: Level.unsafeDecode(num),
+        updatedAtIso,
+      });
     }
 
     if (relationshipsLevel) {
       const num = Number(relationshipsLevel);
       result.relationshipsLevel.total += num;
       result.relationshipsLevel[relationshipsLevel] += 1;
-      result.relationshipsLevel.levels.push(num);
+      result.relationshipsLevel.levels.push({
+        level: Level.unsafeDecode(num),
+        updatedAtIso,
+      });
     }
   }
 

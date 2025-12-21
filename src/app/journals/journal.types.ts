@@ -127,12 +127,12 @@ export type JournalLevelsRadarChartDataType = {
 export type RadarChartData = JournalLevelsRadarChartDataType[];
 
 export interface JournalLevelTypeAndValueCount {
-  name: string;
   /**
    * @example Energy
    */
+  name: string;
   total: number;
-  levels: number[];
+  levels: { level: Level; updatedAtIso: Date }[];
   1: number;
   2: number;
   3: number;

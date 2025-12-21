@@ -7,6 +7,10 @@ import { scan } from "@/lib/db/scan";
 import { getAllItems } from "@/lib/db/get-all-items";
 import { getRadarChartData } from "../lib/get-radar-chart-data.lib";
 import { getAllJournalsScanKey } from "./get-all-created-at-locals.model";
+import {
+  getLineChartData,
+  LineChartData,
+} from "../lib/get-line-chart-data.lib";
 
 export const getJournalLevelsAnalytics = ({
   from,
@@ -19,6 +23,7 @@ export const getJournalLevelsAnalytics = ({
   {
     radar: RadarChartData;
     pie: PieChartData;
+    line: LineChartData;
   }
 > => {
   return EitherAsync(async ({ fromPromise }) => {
@@ -56,6 +61,7 @@ export const getJournalLevelsAnalytics = ({
     return {
       radar: getRadarChartData(filteredLevels),
       pie: getPieChartData(filteredLevels),
+      line: getLineChartData(filteredLevels),
     };
   })
     .ifRight(() => {

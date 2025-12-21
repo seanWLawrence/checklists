@@ -1,5 +1,5 @@
 import {
-  JournalLevels,
+  Journal,
   RadarChartData,
   TotalLevelsByTypeAndValue,
 } from "../journal.types";
@@ -12,11 +12,11 @@ import {
   maxLevel,
 } from "./journal-analytics-chart-math.lib";
 
-export const getRadarChartData = (levels: JournalLevels[]): RadarChartData => {
+export const getRadarChartData = (journals: Journal[]): RadarChartData => {
   const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
-    getTotalLevelsByTypeAndValue(levels);
+    getTotalLevelsByTypeAndValue(journals);
 
-  const total = levels.length;
+  const total = journals.length;
 
   return [
     {
