@@ -38,7 +38,7 @@
     "@serwist/turbopack": "^9.3.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/markdown-it": "^14.1.2",
-    "@types/node": "^22",
+    "@types/node": "^25",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@upstash/redis": "^1.35.8",
