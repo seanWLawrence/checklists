@@ -9,11 +9,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { colors } from "@/lib/chart-colors";
 import { useEffect, useState } from "react";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
+import { colors } from "@/lib/chart-colors";
 
-const LineChart: React.FC<{ data: LineChartData }> = ({ data }) => {
+const LineChart: React.FC<{
+  data: LineChartData;
+  dataKey: string;
+  name: string;
+  color: string;
+}> = ({ data, dataKey, name, color }) => {
   const [isClient, setIsClient] = useState<boolean>(false);
 
   useEffect(() => {
@@ -23,8 +28,6 @@ const LineChart: React.FC<{ data: LineChartData }> = ({ data }) => {
   if (!isClient) {
     return null;
   }
-
-  console.log({ data });
 
   return (
     <div className="flex space-x-1 flex-wrap space-y-1 overflow-x-scroll">
@@ -68,27 +71,47 @@ const LineChart: React.FC<{ data: LineChartData }> = ({ data }) => {
 
         <Legend />
 
-        <Line
-          dataKey="creativityLevel"
-          stroke={colors.blue}
-          name="Creativity"
-        />
-
-        <Line dataKey="moodLevel" stroke={colors.fuschia} name="Mood" />
-
-        <Line dataKey="energyLevel" stroke={colors.fuschia} name="Energy" />
-
-        <Line dataKey="healthLevel" stroke={colors.coral} name="Health" />
-
-        <Line
-          type="monotone"
-          dataKey="relationshipsLevel"
-          stroke={colors.purple}
-          name="Relationships"
-        />
+        <Line dataKey={dataKey} stroke={color} name={name} />
       </LineChartBase>
     </div>
   );
 };
 
-export default LineChart;
+const LineCharts: React.FC<{ data: LineChartData }> = ({ data }) => {
+  return (
+    <div className="flex flex-col space-y-2">
+      <LineChart
+        data={data}
+        dataKey="energyLevel"
+        name="Energy"
+        color={colors.blue}
+      />
+      <LineChart
+        data={data}
+        dataKey="moodLevel"
+        name="Mood"
+        color={colors.fuschia}
+      />
+      <LineChart
+        data={data}
+        dataKey="healthLevel"
+        name="Health"
+        color={colors.teal}
+      />
+      <LineChart
+        data={data}
+        dataKey="creativityLevel"
+        name="Creativity"
+        color={colors.coral}
+      />
+      <LineChart
+        data={data}
+        dataKey="relationshipsLevel"
+        name="Relationships"
+        color={colors.purple}
+      />
+    </div>
+  );
+};
+
+export default LineCharts;
