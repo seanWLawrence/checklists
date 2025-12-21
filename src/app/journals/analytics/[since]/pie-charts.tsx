@@ -5,10 +5,14 @@ import {
   PieChart as PieChartBase,
   ResponsiveContainer,
   Sector,
+  Tooltip,
 } from "recharts";
 import { colors } from "@/lib/chart-colors";
 import { useEffect, useState } from "react";
-import { PieSectorDataItem } from "recharts/types/polar/Pie";
+import {
+  PieSectorDataItem,
+  PieSectorShapeProps,
+} from "recharts/types/polar/Pie";
 import { PieChartData } from "../../lib/get-pie-chart-data.lib";
 
 const ActiveShape: React.FC<PieSectorDataItem> = ({
@@ -73,8 +77,27 @@ const ActiveShape: React.FC<PieSectorDataItem> = ({
   );
 };
 
+const renderPieShape = (props: PieSectorShapeProps) => {
+  const { isActive, index, ...sectorProps } = props;
+
+  if (isActive) {
+    return <ActiveShape {...sectorProps} />;
+  }
+
+  return <Sector {...sectorProps} />;
+};
+
 const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
-  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const defaultIndex = data.reduce(
+    (result, entry, index) => {
+      if (entry.count > result.maxCount) {
+        return { index, maxCount: entry.count };
+      }
+
+      return result;
+    },
+    { index: 0, maxCount: Number.NEGATIVE_INFINITY },
+  ).index;
 
   return (
     <ResponsiveContainer width="100%" height={280} minWidth={300}>
@@ -87,11 +110,11 @@ const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
           innerRadius={60}
           outerRadius={80}
           nameKey="name"
-          activeShape={(props: PieSectorDataItem) => <ActiveShape {...props} />}
-          activeIndex={activeIndex}
-          onMouseEnter={(_, index) => setActiveIndex(index)}
           fill={colors.blue}
-        ></Pie>
+          isAnimationActive
+          shape={renderPieShape}
+        />
+        <Tooltip defaultIndex={defaultIndex} />
       </PieChartBase>
     </ResponsiveContainer>
   );
