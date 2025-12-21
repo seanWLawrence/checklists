@@ -108,7 +108,7 @@ export const JournalForm: React.FC<{
           />
         )}
 
-        <Label label="Date">
+        <Label label="Date" className="max-w-prose">
           <Input
             type="date"
             defaultValue={journal?.createdAtLocal}
