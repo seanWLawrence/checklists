@@ -33,19 +33,17 @@ export const Button: React.FC<
       >
         <span className="text-nowrap whitespace-nowrap">{children}</span>
 
-        <div
-          className={cn("animate-in fade-in duration-1000", {
-            hidden: !pending,
-          })}
-        >
-          <Spinner
-            className={cn({
-              "text-zinc-900": variant === "outline",
-              "text-zinc-200": variant === "ghost",
-              "text-zinc-50": variant === "primary",
-            })}
-          />
-        </div>
+        {pending && (
+          <div className={cn("animate-in fade-in duration-1000")}>
+            <Spinner
+              className={cn({
+                "text-zinc-900": variant === "outline",
+                "text-zinc-200": variant === "ghost",
+                "text-zinc-50": variant === "primary",
+              })}
+            />
+          </div>
+        )}
       </button>
     </div>
   );
