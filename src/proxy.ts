@@ -3,7 +3,7 @@ import { handleAuth } from "./middleware/handle-auth";
 import { AUTH_SECRET } from "./lib/auth/auth.constants";
 import { applySetCookie } from "./lib/auth/apply-set-cookie";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const authResponse = await handleAuth({ request, authSecret: AUTH_SECRET });
 
   applySetCookie(request, authResponse);
