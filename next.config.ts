@@ -1,8 +1,3 @@
-import {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_BUILD,
-} from "next/constants";
-import serwist from "@serwist/next";
 import { NextConfig } from "next";
 
 // TODO: remove need for unsafe-inline for the PWA to work
@@ -26,9 +21,10 @@ const cspHeader = `
     upgrade-insecure-requests;
 `;
 
-const nextConfig: NextConfig = {
+export default {
   poweredByHeader: false,
   crossOrigin: "anonymous",
+  serverExternalPackages: ["esbuild-wasm"],
   async headers() {
     const headers = [
       { key: "x-Frame-Options", value: "DENY" },
@@ -63,18 +59,4 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
-
-const config = async (phase: string): Promise<NextConfig> => {
-  if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
-    const withSerwist = serwist({
-      swSrc: "src/app/sw.ts",
-      swDest: "public/sw.js",
-    });
-    return withSerwist(nextConfig);
-  }
-
-  return nextConfig;
-};
-
-export default config;
+} satisfies NextConfig;

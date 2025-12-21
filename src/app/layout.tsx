@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 
-import "./globals.css";
-import "highlight.js/styles/tokyo-night-dark.css";
+import { SerwistProvider } from "@/app/lib/client";
 import { BASE_URL } from "@/lib/constants";
 import TopNavigation from "@/components/top-navigation";
+
+import "./globals.css";
+import "highlight.js/styles/tokyo-night-dark.css";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -60,8 +62,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TopNavigation />
-        <div className="p-5">{children}</div>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <TopNavigation />
+          <div className="p-5">{children}</div>
+        </SerwistProvider>
       </body>
     </html>
   );
