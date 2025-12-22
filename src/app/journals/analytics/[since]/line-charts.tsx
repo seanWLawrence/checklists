@@ -13,6 +13,10 @@ import { useEffect, useState } from "react";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { colors } from "@/lib/chart-colors";
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "short",
+});
+
 const LineChart: React.FC<{
   data: LineChartData;
   dataKey: string;
@@ -50,12 +54,17 @@ const LineChart: React.FC<{
         <CartesianGrid strokeDasharray="3 3" />
 
         <XAxis
-          dataKey="date"
+          dataKey="dateMilli"
           name="Date"
           angle={-90}
-          type="category"
+          type="number"
           height={50}
           tick={{ fontSize: 12 }}
+          domain={["dataMin", "dataMax"]}
+          scale="time"
+          tickFormatter={(dateMilli) => {
+            return dateFormatter.format(new Date(dateMilli));
+          }}
         />
 
         <YAxis
@@ -67,7 +76,9 @@ const LineChart: React.FC<{
           scale="linear"
         />
 
-        <Tooltip />
+        <Tooltip
+          labelFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
+        />
 
         <Legend />
 

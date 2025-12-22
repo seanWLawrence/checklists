@@ -8,7 +8,7 @@ export type LineChartData = (Pick<
   | "healthLevel"
   | "creativityLevel"
   | "relationshipsLevel"
-> & { date: string })[];
+> & { dateMilli: number })[];
 
 export const getLineChartData = (journals: Journal[]): LineChartData => {
   const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
@@ -16,14 +16,10 @@ export const getLineChartData = (journals: Journal[]): LineChartData => {
 
   const result: LineChartData = [];
 
-  const dateFormatter = new Intl.DateTimeFormat("en-US", {
-    dateStyle: "short",
-  });
-
   totalLevelsByTypeAndValue.creativityLevel.levels.forEach(
     ({ level, updatedAtIso }, index) => {
       result.push({
-        date: dateFormatter.format(updatedAtIso),
+        dateMilli: updatedAtIso.getTime(),
         creativityLevel: level,
         energyLevel: totalLevelsByTypeAndValue.energyLevel.levels[index].level,
         healthLevel: totalLevelsByTypeAndValue.healthLevel.levels[index].level,
