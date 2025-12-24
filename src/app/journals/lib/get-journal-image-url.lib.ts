@@ -3,13 +3,15 @@ import { MaybeAsync } from "purify-ts/MaybeAsync";
 import { list } from "@/lib/blob/list";
 import { CreatedAtLocal } from "../journal.types";
 import { getJournalImagePrefix } from "./get-journal-image-prefix.lib";
+import { getJournalImageCaption } from "./get-journal-image-caption.lib";
+import { Maybe } from "purify-ts/Maybe";
 
-export const getJournalImageUrl = ({
+export const getJournalImageInfo = ({
   createdAtLocal,
 }: {
   createdAtLocal: CreatedAtLocal;
-}): MaybeAsync<string> => {
-  return MaybeAsync(async ({ fromPromise }) => {
+}): MaybeAsync<{ url: string; caption: string }> => {
+  return MaybeAsync(async ({ fromPromise, liftMaybe }) => {
     const listResponse = await fromPromise(
       list({
         options: { prefix: getJournalImagePrefix({ createdAtLocal }) },
@@ -20,6 +22,11 @@ export const getJournalImageUrl = ({
       (a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime(),
     )[0];
 
-    return latest?.url;
+    await liftMaybe(Maybe.fromNullable(latest));
+
+    return {
+      url: latest.url,
+      caption: getJournalImageCaption({ pathname: latest.pathname }),
+    };
   });
 };

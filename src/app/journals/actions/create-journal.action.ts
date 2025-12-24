@@ -81,6 +81,11 @@ export const createJournalAction = async (
       formData,
       name: "image",
     }).toMaybe();
+    const imageDescription = imageMaybe.isJust()
+      ? await liftEither(
+          getStringFromFormData({ name: "imageDescription", formData }),
+        )
+      : undefined;
 
     return fromPromise(
       createItem({
@@ -91,9 +96,11 @@ export const createJournalAction = async (
           if (imageMaybe.isJust()) {
             const image = imageMaybe.extract();
 
-            return uploadJournalImage({ createdAtLocal, image }).map(
-              () => createdJournal,
-            );
+            return uploadJournalImage({
+              createdAtLocal,
+              image,
+              description: imageDescription,
+            }).map(() => createdJournal);
           }
 
           return EitherAsync(async () => createdJournal);

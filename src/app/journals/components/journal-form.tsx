@@ -25,7 +25,8 @@ const DEFAULT_TEMPLATE =
 export const JournalForm: React.FC<{
   journal?: Journal;
   imageUrl?: string;
-}> = ({ journal, imageUrl }) => {
+  imageCaption?: string;
+}> = ({ journal, imageUrl, imageCaption }) => {
   const todayLocal = getTodayLocal();
 
   return (
@@ -133,16 +134,31 @@ export const JournalForm: React.FC<{
         />
 
         <Label label="Image" className="max-w-prose mb-4">
-          {imageUrl ? (
+          <div className="space-y-2">
             <JournalImage imageUrl={imageUrl} />
-          ) : (
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              className="w-full max-w-prose text-sm"
-            />
-          )}
+
+            {!imageUrl && (
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                className="w-full max-w-prose text-sm"
+              />
+            )}
+
+            <Label label="Image description">
+              <Input
+                type="text"
+                name="imageDescription"
+                defaultValue={imageCaption}
+                required={!imageUrl}
+                disabled={!!imageUrl}
+                className={
+                  imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
+                }
+              />
+            </Label>
+          </div>
         </Label>
 
         <div className="flex justify-end w-full max-w-xl">

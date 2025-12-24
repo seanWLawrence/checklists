@@ -1,4 +1,3 @@
-import { PutBlobResult } from "@vercel/blob";
 import { EitherAsync } from "purify-ts";
 
 import { put } from "@/lib/blob/put";
@@ -8,14 +7,17 @@ import { getJournalImagePathname } from "./get-journal-image-pathname.lib";
 export const uploadJournalImage = ({
   createdAtLocal,
   image,
+  description,
 }: {
   createdAtLocal: CreatedAtLocal;
   image: File;
-}): EitherAsync<unknown, PutBlobResult> => {
+  description?: string;
+}): EitherAsync<unknown, void> => {
   return put({
     pathname: getJournalImagePathname({
       createdAtLocal,
-      imageName: image.name,
+      description,
+      originalName: image.name,
     }),
     body: image,
     options: {
@@ -23,5 +25,5 @@ export const uploadJournalImage = ({
       addRandomSuffix: true,
       contentType: image.type,
     },
-  });
+  }).map(() => undefined);
 };
