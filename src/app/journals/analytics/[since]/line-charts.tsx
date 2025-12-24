@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  Area,
   CartesianGrid,
   Legend,
   Line,
   LineChart as LineChartBase,
+  ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
@@ -14,15 +16,59 @@ import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { colors } from "@/lib/chart-colors";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "short",
+  month: "short",
+  year: "2-digit",
 });
+
+const hexToRgba = (hex: string, alpha: number): string => {
+  const sanitized = hex.replace("#", "");
+  const r = parseInt(sanitized.slice(0, 2), 16);
+  const g = parseInt(sanitized.slice(2, 4), 16);
+  const b = parseInt(sanitized.slice(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getDotColor = (value?: number): string => {
+  if (value === undefined) {
+    return "#A1A1AA";
+  }
+
+  if (value <= 2) {
+    return "#EF4444";
+  }
+
+  if (value === 3) {
+    return "#F59E0B";
+  }
+
+  return "#22C55E";
+};
+
+const getMonthlyTicks = (data: LineChartData): number[] => {
+  const seen = new Set<string>();
+  const ticks: number[] = [];
+
+  for (const row of data) {
+    const date = new Date(row.dateMilli);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      ticks.push(new Date(date.getFullYear(), date.getMonth(), 1).getTime());
+    }
+  }
+
+  return ticks;
+};
 
 const LineChart: React.FC<{
   data: LineChartData;
   dataKey: string;
+  avgKey: string;
   name: string;
   color: string;
-}> = ({ data, dataKey, name, color }) => {
+}> = ({ data, dataKey, avgKey, name, color }) => {
   const [isClient, setIsClient] = useState<boolean>(false);
 
   useEffect(() => {
@@ -51,7 +97,7 @@ const LineChart: React.FC<{
           bottom: 5,
         }}
       >
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
         <XAxis
           dataKey="dateMilli"
@@ -62,18 +108,24 @@ const LineChart: React.FC<{
           tick={{ fontSize: 12 }}
           domain={["dataMin", "dataMax"]}
           scale="time"
-          tickFormatter={(dateMilli) => {
-            return dateFormatter.format(new Date(dateMilli));
-          }}
+          ticks={getMonthlyTicks(data)}
+          tickFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
         />
 
         <YAxis
           width="auto"
           interval="preserveStartEnd"
           type="number"
-          domain={[0, 5]}
+          domain={[1, 5]}
           includeHidden
           scale="linear"
+        />
+
+        <ReferenceLine
+          y={3}
+          stroke="#999"
+          strokeDasharray="3 3"
+          ifOverflow="extendDomain"
         />
 
         <Tooltip
@@ -82,7 +134,43 @@ const LineChart: React.FC<{
 
         <Legend />
 
-        <Line dataKey={dataKey} stroke={color} name={name} />
+        <Area
+          dataKey={avgKey}
+          name={`${name} (7d avg)`}
+          stroke="none"
+          fill={hexToRgba(color, 0.15)}
+          fillOpacity={0.15}
+          isAnimationActive={false}
+        />
+
+        <Line
+          dataKey={dataKey}
+          stroke="transparent"
+          dot={({ cx, cy, value }) => (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={3}
+              fill={getDotColor(value as number | undefined)}
+            />
+          )}
+          name={name}
+          isAnimationActive={false}
+        />
+        <Line
+          dataKey={avgKey}
+          stroke="transparent"
+          dot={({ cx, cy, value }) => (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={3}
+              fill={getDotColor(value as number | undefined)}
+            />
+          )}
+          name={`${name} (7d avg)`}
+          isAnimationActive={false}
+        />
       </LineChartBase>
     </div>
   );
@@ -94,30 +182,35 @@ const LineCharts: React.FC<{ data: LineChartData }> = ({ data }) => {
       <LineChart
         data={data}
         dataKey="energyLevel"
+        avgKey="energyLevelAvg7"
         name="Energy"
         color={colors.blue}
       />
       <LineChart
         data={data}
         dataKey="moodLevel"
+        avgKey="moodLevelAvg7"
         name="Mood"
         color={colors.fuschia}
       />
       <LineChart
         data={data}
         dataKey="healthLevel"
+        avgKey="healthLevelAvg7"
         name="Health"
         color={colors.teal}
       />
       <LineChart
         data={data}
         dataKey="creativityLevel"
+        avgKey="creativityLevelAvg7"
         name="Creativity"
         color={colors.coral}
       />
       <LineChart
         data={data}
         dataKey="relationshipsLevel"
+        avgKey="relationshipsLevelAvg7"
         name="Relationships"
         color={colors.purple}
       />
