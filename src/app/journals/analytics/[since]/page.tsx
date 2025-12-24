@@ -7,8 +7,7 @@ import { Button } from "@/components/button";
 import { redirect } from "next/navigation";
 import { CreatedAtLocal, Since } from "../../journal.types";
 import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analytics.model";
-import PieCharts from "./pie-charts";
-import LineCharts from "./line-charts";
+import { LevelChartsTabs } from "./level-charts-tabs";
 
 /**
  * Get the date range from the route, default to last week
@@ -66,9 +65,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
           <div className="space-y-8">
             <RadarChart data={radar} />
 
-            <PieCharts data={pie} />
-
-            <LineCharts data={line} />
+            <LevelChartsTabs pie={pie} line={line} />
           </div>
         </div>
       </section>

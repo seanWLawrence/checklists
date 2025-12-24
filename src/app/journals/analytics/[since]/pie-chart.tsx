@@ -87,7 +87,7 @@ const renderPieShape = (props: PieSectorShapeProps) => {
   return <Sector {...sectorProps} />;
 };
 
-const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
+export const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
   const defaultIndex = data.reduce(
     (result, entry, index) => {
       if (entry.count > result.maxCount) {
@@ -119,25 +119,3 @@ const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
     </ResponsiveContainer>
   );
 };
-
-const PieCharts: React.FC<{ data: PieChartData }> = ({ data }) => {
-  const [isClient, setIsClient] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
-  return (
-    <div className="flex space-x-1 flex-wrap space-y-1">
-      {data.map((d) => {
-        return <PieChart key={d[0].name} data={d} />;
-      })}
-    </div>
-  );
-};
-
-export default PieCharts;

@@ -12,12 +12,8 @@ import {
 } from "recharts";
 import { useEffect, useState } from "react";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
-import { colors } from "@/lib/chart-colors";
-import { stubLineChartData } from "../../lib/line-chart-data.stub";
 
-const USE_STUB_LINE_CHART_DATA = true;
-
-type AverageKey =
+export type AverageKey =
   | "energyLevelAvg7"
   | "moodLevelAvg7"
   | "healthLevelAvg7"
@@ -71,7 +67,7 @@ const gradientOffset = ({}: { averageKey: AverageKey }): number => {
   return Math.min(1, Math.max(0, offset));
 };
 
-const LineChart: React.FC<{
+export const LineChart: React.FC<{
   data: LineChartData;
   dataKey: string;
   averageKey: AverageKey;
@@ -179,49 +175,3 @@ const LineChart: React.FC<{
     </div>
   );
 };
-
-const LineCharts: React.FC<{ data: LineChartData }> = ({ data }) => {
-  const resolvedData = USE_STUB_LINE_CHART_DATA ? stubLineChartData : data;
-
-  return (
-    <div className="flex flex-col space-y-2">
-      <LineChart
-        data={resolvedData}
-        dataKey="energyLevel"
-        averageKey="energyLevelAvg7"
-        name="Energy"
-        color={colors.blue}
-      />
-      <LineChart
-        data={resolvedData}
-        dataKey="moodLevel"
-        averageKey="moodLevelAvg7"
-        name="Mood"
-        color={colors.fuschia}
-      />
-      <LineChart
-        data={resolvedData}
-        dataKey="healthLevel"
-        averageKey="healthLevelAvg7"
-        name="Health"
-        color={colors.teal}
-      />
-      <LineChart
-        data={resolvedData}
-        dataKey="creativityLevel"
-        averageKey="creativityLevelAvg7"
-        name="Creativity"
-        color={colors.coral}
-      />
-      <LineChart
-        data={resolvedData}
-        dataKey="relationshipsLevel"
-        averageKey="relationshipsLevelAvg7"
-        name="Relationships"
-        color={colors.purple}
-      />
-    </div>
-  );
-};
-
-export default LineCharts;
