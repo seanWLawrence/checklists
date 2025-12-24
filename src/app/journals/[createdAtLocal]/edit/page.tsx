@@ -3,6 +3,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { JournalForm } from "../../components/journal-form";
 import { CreatedAtLocal } from "../../journal.types";
 import { getJournal } from "../../model/get-journal.model";
+import { getJournalImageUrl } from "../../lib/get-journal-image-url.lib";
 
 type Params = Promise<{ createdAtLocal: string }>;
 
@@ -15,8 +16,9 @@ const EditJournal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
+    const imageUrlMaybe = await getJournalImageUrl({ createdAtLocal });
 
-    return <JournalForm journal={journal} />;
+    return <JournalForm journal={journal} imageUrl={imageUrlMaybe.extract()} />;
   })
     .mapLeft((e) => {
       return <p>{String(e)}</p>;

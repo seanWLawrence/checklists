@@ -8,7 +8,8 @@ import { Input } from "@/components/input";
 import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form";
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
-import { getTodayLocal } from "../lib/get-today-local";
+import { getTodayLocal } from "../lib/get-today-local.lib";
+import { JournalImage } from "./journal-image";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -23,7 +24,8 @@ const DEFAULT_TEMPLATE =
 
 export const JournalForm: React.FC<{
   journal?: Journal;
-}> = ({ journal }) => {
+  imageUrl?: string;
+}> = ({ journal, imageUrl }) => {
   const todayLocal = getTodayLocal();
 
   return (
@@ -129,6 +131,19 @@ export const JournalForm: React.FC<{
           rows={20}
           required
         />
+
+        <Label label="Image" className="max-w-prose mb-4">
+          {imageUrl ? (
+            <JournalImage imageUrl={imageUrl} />
+          ) : (
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              className="w-full max-w-prose text-sm"
+            />
+          )}
+        </Label>
 
         <div className="flex justify-end w-full max-w-xl">
           <Button type="submit" variant="primary">

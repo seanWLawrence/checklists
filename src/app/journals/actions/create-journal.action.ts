@@ -13,6 +13,8 @@ import { getJournalKey } from "../model/get-journal.model";
 import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/db/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
+import { uploadJournalImage } from "../lib/upload-journal-image.lib";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -75,11 +77,27 @@ export const createJournalAction = async (
       }),
     );
 
+    const imageMaybe = getImageFromFormData({
+      formData,
+      name: "image",
+    }).toMaybe();
+
     return fromPromise(
       createItem({
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
+        .chain(async (createdJournal) => {
+          if (imageMaybe.isJust()) {
+            const image = imageMaybe.extract();
+
+            return uploadJournalImage({ createdAtLocal, image }).map(
+              () => createdJournal,
+            );
+          }
+
+          return EitherAsync(async () => createdJournal);
+        })
         .ifLeft((e) => {
           logger.error(`Failed to create journal`);
           logger.error(e);

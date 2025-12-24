@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { JournalForm } from "../components/journal-form";
-import { getTodayLocal } from "../lib/get-today-local";
+import { getTodayLocal } from "../lib/get-today-local.lib";
 import { journalExistsAction } from "../actions/journal-exists.action";
 
 export const NewJournalClient: React.FC = () => {

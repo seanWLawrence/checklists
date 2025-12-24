@@ -1,9 +1,14 @@
 import { NextConfig } from "next";
+import invariant from "tiny-invariant";
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
 const scriptSrcDevOnly =
   process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
+
+const IMAGE_HOSTNAME = process.env.IMAGE_HOSTNAME;
+
+invariant(IMAGE_HOSTNAME, "IMAGE_HOSTNAME must be set");
 
 const cspHeader = `
     default-src 'self';
@@ -25,6 +30,9 @@ export default {
   poweredByHeader: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
+  images: {
+    remotePatterns: [new URL(IMAGE_HOSTNAME)],
+  },
   async headers() {
     const headers = [
       { key: "x-Frame-Options", value: "DENY" },

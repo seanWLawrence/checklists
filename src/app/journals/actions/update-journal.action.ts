@@ -15,6 +15,10 @@ import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { getJournalKey } from "../model/get-journal.model";
 import { createItem } from "@/lib/db/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
+import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
+import { uploadJournalImage } from "../lib/upload-journal-image.lib";
+import { moveJournalImagesIfTheyExist } from "../lib/move-journal-images-if-they-exist.lib";
+import { deleteJournalImages } from "../lib/delete-journal-images.lib";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -72,6 +76,11 @@ export const updateJournalAction = async (
         .chain(Level.decode),
     );
 
+    const imageMaybe = getImageFromFormData({
+      formData,
+      name: "image",
+    }).toMaybe();
+
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
@@ -111,6 +120,24 @@ export const updateJournalAction = async (
             getJournalKey({ createdAtLocal, user: item.user }),
           item: journal,
         })
+          .chain((createdJournal) => {
+            if (imageMaybe.isJust()) {
+              const image = imageMaybe.extract();
+
+              return uploadJournalImage({ createdAtLocal, image })
+                .chain(() =>
+                  deleteJournalImages({
+                    createdAtLocal: existingCreatedAtLocal,
+                  }),
+                )
+                .map(() => createdJournal);
+            }
+
+            return moveJournalImagesIfTheyExist({
+              fromCreatedAtLocal: existingCreatedAtLocal,
+              toCreatedAtLocal: createdJournal.createdAtLocal,
+            }).map(() => createdJournal);
+          })
           .ifRight((x) => {
             const dateId = x.createdAtLocal;
             logger.info(`Successfully updated journal with date '${dateId}'`);
@@ -156,6 +183,17 @@ export const updateJournalAction = async (
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
+        .chain((updatedJournal) => {
+          if (imageMaybe.isJust()) {
+            const image = imageMaybe.extract();
+
+            return uploadJournalImage({ createdAtLocal, image }).map(
+              () => updatedJournal,
+            );
+          }
+
+          return EitherAsync(async () => updatedJournal);
+        })
         .ifRight((x) => {
           const dateId = x.createdAtLocal;
           logger.info(`Successfully updated journal with date '${dateId}'`);

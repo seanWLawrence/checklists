@@ -10,6 +10,7 @@ import { CreatedAtLocal } from "../journal.types";
 import { getJournalKey } from "../model/get-journal.model";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { deleteJournalImages } from "../lib/delete-journal-images.lib";
 
 export const deleteJournalAction = async (
   formData: FormData,
@@ -32,6 +33,7 @@ export const deleteJournalAction = async (
           }),
         ],
       })
+        .chain(() => deleteJournalImages({ createdAtLocal }))
         .ifRight(() => {
           const dateId = createdAtLocal;
           logger.info(`Successfully deleted journal with ID '${dateId}'`);

@@ -9,6 +9,8 @@ import { groupJournalContentSections } from "./group-journal-content-sections";
 import { getJournal } from "../model/get-journal.model";
 import { prettyDate } from "../lib/pretty-date.lib";
 import { RelativeTime } from "@/components/relative-time";
+import { getJournalImageUrl } from "../lib/get-journal-image-url.lib";
+import { JournalImage } from "../components/journal-image";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -49,6 +51,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
+    const imageUrlMaybe = await getJournalImageUrl({ createdAtLocal });
 
     return (
       <main className="space-y-2 max-w-prose">
@@ -118,6 +121,8 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
         </Label>
 
         <div className="space-y-1">{prettyContent(journal.content)}</div>
+
+        <JournalImage imageUrl={imageUrlMaybe.extract()} />
       </main>
     );
   })
