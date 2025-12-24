@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { colors } from "@/lib/chart-colors";
-import { useEffect, useState } from "react";
 import { RadarChartData } from "../../journal.types";
 
 const opacity = 0.5;
@@ -19,16 +18,6 @@ const opacity = 0.5;
 export const RadarChart: React.FC<{
   data: RadarChartData;
 }> = ({ data }) => {
-  const [isClient, setIsClient] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
   return (
     <ResponsiveContainer width="100%" height={300} minWidth={300}>
       <RadarChartBase data={data}>

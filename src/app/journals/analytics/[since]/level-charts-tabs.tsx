@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
-import { colors } from "@/lib/chart-colors";
 import { PieChart } from "./pie-chart";
 import { LineChart, AverageKey } from "./line-chart";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
@@ -22,7 +21,6 @@ type LevelTab = {
   key: LevelKey;
   averageKey: AverageKey;
   name: string;
-  color: string;
 };
 
 const LEVEL_TABS: LevelTab[] = [
@@ -30,31 +28,26 @@ const LEVEL_TABS: LevelTab[] = [
     key: "energyLevel",
     averageKey: "energyLevelAvg7",
     name: "Energy",
-    color: colors.blue,
   },
   {
     key: "moodLevel",
     averageKey: "moodLevelAvg7",
     name: "Mood",
-    color: colors.fuschia,
   },
   {
     key: "healthLevel",
     averageKey: "healthLevelAvg7",
     name: "Health",
-    color: colors.teal,
   },
   {
     key: "creativityLevel",
     averageKey: "creativityLevelAvg7",
     name: "Creativity",
-    color: colors.coral,
   },
   {
     key: "relationshipsLevel",
     averageKey: "relationshipsLevelAvg7",
     name: "Relationships",
-    color: colors.purple,
   },
 ];
 
@@ -98,7 +91,6 @@ export const LevelChartsTabs: React.FC<{
           dataKey={selectedTab.key}
           averageKey={selectedTab.averageKey}
           name={selectedTab.name}
-          color={selectedTab.color}
         />
       </div>
     </div>

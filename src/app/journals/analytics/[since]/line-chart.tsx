@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useEffect, useState } from "react";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 
 export type AverageKey =
@@ -72,18 +71,7 @@ export const LineChart: React.FC<{
   dataKey: string;
   averageKey: AverageKey;
   name: string;
-  color: string;
 }> = ({ data, dataKey, averageKey: averageKey, name }) => {
-  const [isClient, setIsClient] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
   const off = gradientOffset({ averageKey });
   const gradientId = `splitColor-${averageKey}`;
 
