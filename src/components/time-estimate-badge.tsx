@@ -1,5 +1,5 @@
+import { TimeEstimate } from "@/app/checklists/checklist-v2.types";
 import { sumTimeEstimates } from "@/app/checklists/lib/sum-time-estimates";
-import { TimeEstimate } from "@/lib/types";
 
 const NO_TIME_ESTIMATE = "0m";
 

@@ -50,15 +50,3 @@ export const Key = Codec.custom<Key>({
       : Left(`Invalid Key: '${input}'`),
   encode: (input) => input, // strings have no serialization logic
 });
-
-type TimeEstimateValue = `${number}m` | `${number}h`;
-
-export const TimeEstimate = Codec.custom<TimeEstimateValue>({
-  decode: (input) =>
-    typeof input === "string" && input.match(/^\d+(m|h)$/)
-      ? Right(input as TimeEstimateValue)
-      : Left(`Invalid TimeEstimate. Received: '${input}'`),
-  encode: (input) => input, // strings have no serialization logic
-});
-
-export type TimeEstimate = GetType<typeof TimeEstimate>;

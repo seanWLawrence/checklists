@@ -1,7 +1,6 @@
 import {
   Journal,
   JournalLevelTypeAndValueCount,
-  Level,
   TotalLevelsByTypeAndValue,
 } from "../journal.types";
 
@@ -137,10 +136,7 @@ export const getTotalLevelsByTypeAndValue = (
       result.energyLevel.total += num;
       result.energyLevel[energyLevel] += 1;
       result.energyLevel.levels.push({
-        /**
-         * Using unsafeDecode since the levels are validated during the save
-         */
-        level: Level.unsafeDecode(num),
+        level: energyLevel,
         updatedAtIso,
       });
     }
@@ -149,7 +145,7 @@ export const getTotalLevelsByTypeAndValue = (
       result.moodLevel.total += num;
       result.moodLevel[moodLevel] += 1;
       result.moodLevel.levels.push({
-        level: Level.unsafeDecode(num),
+        level: moodLevel,
         updatedAtIso,
       });
     }
@@ -159,7 +155,7 @@ export const getTotalLevelsByTypeAndValue = (
       result.healthLevel.total += num;
       result.healthLevel[healthLevel] += 1;
       result.healthLevel.levels.push({
-        level: Level.unsafeDecode(num),
+        level: healthLevel,
         updatedAtIso,
       });
     }
@@ -169,7 +165,7 @@ export const getTotalLevelsByTypeAndValue = (
       result.creativityLevel.total += num;
       result.creativityLevel[creativityLevel] += 1;
       result.creativityLevel.levels.push({
-        level: Level.unsafeDecode(num),
+        level: creativityLevel,
         updatedAtIso,
       });
     }
@@ -179,7 +175,7 @@ export const getTotalLevelsByTypeAndValue = (
       result.relationshipsLevel.total += num;
       result.relationshipsLevel[relationshipsLevel] += 1;
       result.relationshipsLevel.levels.push({
-        level: Level.unsafeDecode(num),
+        level: relationshipsLevel,
         updatedAtIso,
       });
     }

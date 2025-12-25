@@ -1,6 +1,7 @@
 import { kv } from "@vercel/kv";
 import { Redis } from "@upstash/redis";
 import { Either } from "purify-ts/Either";
+import { isProduction } from "../environment";
 
 export type Client = Redis | typeof kv;
 
@@ -19,7 +20,7 @@ export const getClient = ({
       return client;
     }
 
-    if (process.env.NODE_ENV !== "production") {
+    if (!isProduction()) {
       client = getDevClientFn();
     } else {
       client = getProdClientFn();

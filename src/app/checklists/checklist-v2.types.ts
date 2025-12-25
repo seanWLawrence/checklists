@@ -1,6 +1,8 @@
 import {
   Codec,
   GetType,
+  Left,
+  Right,
   array,
   boolean,
   intersect,
@@ -8,7 +10,17 @@ import {
   string,
 } from "purify-ts";
 
-import { Metadata, TimeEstimate, UUID } from "@/lib/types";
+import { Metadata, UUID } from "@/lib/types";
+
+export const TimeEstimate = Codec.custom<TimeEstimateValue>({
+  decode: (input) =>
+    typeof input === "string" && input.match(/^\d+(m|h)$/)
+      ? Right(input as TimeEstimateValue)
+      : Left(`Invalid TimeEstimate. Received: '${input}'`),
+  encode: (input) => input, // strings have no serialization logic
+});
+
+export type TimeEstimate = GetType<typeof TimeEstimate>;
 
 export const ChecklistV2Base = Codec.interface({
   name: string,
@@ -48,3 +60,5 @@ export const ChecklistV2Structured = Codec.interface({
 });
 
 export type ChecklistV2Structured = GetType<typeof ChecklistV2Structured>;
+
+type TimeEstimateValue = `${number}m` | `${number}h`;

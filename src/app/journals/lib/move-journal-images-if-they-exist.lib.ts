@@ -16,6 +16,7 @@ export const moveJournalImagesIfTheyExist = ({
     const fromPrefix = getJournalImagePrefix({
       createdAtLocal: fromCreatedAtLocal,
     });
+
     const toPrefix = getJournalImagePrefix({
       createdAtLocal: toCreatedAtLocal,
     });

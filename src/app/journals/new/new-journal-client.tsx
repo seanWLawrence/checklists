@@ -8,19 +8,20 @@ import { CreatedAtLocal } from "../journal.types";
 
 export const NewJournalClient: React.FC = () => {
   const router = useRouter();
-  /**
-   * Using unsafeDecode since the inputs are fully controlled
-   */
-  const todayLocal = CreatedAtLocal.unsafeDecode(new Date());
+  const todayLocal = CreatedAtLocal.decode(new Date());
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = false;
 
-    journalExistsAction(todayLocal).then((exists) => {
-      if (isMounted && exists) {
-        router.replace(`/journals/${todayLocal}/edit`);
-      }
-    });
+    if (todayLocal.isRight()) {
+      isMounted = true;
+
+      journalExistsAction(todayLocal.extract()).then((exists) => {
+        if (isMounted && exists) {
+          router.replace(`/journals/${todayLocal}/edit`);
+        }
+      });
+    }
 
     return () => {
       isMounted = false;

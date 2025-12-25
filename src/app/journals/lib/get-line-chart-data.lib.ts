@@ -1,3 +1,4 @@
+import { List } from "purify-ts/List";
 import { Journal, TotalLevelsByTypeAndValue } from "../journal.types";
 import { getTotalLevelsByTypeAndValue } from "./journal-analytics-chart-math.lib";
 
@@ -17,28 +18,35 @@ export type LineChartData = (Pick<
   relationshipsLevelAvg7?: number;
 })[];
 
-const rollingAverage = (
-  data: LineChartData,
-  key: keyof LineChartData[number],
-  avgKey: keyof LineChartData[number],
-): LineChartData => {
-  const windowSize = 7;
+const rollingAverage = ({
+  index,
+  numDays,
+  data,
+  dataKey,
+}: {
+  index: number;
+  numDays: number;
+  data: LineChartData;
+  dataKey: keyof LineChartData[number];
+}) => {
+  const start = Math.max(0, index - numDays + 1);
+  const slice = data.slice(start, index + 1);
 
-  return data.map((row, index) => {
-    const start = Math.max(0, index - windowSize + 1);
-    const slice = data.slice(start, index + 1);
-    const values = slice
-      .map((item) => item[key])
-      .filter((value): value is number => typeof value === "number");
+  const values: number[] = [];
 
-    const total = values.reduce((sum, value) => sum + value, 0);
-    const avg =
-      values.length > 0
-        ? Number((total / values.length).toFixed(2))
-        : undefined;
+  for (const item of slice) {
+    const value = item[dataKey];
 
-    return { ...row, [avgKey]: avg };
-  });
+    if (value !== undefined && typeof value === "number") {
+      values.push(value);
+    }
+  }
+
+  const total = List.sum(values);
+
+  return values.length > 0
+    ? Number((total / values.length).toFixed(2))
+    : undefined;
 };
 
 export const getLineChartData = (journals: Journal[]): LineChartData => {
@@ -61,23 +69,41 @@ export const getLineChartData = (journals: Journal[]): LineChartData => {
     },
   );
 
-  const sorted = [...result].sort((a, b) => a.dateMilli - b.dateMilli);
+  const data = [...result].sort((a, b) => a.dateMilli - b.dateMilli);
 
-  return rollingAverage(
-    rollingAverage(
-      rollingAverage(
-        rollingAverage(
-          rollingAverage(sorted, "energyLevel", "energyLevelAvg7"),
-          "moodLevel",
-          "moodLevelAvg7",
-        ),
-        "healthLevel",
-        "healthLevelAvg7",
-      ),
-      "creativityLevel",
-      "creativityLevelAvg7",
-    ),
-    "relationshipsLevel",
-    "relationshipsLevelAvg7",
-  );
+  return data.map((dataPoint, index) => {
+    return {
+      ...dataPoint,
+      creativityLevelAvg7: rollingAverage({
+        numDays: 7,
+        data,
+        index,
+        dataKey: "creativityLevel",
+      }),
+      energyLevelAvg7: rollingAverage({
+        numDays: 7,
+        data,
+        index,
+        dataKey: "energyLevel",
+      }),
+      healthLevelAvg7: rollingAverage({
+        numDays: 7,
+        data,
+        index,
+        dataKey: "healthLevel",
+      }),
+      relationshipsLevelAvg7: rollingAverage({
+        numDays: 7,
+        data,
+        index,
+        dataKey: "relationshipsLevel",
+      }),
+      moodLevelAvg7: rollingAverage({
+        numDays: 7,
+        data,
+        index,
+        dataKey: "moodLevel",
+      }),
+    };
+  });
 };

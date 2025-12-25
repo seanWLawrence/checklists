@@ -23,24 +23,21 @@ const rawLevels = Array.from({ length: 60 }, (_, index) => {
       baseDate.getMonth(),
       baseDate.getDate() + index,
     ).getTime(),
-    /**
-     * Using unsafeDecode since the inputs are fully controlled
-     */
-    energyLevel: Level.unsafeDecode(
+    energyLevel: Level.decode(
       Math.round(clampLevel(3 + Math.sin(index / 4) * 2)),
-    ),
-    moodLevel: Level.unsafeDecode(
+    ).orDefault(1),
+    moodLevel: Level.decode(
       Math.round(clampLevel(3 + Math.cos(index / 5) * 2)),
-    ),
-    healthLevel: Level.unsafeDecode(
+    ).orDefault(1),
+    healthLevel: Level.decode(
       Math.round(clampLevel(3 + Math.sin(index / 6) * 2)),
-    ),
-    creativityLevel: Level.unsafeDecode(
+    ).orDefault(1),
+    creativityLevel: Level.decode(
       Math.round(clampLevel(3 + Math.cos(index / 7) * 2)),
-    ),
-    relationshipsLevel: Level.unsafeDecode(
+    ).orDefault(1),
+    relationshipsLevel: Level.decode(
       Math.round(clampLevel(3 + Math.sin(index / 8) * 2)),
-    ),
+    ).orDefault(1),
   };
 });
 
