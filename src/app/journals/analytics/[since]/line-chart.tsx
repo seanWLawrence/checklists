@@ -143,6 +143,7 @@ export const LineChart: React.FC<{
           type="monotone"
           stroke="#555"
           fill={`url(#${gradientId})`}
+          baseValue={3}
         />
 
         <Line
