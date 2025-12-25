@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
+import { colors } from "@/lib/chart-colors";
 
 export type AverageKey =
   | "energyLevelAvg7"
@@ -26,18 +27,18 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
 const getDotColor = (value?: number): string => {
   if (value === undefined) {
-    return "#A1A1AA";
+    return colors.gray;
   }
 
   if (value <= 2) {
-    return "#EF4444";
+    return colors.red;
   }
 
   if (value === 3) {
-    return "#F59E0B";
+    return colors.orange;
   }
 
-  return "#22C55E";
+  return colors.green;
 };
 
 const getMonthlyTicks = (data: LineChartData): number[] => {
@@ -57,7 +58,7 @@ const getMonthlyTicks = (data: LineChartData): number[] => {
   return ticks;
 };
 
-const gradientOffset = ({}: { averageKey: AverageKey }): number => {
+const gradientOffset = (): number => {
   const min = 1;
   const max = 5;
   const threshold = 3;
@@ -66,13 +67,14 @@ const gradientOffset = ({}: { averageKey: AverageKey }): number => {
   return Math.min(1, Math.max(0, offset));
 };
 
+const off = gradientOffset();
+
 export const LineChart: React.FC<{
   data: LineChartData;
   dataKey: string;
   averageKey: AverageKey;
   name: string;
 }> = ({ data, dataKey, averageKey: averageKey, name }) => {
-  const off = gradientOffset({ averageKey });
   const gradientId = `splitColor-${averageKey}`;
 
   return (
@@ -117,7 +119,7 @@ export const LineChart: React.FC<{
 
         <ReferenceLine
           y={3}
-          stroke={"orange"}
+          stroke={colors.orange}
           strokeWidth={1.5}
           ifOverflow="extendDomain"
         />
@@ -130,10 +132,10 @@ export const LineChart: React.FC<{
 
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="green" stopOpacity={1} />
-            <stop offset={off} stopColor="green" stopOpacity={0.1} />
-            <stop offset={off} stopColor="red" stopOpacity={0.1} />
-            <stop offset="1" stopColor="red" stopOpacity={1} />
+            <stop offset="0" stopColor="#22C55E" stopOpacity={0.25} />
+            <stop offset={off} stopColor="#22C55E" stopOpacity={0.25} />
+            <stop offset={off} stopColor="#EF4444" stopOpacity={0.25} />
+            <stop offset="1" stopColor="#EF4444" stopOpacity={0.25} />
           </linearGradient>
         </defs>
 
@@ -141,7 +143,7 @@ export const LineChart: React.FC<{
           dataKey={averageKey}
           name={`${name} (7d avg)`}
           type="monotone"
-          stroke="#555"
+          stroke={colors.gray}
           fill={`url(#${gradientId})`}
           baseValue={3}
         />
