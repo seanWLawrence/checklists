@@ -5,7 +5,7 @@ import { REFRESH_TOKEN_COOKIE_NAME } from "./auth.constants";
 import { deleteAllItems } from "../db/delete-all-items";
 import { logger } from "../logger";
 
-export const revokeRefreshToken = async ({
+export const revokeRefreshToken = ({
   token,
   deleteCookieFn = deleteCookie,
   deleteAllItemsFn = deleteAllItems,
