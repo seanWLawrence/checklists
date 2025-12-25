@@ -8,7 +8,6 @@ import {
   Tooltip,
 } from "recharts";
 import { colors } from "@/lib/chart-colors";
-import { useEffect, useState } from "react";
 import {
   PieSectorDataItem,
   PieSectorShapeProps,

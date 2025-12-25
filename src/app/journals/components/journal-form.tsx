@@ -2,13 +2,12 @@
 
 import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
-import { Journal } from "../journal.types";
+import { CreatedAtLocal, Journal } from "../journal.types";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form";
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
-import { getTodayLocal } from "../lib/get-today-local.lib";
 import { JournalImage } from "./journal-image";
 
 const DEFAULT_TEMPLATE =
@@ -27,7 +26,10 @@ export const JournalForm: React.FC<{
   imageUrl?: string;
   imageCaption?: string;
 }> = ({ journal, imageUrl, imageCaption }) => {
-  const todayLocal = getTodayLocal();
+  /**
+   * Using unsafeDecode since the inputs are fully controlled
+   */
+  const todayLocal = CreatedAtLocal.unsafeDecode(new Date());
 
   return (
     <div className="space-y-2 max-w-prose">

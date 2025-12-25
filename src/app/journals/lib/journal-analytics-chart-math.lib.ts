@@ -137,6 +137,9 @@ export const getTotalLevelsByTypeAndValue = (
       result.energyLevel.total += num;
       result.energyLevel[energyLevel] += 1;
       result.energyLevel.levels.push({
+        /**
+         * Using unsafeDecode since the levels are validated during the save
+         */
         level: Level.unsafeDecode(num),
         updatedAtIso,
       });

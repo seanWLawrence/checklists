@@ -4,6 +4,7 @@ import { Button } from "./button";
 import { MenuButton } from "./menu-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
+import { CreatedAtLocal } from "@/app/journals/journal.types";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
@@ -13,9 +14,13 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   const safeUser = user.mapLeft(() => null).extract();
 
   const now = new Date();
-  const defaultJournalAnalyticsSince = `2020-01-01to${now.getFullYear()}-${String(
-    now.getMonth() + 1,
-  ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(now.getMonth() - 1);
+
+  /**
+   * Using unsafeDecode since the inputs are fully controlled
+   */
+  const defaultJournalAnalyticsSince = `${CreatedAtLocal.unsafeDecode(oneMonthAgo)}to${CreatedAtLocal.unsafeDecode(now)}`;
 
   return (
     <nav className="py-2 px-5 flex space-x-1 items-center w-full">

@@ -80,11 +80,6 @@ export const updateJournalAction = async (
       formData,
       name: "image",
     }).toMaybe();
-    const imageDescription = imageMaybe.isJust()
-      ? await liftEither(
-          getStringFromFormData({ name: "imageDescription", formData }),
-        )
-      : undefined;
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
@@ -125,14 +120,18 @@ export const updateJournalAction = async (
             getJournalKey({ createdAtLocal, user: item.user }),
           item: journal,
         })
-          .chain((createdJournal) => {
+          .chain(async (createdJournal) => {
             if (imageMaybe.isJust()) {
               const image = imageMaybe.extract();
+
+              const description = await liftEither(
+                getStringFromFormData({ name: "imageDescription", formData }),
+              );
 
               return uploadJournalImage({
                 createdAtLocal,
                 image,
-                description: imageDescription,
+                description,
               })
                 .chain(() =>
                   deleteJournalImages({
@@ -192,14 +191,18 @@ export const updateJournalAction = async (
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
-        .chain((updatedJournal) => {
+        .chain(async (updatedJournal) => {
           if (imageMaybe.isJust()) {
             const image = imageMaybe.extract();
+
+            const description = await liftEither(
+              getStringFromFormData({ name: "imageDescription", formData }),
+            );
 
             return uploadJournalImage({
               createdAtLocal,
               image,
-              description: imageDescription,
+              description,
             }).map(() => updatedJournal);
           }
 

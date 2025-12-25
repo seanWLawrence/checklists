@@ -54,5 +54,5 @@ test("returns file if successful", ({ expect }) => {
   });
 
   expect(result.isRight()).toBe(true);
-  expect(result.extract().name).toBe("photo.png");
+  expect((result.extract() as File).name).toBe("photo.png");
 });

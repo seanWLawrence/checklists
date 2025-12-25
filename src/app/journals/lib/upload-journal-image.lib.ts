@@ -11,7 +11,7 @@ export const uploadJournalImage = ({
 }: {
   createdAtLocal: CreatedAtLocal;
   image: File;
-  description?: string;
+  description: string;
 }): EitherAsync<unknown, void> => {
   return put({
     pathname: getJournalImagePathname({

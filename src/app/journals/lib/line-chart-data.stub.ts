@@ -23,6 +23,9 @@ const rawLevels = Array.from({ length: 60 }, (_, index) => {
       baseDate.getMonth(),
       baseDate.getDate() + index,
     ).getTime(),
+    /**
+     * Using unsafeDecode since the inputs are fully controlled
+     */
     energyLevel: Level.unsafeDecode(
       Math.round(clampLevel(3 + Math.sin(index / 4) * 2)),
     ),

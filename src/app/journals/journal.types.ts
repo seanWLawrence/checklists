@@ -15,11 +15,20 @@ import { Metadata } from "@/lib/types";
 export type CreatedAtLocal =
   `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
 
+export const dateToCreatedAtLocal = (date: Date): CreatedAtLocal => {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${date.getFullYear()}-${month}-${day}` as CreatedAtLocal;
+};
+
 export const CreatedAtLocal = Codec.custom<CreatedAtLocal>({
   decode: (input) =>
     typeof input === "string" && input.match(/^\d{4,}-\d{2,}-\d{2,}$/)?.[0]
       ? Right(input as CreatedAtLocal)
-      : Left(`Invalid createdAtLocal '${input}'`),
+      : input instanceof Date && !Number.isNaN(input.getTime())
+        ? Right(dateToCreatedAtLocal(input))
+        : Left(`Invalid createdAtLocal '${input}'`),
   encode: (input) => input,
 });
 

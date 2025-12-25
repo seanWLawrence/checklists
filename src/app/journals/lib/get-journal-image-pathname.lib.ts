@@ -17,7 +17,7 @@ const buildImageFilename = ({
   description,
   originalName,
 }: {
-  description?: string;
+  description: string;
   originalName: string;
 }): string => {
   const ext = getExtension(originalName);
@@ -36,7 +36,7 @@ export const getJournalImagePathname = ({
   originalName,
 }: {
   createdAtLocal: CreatedAtLocal;
-  description?: string;
+  description: string;
   originalName: string;
 }): string => {
   const imageName = buildImageFilename({ description, originalName });
