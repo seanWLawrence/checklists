@@ -27,6 +27,11 @@ const cspHeader = `
 `;
 
 export default {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   poweredByHeader: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
