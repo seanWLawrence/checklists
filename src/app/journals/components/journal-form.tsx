@@ -9,6 +9,7 @@ import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form"
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
 import { JournalImage } from "./journal-image";
+import { useState } from "react";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -30,6 +31,7 @@ export const JournalForm: React.FC<{
    * Using unsafeDecode since the inputs are fully controlled
    */
   const todayLocal = CreatedAtLocal.unsafeDecode(new Date());
+  const [hasImageSelected, setHasImageSelected] = useState(false);
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -145,6 +147,9 @@ export const JournalForm: React.FC<{
                 name="image"
                 accept="image/*"
                 className="w-full max-w-prose text-sm"
+                onChange={(event) => {
+                  setHasImageSelected(!!event.currentTarget.files?.length);
+                }}
               />
             )}
 
@@ -153,7 +158,7 @@ export const JournalForm: React.FC<{
                 type="text"
                 name="imageDescription"
                 defaultValue={imageCaption}
-                required={!imageUrl}
+                required={!imageUrl && hasImageSelected}
                 disabled={!!imageUrl}
                 className={
                   imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
