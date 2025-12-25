@@ -124,14 +124,14 @@ export const updateJournalAction = async (
             if (imageMaybe.isJust()) {
               const image = imageMaybe.extract();
 
-              const description = await liftEither(
-                getStringFromFormData({ name: "imageDescription", formData }),
+              const caption = await liftEither(
+                getStringFromFormData({ name: "imageCaption", formData }),
               );
 
               return uploadJournalImage({
                 createdAtLocal,
                 image,
-                description,
+                caption,
               })
                 .chain(() =>
                   deleteJournalImages({
@@ -195,14 +195,14 @@ export const updateJournalAction = async (
           if (imageMaybe.isJust()) {
             const image = imageMaybe.extract();
 
-            const description = await liftEither(
-              getStringFromFormData({ name: "imageDescription", formData }),
+            const caption = await liftEither(
+              getStringFromFormData({ name: "imageCaption", formData }),
             );
 
             return uploadJournalImage({
               createdAtLocal,
               image,
-              description,
+              caption,
             }).map(() => updatedJournal);
           }
 

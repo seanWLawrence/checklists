@@ -8,16 +8,16 @@ import { getJournalImagePathname } from "./get-journal-image-pathname.lib";
 export const uploadJournalImage = ({
   createdAtLocal,
   image,
-  description,
+  caption,
 }: {
   createdAtLocal: CreatedAtLocal;
   image: File;
-  description: string;
+  caption: string;
 }): EitherAsync<unknown, PutBlobResult> => {
   return put({
     pathname: getJournalImagePathname({
       createdAtLocal,
-      description,
+      caption,
       originalName: image.name,
     }),
     body: image,

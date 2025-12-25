@@ -142,21 +142,23 @@ export const JournalForm: React.FC<{
             <JournalImage imageUrl={imageUrl} />
 
             {!imageUrl && (
-              <input
-                type="file"
-                name="image"
-                accept="image/*"
-                className="w-full max-w-prose text-sm"
-                onChange={(event) => {
-                  setHasImageSelected(!!event.currentTarget.files?.length);
-                }}
-              />
+              <Label label="Image">
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  className="w-full max-w-prose text-sm"
+                  onChange={(event) => {
+                    setHasImageSelected(!!event.currentTarget.files?.length);
+                  }}
+                />
+              </Label>
             )}
 
-            <Label label="Image description">
+            <Label label="Caption">
               <Input
                 type="text"
-                name="imageDescription"
+                name="imageCaption"
                 defaultValue={imageCaption}
                 required={!imageUrl && hasImageSelected}
                 disabled={!!imageUrl}

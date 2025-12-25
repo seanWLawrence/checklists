@@ -13,15 +13,15 @@ const getExtension = (filename: string, fallback = "jpg"): string => {
   return ext && ext.length <= 8 ? ext.toLowerCase() : fallback;
 };
 
-const buildImageFilename = ({
-  description,
+const getImageFilename = ({
+  caption,
   originalName,
 }: {
-  description: string;
+  caption: string;
   originalName: string;
 }): string => {
   const ext = getExtension(originalName);
-  const base = description ? sanitizeFilename(description) : "";
+  const base = caption ? sanitizeFilename(caption) : "";
 
   if (base.length > 0) {
     return `${base.slice(0, 60)}.${ext}`;
@@ -32,13 +32,14 @@ const buildImageFilename = ({
 
 export const getJournalImagePathname = ({
   createdAtLocal,
-  description,
+  caption,
   originalName,
 }: {
   createdAtLocal: CreatedAtLocal;
-  description: string;
+  caption: string;
   originalName: string;
 }): string => {
-  const imageName = buildImageFilename({ description, originalName });
+  const imageName = getImageFilename({ caption, originalName });
+
   return `${getJournalImagePrefix({ createdAtLocal })}${imageName}`;
 };
