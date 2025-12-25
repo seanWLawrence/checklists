@@ -1,5 +1,5 @@
-import { TimeEstimate } from "@/lib/types";
 import { Maybe } from "purify-ts";
+import { TimeEstimate } from "../checklist-v2.types";
 
 const unitToMinutes = { h: 60, m: 1 };
 

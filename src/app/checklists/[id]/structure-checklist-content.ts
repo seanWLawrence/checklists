@@ -1,8 +1,8 @@
-import { TimeEstimate } from "@/lib/types";
 import {
   ChecklistV2Structured,
   ChecklistV2StructuredItem,
   ChecklistV2StructuredSection,
+  TimeEstimate,
 } from "../checklist-v2.types";
 import { Maybe, optional, string } from "purify-ts";
 import { id } from "@/factories/id.factory";

@@ -7,11 +7,11 @@ import {
   ChecklistV2,
   ChecklistV2Structured,
   ChecklistV2StructuredItem,
+  TimeEstimate,
 } from "../checklist-v2.types";
 import { Maybe } from "purify-ts/Maybe";
 import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
-import { TimeEstimate } from "@/lib/types";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
 import { RelativeTime } from "@/components/relative-time";
