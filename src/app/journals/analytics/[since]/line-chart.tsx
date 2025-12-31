@@ -58,24 +58,29 @@ const getMonthlyTicks = (data: LineChartData): number[] => {
   return ticks;
 };
 
-const gradientOffset = (): number => {
-  const min = 1;
-  const max = 5;
-  const threshold = 3;
-  const offset = (max - threshold) / (max - min);
-
-  return Math.min(1, Math.max(0, offset));
-};
-
-const off = gradientOffset();
-
 export const LineChart: React.FC<{
   data: LineChartData;
   dataKey: string;
   averageKey: AverageKey;
   name: string;
 }> = ({ data, dataKey, averageKey: averageKey, name }) => {
-  const gradientId = `splitColor-${averageKey}`;
+  const chartData = data.map((row) => {
+    const value = row[averageKey];
+
+    if (typeof value !== "number") {
+      return {
+        ...row,
+        avgAbove: 3,
+        avgBelow: 3,
+      };
+    }
+
+    return {
+      ...row,
+      avgAbove: value >= 3 ? value : 3,
+      avgBelow: value < 3 ? value : 3,
+    };
+  });
 
   return (
     <div className="flex space-x-1 flex-wrap space-y-1 overflow-x-scroll">
@@ -87,7 +92,7 @@ export const LineChart: React.FC<{
           aspectRatio: 1.618,
         }}
         responsive
-        data={data}
+        data={chartData}
         margin={{
           top: 5,
           right: 0,
@@ -130,22 +135,26 @@ export const LineChart: React.FC<{
 
         <Legend />
 
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#22C55E" stopOpacity={0.25} />
-            <stop offset={off} stopColor="#22C55E" stopOpacity={0.25} />
-            <stop offset={off} stopColor="#EF4444" stopOpacity={0.25} />
-            <stop offset="1" stopColor="#EF4444" stopOpacity={0.25} />
-          </linearGradient>
-        </defs>
-
         <Area
-          dataKey={averageKey}
+          dataKey="avgAbove"
           name={`${name} (7d avg)`}
           type="monotone"
-          stroke={colors.gray}
-          fill={`url(#${gradientId})`}
+          stroke="transparent"
+          fill={colors.green}
+          fillOpacity={0.25}
           baseValue={3}
+          isAnimationActive={false}
+        />
+
+        <Area
+          dataKey="avgBelow"
+          name={`${name} (7d avg)`}
+          type="monotone"
+          stroke="transparent"
+          fill={colors.red}
+          fillOpacity={0.25}
+          baseValue={3}
+          isAnimationActive={false}
         />
 
         <Line
