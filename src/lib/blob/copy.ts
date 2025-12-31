@@ -4,6 +4,7 @@ import {
   CopyCommandOptions,
 } from "@vercel/blob";
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { logger } from "../logger";
 
 export const copy = ({
   fromUrlOrPathname,
@@ -20,6 +21,8 @@ export const copy = ({
 
       return result;
     } catch (e) {
+      logger.error("Error copying blob: ", e);
+
       return throwE(e);
     }
   });

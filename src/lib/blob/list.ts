@@ -4,6 +4,7 @@ import {
   ListCommandOptions,
 } from "@vercel/blob";
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { logger } from "../logger";
 
 export const list = ({
   options,
@@ -16,6 +17,7 @@ export const list = ({
 
       return result;
     } catch (e) {
+      logger.error("Error listing blobs: ", e);
       return throwE(e);
     }
   });

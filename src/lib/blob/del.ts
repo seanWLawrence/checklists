@@ -1,5 +1,6 @@
 import { del as delBlob } from "@vercel/blob";
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { logger } from "../logger";
 
 export const del = ({
   urls,
@@ -10,6 +11,8 @@ export const del = ({
     try {
       await delBlob(urls);
     } catch (e) {
+      logger.error("Error deleting blob: ", e);
+
       return throwE(e);
     }
   });
