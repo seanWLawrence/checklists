@@ -10,6 +10,7 @@ import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
 import { JournalImage } from "./journal-image";
 import { useState } from "react";
+import { MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -31,7 +32,11 @@ export const JournalForm: React.FC<{
    * Using unsafeDecode since the inputs are fully controlled
    */
   const todayLocal = CreatedAtLocal.unsafeDecode(new Date());
-  const [hasImageSelected, setHasImageSelected] = useState(false);
+  const [currentImageSizeMb, setCurrentImageSizeMb] = useState<number | null>(
+    null,
+  );
+  const formattedImageSizeMb =
+    currentImageSizeMb === null ? "-" : currentImageSizeMb.toFixed(1);
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -141,31 +146,44 @@ export const JournalForm: React.FC<{
           <JournalImage imageUrl={imageUrl} />
 
           {!imageUrl && (
-            <Label label="Image">
+            <div className="space-y-1 flex flex-col">
+              <div className="flex space-x-1 items-center max-w-min">
+                <Label htmlFor="image" label="Image" />
+
+                <span className="text-xs text-zinc-500 flex items-center">
+                  {formattedImageSizeMb}mb/{MAX_IMAGE_SIZE_MB}mb
+                </span>
+              </div>
+
               <input
                 type="file"
+                id="image"
                 name="image"
                 accept="image/*"
                 className="w-full max-w-prose text-sm"
                 onChange={(event) => {
-                  setHasImageSelected(!!event.currentTarget.files?.length);
+                  const file = event.currentTarget.files?.[0] ?? null;
+
+                  setCurrentImageSizeMb(
+                    file ? file.size / (1024 * 1024) : null,
+                  );
                 }}
               />
-            </Label>
-          )}
 
-          <Label label="Caption">
-            <Input
-              type="text"
-              name="imageCaption"
-              defaultValue={imageCaption}
-              required={!imageUrl && hasImageSelected}
-              disabled={!!imageUrl}
-              className={
-                imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
-              }
-            />
-          </Label>
+              <Label label="Caption">
+                <Input
+                  type="text"
+                  name="imageCaption"
+                  defaultValue={imageCaption}
+                  required={!imageUrl && currentImageSizeMb !== null}
+                  disabled={!!imageUrl}
+                  className={
+                    imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
+                  }
+                />
+              </Label>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end w-full max-w-xl">

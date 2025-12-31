@@ -1,5 +1,6 @@
 import { NextConfig } from "next";
 import invariant from "tiny-invariant";
+import { MAX_IMAGE_SIZE } from "./src/lib/upload.constants";
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
@@ -25,8 +26,6 @@ const cspHeader = `
     frame-ancestors 'none';
     upgrade-insecure-requests;
 `;
-
-const MAX_IMAGE_SIZE = "30mb";
 
 export default {
   experimental: {
