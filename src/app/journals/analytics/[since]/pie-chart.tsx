@@ -87,6 +87,14 @@ const renderPieShape = (props: PieSectorShapeProps) => {
 };
 
 export const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
+  if (
+    !data ||
+    data.length === 0 ||
+    data.every((entry) => entry.count <= 0)
+  ) {
+    return <p className="py-20">No data available</p>;
+  }
+
   const defaultIndex = data.reduce(
     (result, entry, index) => {
       if (entry.count > result.maxCount) {

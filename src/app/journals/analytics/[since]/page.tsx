@@ -1,13 +1,11 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { RadarChart } from "./radar-chart";
 import { Heading } from "@/components/heading";
-import { Input } from "@/components/input";
-import { Label } from "@/components/label";
-import { Button } from "@/components/button";
 import { redirect } from "next/navigation";
-import { CreatedAtLocal, Since } from "../../journal.types";
+import { parseSinceRange } from "../../lib/parse-since-range.lib";
 import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analytics.model";
 import { LevelChartsTabs } from "./level-charts-tabs";
+import { SinceFilterForm } from "../../components/since-filter-form";
 
 /**
  * Get the date range from the route, default to last week
@@ -20,11 +18,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
   const { since: unsafeSince } = await params;
 
   const page = await EitherAsync(async ({ fromPromise, liftEither }) => {
-    const safeSince = await liftEither(Since.decode(unsafeSince));
-
-    const [fromRaw, toRaw] = safeSince.split("to");
-    const from = await liftEither(CreatedAtLocal.decode(fromRaw));
-    const to = await liftEither(CreatedAtLocal.decode(toRaw));
+    const { since, from, to } = await liftEither(parseSinceRange(unsafeSince));
 
     const { radar, pie, line } = await fromPromise(
       getJournalLevelsAnalytics({ from, to }).run(),
@@ -34,7 +28,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
       <section className="space-y-2 text-center items-center flex flex-col">
         <Heading level={1}>Journal analytics</Heading>
 
-        <form
+        <SinceFilterForm
           className="flex max-w-fit items-end space-x-2"
           action={async (formData) => {
             "use server";
@@ -42,24 +36,8 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
 
             redirect(`/journals/analytics/${since}`);
           }}
-        >
-          <Label
-            label={
-              <span className="flex flex-col space-y-1">
-                <span>Since</span> <span>(YYYY-MM-DDtoYYYY-MM-DD)</span>
-              </span>
-            }
-          >
-            <Input
-              name="since"
-              defaultValue={safeSince}
-              pattern="\d{4,}-\d{2,}-\d{2,}to\d{4,}-\d{2,}-\d{2,}"
-              className="min-w-56"
-            />
-          </Label>
-
-          <Button variant="primary">Filter</Button>
-        </form>
+          defaultSince={since}
+        />
 
         <div className="space-y-2 text-center flex flex-col items-center">
           <div className="space-y-8">

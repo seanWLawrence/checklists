@@ -18,6 +18,21 @@ const opacity = 0.5;
 export const RadarChart: React.FC<{
   data: RadarChartData;
 }> = ({ data }) => {
+  if (
+    !data ||
+    data.length === 0 ||
+    data.some(
+      (entry) =>
+        !entry.average ||
+        !entry.median ||
+        !entry.mode ||
+        !entry.eightiethPercentile ||
+        !entry.twentiethPercentile,
+    )
+  ) {
+    return <p className="py-20">No data available</p>;
+  }
+
   return (
     <ResponsiveContainer width="100%" height={300} minWidth={300}>
       <RadarChartBase data={data}>

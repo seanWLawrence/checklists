@@ -1,16 +1,33 @@
 import Link from "next/link";
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { redirect } from "next/navigation";
 
 import { Heading } from "@/components/heading";
 import { CreatedAtLocal } from "./journal.types";
 import { Button } from "@/components/button";
-import { getAllCreatedAtLocals } from "./model/get-all-created-at-locals.model";
 import { groupCreatedAtLocals } from "./lib/group-created-at-locals.lib";
 import { prettyDate } from "./lib/pretty-date.lib";
+import { parseSinceYear } from "./lib/parse-since-year.lib";
+import { getCreatedAtLocalsForYear } from "./model/get-created-at-locals-for-year.model";
+import { Label } from "@/components/label";
+import { Input } from "@/components/input";
 
-const Journals: React.FC = async () => {
+const Journals: React.FC<{
+  searchParams?: Promise<{ sinceYear?: string }>;
+}> = async ({ searchParams }) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const defaultSinceYear = String(currentYear);
+
   const page = await EitherAsync(async ({ fromPromise }) => {
-    const createdAtLocals = await fromPromise(getAllCreatedAtLocals());
+    const resolvedSearchParams = await searchParams;
+    const rawSinceYear = resolvedSearchParams?.sinceYear;
+    const sinceYear = parseSinceYear(rawSinceYear).orDefault(defaultSinceYear);
+
+    const createdAtLocals = await fromPromise(
+      getCreatedAtLocalsForYear({ year: sinceYear }),
+    );
+
     const groupedJournals = Object.entries(
       groupCreatedAtLocals(createdAtLocals),
     );
@@ -18,6 +35,33 @@ const Journals: React.FC = async () => {
     return (
       <main className="space-y-2">
         <Heading level={1}>Journals</Heading>
+
+        <form
+          className="flex max-w-fit items-end space-x-2 my-4"
+          action={async (formData) => {
+            "use server";
+            const sinceYear = formData.get("sinceYear");
+            const trimmedSinceYear =
+              typeof sinceYear === "string" ? sinceYear.trim() : "";
+            const query =
+              trimmedSinceYear !== ""
+                ? encodeURIComponent(trimmedSinceYear)
+                : "";
+
+            redirect(`/journals${query ? `?sinceYear=${query}` : ""}`);
+          }}
+        >
+          <Label label={"Year (YYYY)"}>
+            <Input
+              name="sinceYear"
+              defaultValue={sinceYear}
+              pattern="\d{4}"
+              className="min-w-28"
+            />
+          </Label>
+
+          <Button variant="primary">Filter</Button>
+        </form>
 
         <div className="space-y-1">
           {groupedJournals.map(([year, monthMap]) => {
