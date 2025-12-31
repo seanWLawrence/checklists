@@ -26,11 +26,14 @@ const cspHeader = `
     upgrade-insecure-requests;
 `;
 
+const MAX_IMAGE_SIZE = "30mb";
+
 export default {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: MAX_IMAGE_SIZE,
     },
+    proxyClientMaxBodySize: MAX_IMAGE_SIZE,
   },
   poweredByHeader: false,
   crossOrigin: "anonymous",
