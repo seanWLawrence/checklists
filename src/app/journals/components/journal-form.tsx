@@ -120,7 +120,7 @@ export const JournalForm: React.FC<{
           />
         )}
 
-        <Label label="Date" className="max-w-prose">
+        <Label label="Date" className="max-w-min">
           <Input
             type="date"
             defaultValue={journal?.createdAtLocal ?? todayLocal}
