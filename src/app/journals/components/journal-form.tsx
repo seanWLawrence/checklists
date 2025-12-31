@@ -137,38 +137,36 @@ export const JournalForm: React.FC<{
           required
         />
 
-        <Label label="Image" className="max-w-prose mb-4">
-          <div className="space-y-2">
-            <JournalImage imageUrl={imageUrl} />
+        <div className="space-y-2">
+          <JournalImage imageUrl={imageUrl} />
 
-            {!imageUrl && (
-              <Label label="Image">
-                <input
-                  type="file"
-                  name="image"
-                  accept="image/*"
-                  className="w-full max-w-prose text-sm"
-                  onChange={(event) => {
-                    setHasImageSelected(!!event.currentTarget.files?.length);
-                  }}
-                />
-              </Label>
-            )}
-
-            <Label label="Caption">
-              <Input
-                type="text"
-                name="imageCaption"
-                defaultValue={imageCaption}
-                required={!imageUrl && hasImageSelected}
-                disabled={!!imageUrl}
-                className={
-                  imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
-                }
+          {!imageUrl && (
+            <Label label="Image">
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                className="w-full max-w-prose text-sm"
+                onChange={(event) => {
+                  setHasImageSelected(!!event.currentTarget.files?.length);
+                }}
               />
             </Label>
-          </div>
-        </Label>
+          )}
+
+          <Label label="Caption">
+            <Input
+              type="text"
+              name="imageCaption"
+              defaultValue={imageCaption}
+              required={!imageUrl && hasImageSelected}
+              disabled={!!imageUrl}
+              className={
+                imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
+              }
+            />
+          </Label>
+        </div>
 
         <div className="flex justify-end w-full max-w-xl">
           <Button type="submit" variant="primary">
