@@ -1,3 +1,4 @@
+import "server-only";
 import { Either, EitherAsync } from "purify-ts";
 import { setAccessJwtCookie } from "./set-access-jwt-cookie";
 import { secureHash } from "./secure-hash";
@@ -81,8 +82,8 @@ export const setAuthTokensAndCookies = ({
 
     logger.debug("Expiration set, setting auth cookies");
 
-    setAccessJwtCookieFn({ jwt: accessJwt });
+    await setAccessJwtCookieFn({ jwt: accessJwt });
 
-    setRefreshTokenCookieFn({ token });
+    await setRefreshTokenCookieFn({ token });
   });
 };

@@ -1,3 +1,4 @@
+import "server-only";
 import { Either } from "purify-ts";
 
 export const randomBytes = (): Uint8Array => {

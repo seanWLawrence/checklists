@@ -1,3 +1,4 @@
+import "server-only";
 import { Either } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
 import invariant from "tiny-invariant";

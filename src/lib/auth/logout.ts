@@ -1,3 +1,4 @@
+import "server-only";
 import { redirect } from "next/navigation";
 import { EitherAsync } from "purify-ts/EitherAsync";
 

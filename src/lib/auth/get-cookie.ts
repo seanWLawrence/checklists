@@ -1,8 +1,9 @@
-import type { NextRequest } from "next/server";
+import "server-only";
 import type { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { MaybeAsync } from "purify-ts/MaybeAsync";
 import { cookies } from "next/headers";
 import { Maybe } from "purify-ts/Maybe";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 export const getCookieFromHeaders = ({
   name,
@@ -24,7 +25,7 @@ export const getCookie = ({
   getCookieFromHeadersFn = getCookieFromHeaders,
 }: {
   name: string;
-  request?: { cookies: NextRequest["cookies"] };
+  request?: { cookies: ReadonlyRequestCookies };
   getCookieFromHeadersFn?: typeof getCookieFromHeaders;
 }): MaybeAsync<RequestCookie> => {
   return MaybeAsync(async ({ fromPromise }) => {

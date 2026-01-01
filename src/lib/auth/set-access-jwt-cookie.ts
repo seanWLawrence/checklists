@@ -1,3 +1,4 @@
+import "server-only";
 import { logger } from "../logger";
 import {
   ACCESS_JWT_COOKIE_NAME,
@@ -11,10 +12,10 @@ export const setAccessJwtCookie = ({
 }: {
   jwt: string;
   setJwtCookieFn?: typeof setCookie;
-}): void => {
+}): Promise<void> => {
   logger.debug("Setting access jwt cookie");
 
-  setJwtCookieFn({
+  return setJwtCookieFn({
     cookieName: ACCESS_JWT_COOKIE_NAME,
     value: jwt,
     expires: new Date(Date.now() + FIFTEEN_MINUTES_IN_MILLISECONDS),

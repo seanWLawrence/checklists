@@ -1,3 +1,4 @@
+import "server-only";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getSingleItem } from "../db/get-single-item";

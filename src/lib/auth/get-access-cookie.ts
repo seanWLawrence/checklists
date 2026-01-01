@@ -1,3 +1,4 @@
+import "server-only";
 import { getCookie } from "./get-cookie";
 import { ACCESS_JWT_COOKIE_NAME } from "./auth.constants";
 

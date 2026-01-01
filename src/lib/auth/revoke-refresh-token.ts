@@ -1,3 +1,4 @@
+import "server-only";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { deleteCookie } from "./delete-cookie";

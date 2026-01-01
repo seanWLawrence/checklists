@@ -1,3 +1,4 @@
+import "server-only";
 import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
 import { isProduction } from "../environment";

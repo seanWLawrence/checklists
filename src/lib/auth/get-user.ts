@@ -1,3 +1,4 @@
+import "server-only";
 import { NextRequest } from "next/server";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Either } from "purify-ts/Either";

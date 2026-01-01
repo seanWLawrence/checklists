@@ -1,3 +1,4 @@
+import "server-only";
 import { jwtVerify } from "jose/jwt/verify";
 import { JWTPayload } from "jose";
 import { EitherAsync } from "purify-ts";
