@@ -1,8 +1,16 @@
 import Link from "next/link";
 
 import { Button } from "@/components/button";
+import { getUser } from "@/lib/auth/get-user";
+import { redirect } from "next/navigation";
 
-const Home: React.FC = () => {
+const Home: React.FC = async () => {
+  const userMaybe = await getUser({});
+
+  if (userMaybe.isNothing()) {
+    redirect("/login");
+  }
+
   return (
     <main className="flex flex-wrap mr-1">
       <Link href="/checklists">

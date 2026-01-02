@@ -6,5 +6,6 @@ export default defineConfig({
     alias: {
       "@/": new URL("./src/", import.meta.url).pathname,
     },
+    setupFiles: ["./src/test/vitest.setup.ts"],
   },
 });

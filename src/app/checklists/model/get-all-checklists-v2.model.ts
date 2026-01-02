@@ -1,10 +1,10 @@
 import { logger } from "@/lib/logger";
 import { EitherAsync } from "purify-ts";
 import { ChecklistV2 } from "../checklist-v2.types";
-import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { scan } from "@/lib/db/scan";
 import { getAllItems } from "@/lib/db/get-all-items";
 import { Key, User } from "@/lib/types";
+import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 const getAllChecklistsV2ScanKey = ({ user }: { user: User }): Key =>
   `user#${user.username}#checklist-v2#*`;
@@ -28,6 +28,6 @@ export const getAllChecklistsV2 = (): EitherAsync<unknown, ChecklistV2[]> => {
     })
     .ifLeft((e) => {
       logger.error(`Failed to load all checklists`);
-      logger.error(e);
+      logger.error("Error", e);
     });
 };

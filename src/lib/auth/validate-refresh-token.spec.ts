@@ -74,7 +74,7 @@ test("fails if the token was issued more than 30 days ago", async ({
   expect(result.extract()).toContain("expired");
 });
 
-test("returns user if succeeds", async ({ expect }) => {
+test("returns refresh token if succeeds", async ({ expect }) => {
   const user = { username: "username" };
 
   const getSingleItemFn = vi.fn().mockResolvedValue(
@@ -95,5 +95,5 @@ test("returns user if succeeds", async ({ expect }) => {
   });
 
   expect(result.isRight()).toBe(true);
-  expect(result.extract()).toEqual(user);
+  expect(result.extract()).toMatchObject({ user });
 });

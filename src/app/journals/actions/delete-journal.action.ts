@@ -16,7 +16,9 @@ export const deleteJournalAction = async (
   formData: FormData,
 ): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
-    const user = await fromPromise(validateUserLoggedIn({}));
+    const user = await fromPromise(
+      validateUserLoggedIn({ variant: 'server-action' }),
+    );
 
     const createdAtLocal = await liftEither(
       getStringFromFormData({ name: "createdAtLocal", formData }).chain(

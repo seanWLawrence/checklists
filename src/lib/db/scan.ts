@@ -44,7 +44,7 @@ export const scan = ({
         return allKeysSoFar;
       }
 
-      logger.debug("Fetching more keys");
+      logger.debug("Fetching more keys", `current cursor: '${cursor}'`);
 
       return fromPromise(
         scan({

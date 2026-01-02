@@ -4,7 +4,6 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getSingleItem } from "../db/get-single-item";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { RefreshToken } from "./auth.types";
-import { User } from "../types";
 import { THIRTY_DAYS_IN_MILLISECONDS } from "./auth.constants";
 import { secureHash } from "./secure-hash";
 import { Either } from "purify-ts/Either";
@@ -21,7 +20,7 @@ export const validateRefreshToken = ({
   token,
   getSingleItemFn = getSingleItem,
   secureHashFn = secureHash,
-}: ValidateRefreshTokenParams): EitherAsync<unknown, User> => {
+}: ValidateRefreshTokenParams): EitherAsync<unknown, RefreshToken> => {
   return EitherAsync(async ({ fromPromise, throwE }) => {
     logger.debug("Validating refresh token");
 
@@ -39,6 +38,9 @@ export const validateRefreshToken = ({
       }),
     );
 
+    /**
+     * Important to avoid matching timing attacks
+     */
     const hashesMatch = constantTimeStringComparison(
       hashedToken.hash,
       refreshTokenFromDb.hash,
@@ -58,6 +60,6 @@ export const validateRefreshToken = ({
       return throwE("Refresh token expired");
     }
 
-    return refreshTokenFromDb.user;
+    return refreshTokenFromDb;
   });
 };

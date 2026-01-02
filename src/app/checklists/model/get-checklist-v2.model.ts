@@ -1,11 +1,11 @@
-import { EitherAsync } from "purify-ts";
+import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getSingleItem } from "@/lib/db/get-single-item";
-import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { logger } from "@/lib/logger";
 import { UUID } from "@/lib/types";
 import { ChecklistV2 } from "../checklist-v2.types";
 import { Key, User } from "@/lib/types";
+import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const getChecklistV2Key = ({
   user,
@@ -18,6 +18,7 @@ export const getChecklistV2Key = ({
 export const getChecklistV2 = (id: UUID): EitherAsync<unknown, ChecklistV2> => {
   return EitherAsync(async ({ fromPromise }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
+
     const key = getChecklistV2Key({ id, user });
 
     return fromPromise(getSingleItem({ key, decoder: ChecklistV2 }));

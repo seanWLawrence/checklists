@@ -4,13 +4,15 @@ import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
-import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { loginAction } from "./actions/login.action";
+import { getUser } from "@/lib/auth/get-user";
 
 const Login: React.FC = async () => {
-  await validateUserLoggedIn({}).ifLeft(() => {
+  const userMaybe = await getUser({});
+
+  if (userMaybe.isJust()) {
     redirect("/checklists");
-  });
+  }
 
   return (
     <form className="space-y-2" action={loginAction}>

@@ -17,7 +17,9 @@ export const createChecklistV2Action = async (
   formData: FormData,
 ): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
-    const user = await fromPromise(validateUserLoggedIn({}));
+    const user = await fromPromise(
+      validateUserLoggedIn({ variant: 'server-action' }),
+    );
 
     const name = await liftEither(
       getStringFromFormData({ name: "name", formData }),

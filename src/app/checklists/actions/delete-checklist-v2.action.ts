@@ -11,7 +11,9 @@ import { deleteAllItems } from "@/lib/db/delete-all-items";
 
 export const deleteChecklistV2Action = async (id: UUID): Promise<void> => {
   await EitherAsync(async ({ fromPromise }) => {
-    const user = await fromPromise(validateUserLoggedIn({}));
+    const user = await fromPromise(
+      validateUserLoggedIn({ variant: "server-action" }),
+    );
 
     return fromPromise(
       deleteAllItems({

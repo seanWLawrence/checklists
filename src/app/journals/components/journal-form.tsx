@@ -150,7 +150,7 @@ export const JournalForm: React.FC<{
               <div className="flex space-x-1 items-center max-w-min">
                 <Label htmlFor="image" label="Image" />
 
-                <span className="text-xs text-zinc-500 flex items-center">
+                <span className="text-xs text-zinc-500">
                   {formattedImageSizeMb}mb/{MAX_IMAGE_SIZE_MB}mb
                 </span>
               </div>

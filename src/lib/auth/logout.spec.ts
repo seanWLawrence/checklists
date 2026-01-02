@@ -1,17 +1,19 @@
 import { test, vi } from "vitest";
 import { logout } from "./logout";
 import { Left, Right } from "purify-ts/Either";
-import { MaybeAsync } from "purify-ts";
+import { MaybeAsync } from "purify-ts/MaybeAsync";
 
 test("skips revoking and redirects if user isnt found", async ({ expect }) => {
-  const getUserFn = vi.fn().mockResolvedValue(Left("some error"));
+  const validateUserLoggedInFn = vi
+    .fn()
+    .mockResolvedValue(Left("No user found."));
   const revokeRefreshTokenFn = vi.fn();
   const revokeAccessTokenFn = vi.fn();
   const redirectFn = vi.fn();
   const revalidatePathFn = vi.fn();
 
   await logout({
-    getUserFn,
+    validateUserLoggedInFn,
     revokeRefreshTokenFn,
     revokeAccessTokenFn,
     // @ts-expect-error just for testing
@@ -26,7 +28,7 @@ test("skips revoking and redirects if user isnt found", async ({ expect }) => {
 
 test("fails if revokeRefreshTokenFn fails", async ({ expect }) => {
   const user = { username: "username" };
-  const getUserFn = vi.fn().mockResolvedValue(Right(user));
+  const validateUserLoggedInFn = vi.fn().mockResolvedValue(Right(user));
   const getRefreshCookieFn = vi
     .fn()
     .mockReturnValue(MaybeAsync(async () => ({ value: "some token" })));
@@ -36,7 +38,7 @@ test("fails if revokeRefreshTokenFn fails", async ({ expect }) => {
   const revalidatePathFn = vi.fn();
 
   await logout({
-    getUserFn,
+    validateUserLoggedInFn,
     getRefreshCookieFn,
     revokeRefreshTokenFn,
     revokeAccessTokenFn,
@@ -56,7 +58,7 @@ test("deletes access and refresh cookies and redirects to login when user is fou
   expect,
 }) => {
   const user = { username: "username" };
-  const getUserFn = vi.fn().mockResolvedValue(Right(user));
+  const validateUserLoggedInFn = vi.fn().mockResolvedValue(Right(user));
   const getRefreshCookieFn = vi
     .fn()
     .mockReturnValue(MaybeAsync(async () => ({ value: "some token" })));
@@ -66,7 +68,7 @@ test("deletes access and refresh cookies and redirects to login when user is fou
   const revalidatePathFn = vi.fn();
 
   await logout({
-    getUserFn,
+    validateUserLoggedInFn,
     getRefreshCookieFn,
     revokeRefreshTokenFn,
     revokeAccessTokenFn,

@@ -9,9 +9,7 @@ import { CreatedAtLocal } from "@/app/journals/journal.types";
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
 }) => {
-  const user = await getUserFn({});
-
-  const safeUser = user.mapLeft(() => null).extract();
+  const userMaybe = await getUserFn({});
 
   const now = new Date();
   const oneMonthAgo = new Date();
@@ -28,7 +26,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
         App
       </Link>
 
-      {safeUser && (
+      {userMaybe.isJust() && (
         <MenuButton
           menu={
             <div

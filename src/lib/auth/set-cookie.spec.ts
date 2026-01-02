@@ -1,9 +1,10 @@
 import { test, vi } from "vitest";
 import { setCookie } from "./set-cookie";
+import { FIFTEEN_MINUTES_IN_MILLISECONDS } from "./auth.constants";
 
 const cookieName = "cookie name";
 const value = "some value";
-const expires = new Date(Date.now() + 1000);
+const expires = new Date(Date.now() + FIFTEEN_MINUTES_IN_MILLISECONDS);
 
 test("sets cookie with expected secure params in production", async ({
   expect,
