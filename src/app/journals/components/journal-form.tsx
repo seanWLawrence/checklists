@@ -36,7 +36,7 @@ export const JournalForm: React.FC<{
     null,
   );
   const formattedImageSizeMb =
-    currentImageSizeMb === null ? "-" : currentImageSizeMb.toFixed(1);
+    currentImageSizeMb === null ? "0" : currentImageSizeMb.toFixed(1);
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -151,7 +151,7 @@ export const JournalForm: React.FC<{
                 <Label htmlFor="image" label="Image" />
 
                 <span className="text-xs text-zinc-500">
-                  {formattedImageSizeMb}mb/{MAX_IMAGE_SIZE_MB}mb
+                  {formattedImageSizeMb}/{MAX_IMAGE_SIZE_MB}mb
                 </span>
               </div>
 
