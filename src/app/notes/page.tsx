@@ -5,6 +5,8 @@ import { Heading } from "@/components/heading";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllNotes } from "./model/get-all-notes.model";
 
+export const dynamic = "force-dynamic";
+
 const Notes: React.FC = async () => {
   const page = await EitherAsync(async ({ fromPromise }) => {
     const notes = await fromPromise(getAllNotes());

@@ -12,6 +12,8 @@ import { getCreatedAtLocalsForYear } from "./model/get-created-at-locals-for-yea
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 
+export const dynamic = "force-dynamic";
+
 const Journals: React.FC<{
   searchParams?: Promise<{ sinceYear?: string }>;
 }> = async ({ searchParams }) => {

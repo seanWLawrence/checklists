@@ -7,6 +7,8 @@ import { Label } from "@/components/label";
 import { loginAction } from "./actions/login.action";
 import { getUser } from "@/lib/auth/get-user";
 
+export const dynamic = "force-dynamic";
+
 const Login: React.FC = async () => {
   const userMaybe = await getUser({});
 

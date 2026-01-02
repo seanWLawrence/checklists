@@ -6,6 +6,8 @@ import { ChecklistV2 } from "./checklist-v2.types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllChecklistsV2 } from "./model/get-all-checklists-v2.model";
 
+export const dynamic = "force-dynamic";
+
 const ChecklistsV2: React.FC = async () => {
   const page = await EitherAsync(async ({ fromPromise }) => {
     const checklists = await fromPromise(getAllChecklistsV2());
