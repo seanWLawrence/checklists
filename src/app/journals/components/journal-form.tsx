@@ -15,13 +15,13 @@ import { MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
 const DEFAULT_TEMPLATE =
   "## Dreams" +
   "\n\n" +
-  "## Grateful for" +
+  "## How I'm feelin" +
   "\n\n" +
-  "## What could make today great?" +
+  "## If today was my last day alive?" +
   "\n\n" +
   "## Highlights of the day" +
   "\n\n" +
-  "## What did I learn today?";
+  "## What did I learn?";
 
 export const JournalForm: React.FC<{
   journal?: Journal;
