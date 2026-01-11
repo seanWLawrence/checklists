@@ -18,7 +18,7 @@ export const NewJournalClient: React.FC = () => {
 
       journalExistsAction(todayLocal.extract()).then((exists) => {
         if (isMounted && exists) {
-          router.replace(`/journals/${todayLocal}/edit`);
+          router.replace(`/journals/${todayLocal.extract()}/edit`);
         }
       });
     }
