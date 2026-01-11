@@ -106,7 +106,7 @@ export const LineChart: React.FC<{
           angle={-90}
           type="number"
           height={50}
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 12, fill: "var(--chart-label)" }}
           domain={["dataMin", "dataMax"]}
           scale="time"
           ticks={getMonthlyTicks(data)}
@@ -120,6 +120,7 @@ export const LineChart: React.FC<{
           domain={[1, 5]}
           includeHidden
           scale="linear"
+          tick={{ fill: "var(--chart-label)" }}
         />
 
         <ReferenceLine
@@ -131,6 +132,14 @@ export const LineChart: React.FC<{
 
         <Tooltip
           labelFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
+          contentStyle={{
+            backgroundColor: "var(--chart-tooltip-bg)",
+            borderColor: "var(--chart-tooltip-border)",
+            color: "var(--chart-tooltip-text)",
+            borderRadius: 8,
+          }}
+          labelStyle={{ color: "var(--chart-tooltip-text)" }}
+          itemStyle={{ color: "var(--chart-tooltip-text)" }}
         />
 
         <Legend />

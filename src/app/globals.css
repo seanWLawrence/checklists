@@ -12,6 +12,34 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  :root {
+    color-scheme: light dark;
+    --app-bg: #ffffff;
+    --app-fg: #18181b;
+    --chart-label: #3f3f46;
+    --chart-label-strong: #27272a;
+    --chart-label-muted: #71717a;
+    --chart-tooltip-bg: #ffffff;
+    --chart-tooltip-border: #e4e4e7;
+    --chart-tooltip-text: #18181b;
+  }
+
+  .dark {
+    --app-bg: #09090b;
+    --app-fg: #f4f4f5;
+    --chart-label: #d4d4d8;
+    --chart-label-strong: #e4e4e7;
+    --chart-label-muted: #a1a1aa;
+    --chart-tooltip-bg: #18181b;
+    --chart-tooltip-border: #3f3f46;
+    --chart-tooltip-text: #f4f4f5;
+  }
+
+  body {
+    background-color: var(--app-bg);
+    color: var(--app-fg);
+  }
+
   *,
   ::after,
   ::before,

@@ -56,7 +56,7 @@ export const Checkbox: React.FC<
       />
 
       <span
-        className={cn("text-sm text-zinc-800 text-left w-full", {
+        className={cn("text-sm text-zinc-800 dark:text-zinc-200 text-left w-full", {
           "line-through decoration-2": checked,
         })}
       >
@@ -65,7 +65,7 @@ export const Checkbox: React.FC<
 
       {note && (
         <span
-          className={cn("text-xs text-zinc-600", {
+          className={cn("text-xs text-zinc-600 dark:text-zinc-400", {
             "line-through decoration-1": checked,
           })}
         >

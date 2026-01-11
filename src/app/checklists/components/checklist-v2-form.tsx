@@ -184,7 +184,7 @@ export const ChecklistV2Form: React.FC<{
           <textarea
             name="content"
             defaultValue={checklist?.content}
-            className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full"
+            className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             rows={20}
             required
             ref={contentRef}

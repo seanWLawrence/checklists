@@ -9,19 +9,37 @@ export const Heading: React.FC<
   switch (level) {
     case 1:
       return (
-        <h1 {...rest} className={cn("font-bold text-2xl", rest.className)}>
+        <h1
+          {...rest}
+          className={cn(
+            "font-bold text-2xl text-zinc-900 dark:text-zinc-200",
+            rest.className,
+          )}
+        >
           {children}
         </h1>
       );
     case 2:
       return (
-        <h2 {...rest} className={cn("font-bold text-xl", rest.className)}>
+        <h2
+          {...rest}
+          className={cn(
+            "font-bold text-xl text-zinc-900 dark:text-zinc-200",
+            rest.className,
+          )}
+        >
           {children}
         </h2>
       );
     case 3:
       return (
-        <h3 {...rest} className={cn("font-semibold text-sm", rest.className)}>
+        <h3
+          {...rest}
+          className={cn(
+            "font-semibold text-sm text-zinc-800 dark:text-zinc-300",
+            rest.className,
+          )}
+        >
           {children}
         </h3>
       );
@@ -29,7 +47,10 @@ export const Heading: React.FC<
       return (
         <legend
           {...rest}
-          className={cn("font-semibold text-md", rest.className)}
+          className={cn(
+            "font-semibold text-md text-zinc-800 dark:text-zinc-300",
+            rest.className,
+          )}
         >
           {children}
         </legend>

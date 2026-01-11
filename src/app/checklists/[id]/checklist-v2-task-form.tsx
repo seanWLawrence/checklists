@@ -136,7 +136,7 @@ export const ChecklistV2TaskForm: React.FC<{
 
             return (
               <div key={id}>
-                <fieldset className="space-y-1 border-2 border-zinc-700 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
+                <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
                   <Heading
                     level="legend"
                     className="flex items-center space-x-2"

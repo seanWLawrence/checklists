@@ -65,11 +65,11 @@ const ActiveShape: React.FC<PieSectorDataItem> = ({
         fill={fill}
       />
 
-      <text x={cx} y={cy - 120} textAnchor="middle" fill="#333">
+      <text x={cx} y={cy - 120} textAnchor="middle" fill="var(--chart-label-strong)">
         Level {payload.level}
       </text>
 
-      <text x={cx} y={cy - 100} textAnchor="middle" fill="#999">
+      <text x={cx} y={cy - 100} textAnchor="middle" fill="var(--chart-label-muted)">
         {`${value} entries (${(percent * 100).toFixed(2)}%)`}
       </text>
     </g>
@@ -121,7 +121,17 @@ export const PieChart: React.FC<{ data: PieChartData[0] }> = ({ data }) => {
           isAnimationActive
           shape={renderPieShape}
         />
-        <Tooltip defaultIndex={defaultIndex} />
+        <Tooltip
+          defaultIndex={defaultIndex}
+          contentStyle={{
+            backgroundColor: "var(--chart-tooltip-bg)",
+            borderColor: "var(--chart-tooltip-border)",
+            color: "var(--chart-tooltip-text)",
+            borderRadius: 8,
+          }}
+          labelStyle={{ color: "var(--chart-label-muted)" }}
+          itemStyle={{ color: "var(--chart-tooltip-text)" }}
+        />
       </PieChartBase>
     </ResponsiveContainer>
   );

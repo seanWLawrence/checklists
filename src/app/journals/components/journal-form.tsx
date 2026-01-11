@@ -137,7 +137,7 @@ export const JournalForm: React.FC<{
         <textarea
           name="content"
           defaultValue={journal?.content ?? DEFAULT_TEMPLATE}
-          className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full"
+          className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
           rows={20}
           required
         />
@@ -178,7 +178,9 @@ export const JournalForm: React.FC<{
                   required={!imageUrl && currentImageSizeMb !== null}
                   disabled={!!imageUrl}
                   className={
-                    imageUrl ? "opacity-60 cursor-not-allowed bg-zinc-100" : ""
+                    imageUrl
+                      ? "opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800"
+                      : ""
                   }
                 />
               </Label>

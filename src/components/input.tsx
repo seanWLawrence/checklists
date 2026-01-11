@@ -9,7 +9,7 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
     <input
       {...rest}
       className={cn(
-        "rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full max-w-prose",
+        "rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full max-w-prose bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500",
         rest.className,
       )}
     />

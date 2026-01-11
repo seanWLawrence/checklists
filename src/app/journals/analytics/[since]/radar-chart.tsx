@@ -37,13 +37,22 @@ export const RadarChart: React.FC<{
     <ResponsiveContainer width="100%" height={300} minWidth={300}>
       <RadarChartBase data={data}>
         <PolarGrid />
-        <PolarAngleAxis dataKey="name" />
+        <PolarAngleAxis dataKey="name" tick={{ fill: "var(--chart-label)" }} />
         <PolarRadiusAxis
           domain={[0, "dataMax"]}
           axisLine={false}
           tick={false}
         />
-        <Tooltip />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "var(--chart-tooltip-bg)",
+            borderColor: "var(--chart-tooltip-border)",
+            color: "var(--chart-tooltip-text)",
+            borderRadius: 8,
+          }}
+          labelStyle={{ color: "var(--chart-label-muted)" }}
+          itemStyle={{ color: "var(--chart-tooltip-text)" }}
+        />
         <Radar
           name="Median"
           dataKey="median"

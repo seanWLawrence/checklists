@@ -6,6 +6,7 @@ import TopNavigation from "@/components/top-navigation";
 
 import "./globals.css";
 import "highlight.js/styles/tokyo-night-dark.css";
+import { ThemeSetter } from "@/components/ThemeSetter.client";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -58,7 +59,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#FFFFFF",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0A" },
+  ],
 };
 
 export default function RootLayout({
@@ -70,6 +74,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SerwistProvider swUrl="/serwist/sw.js">
+          <ThemeSetter />
           <TopNavigation />
           <div className="p-5">{children}</div>
         </SerwistProvider>
