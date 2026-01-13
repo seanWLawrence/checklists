@@ -4,33 +4,67 @@ import { refreshAuthTokens } from "@/lib/auth/refresh-auth-tokens";
 
 const getSafeRedirectToPath = (request: NextRequest): string | null => {
   const url = new URL(request.url);
-  const redirectTo = url.searchParams.get("redirectTo");
+  const redirect = url.searchParams.get("redirect");
 
-  if (!redirectTo || !redirectTo.startsWith("/")) {
+  if (!redirect || !redirect.startsWith("/")) {
     return null;
   }
 
-  return redirectTo;
+  return redirect;
 };
 
 export const GET = async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const redirectParam = url.searchParams.get("redirect");
+  const skipRedirect = redirectParam === "false";
+
   const response = await refreshAuthTokens({ request })
     .map(({ status }) => {
       if (status === "tokensUnchanged") {
+        if (skipRedirect) {
+          return NextResponse.json(
+            { ok: true, status },
+            {
+              status: 204,
+              headers: { "Cache-Control": "no-store" },
+            },
+          );
+        }
+
         return new NextResponse(null, { status: 204 });
       }
 
-      if (status === "tokensRefreshed") {
-        const redirectToPath = getSafeRedirectToPath(request);
+      if (skipRedirect) {
+        return NextResponse.json(
+          { ok: true, status },
+          {
+            status: 200,
+            headers: { "Cache-Control": "no-store" },
+          },
+        );
+      }
 
-        if (!redirectToPath) {
+      if (status === "tokensRefreshed") {
+        const redirectPath = getSafeRedirectToPath(request);
+
+        if (!redirectPath) {
           return NextResponse.redirect(new URL(request.url));
         }
 
-        return NextResponse.redirect(new URL(redirectToPath, request.url));
+        return NextResponse.redirect(new URL(redirectPath, request.url));
       }
     })
     .mapLeft(() => {
+      if (skipRedirect) {
+        return NextResponse.json(
+          { ok: false },
+          {
+            status: 401,
+            headers: { "Cache-Control": "no-store" },
+          },
+        );
+      }
+
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "failed-token-refresh");
 

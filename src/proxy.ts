@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   const pathname = isLoginPage ? "/checklists" : url.pathname;
   const nextPath = `${pathname}${url.search}`;
   const redirectUrl = new URL("/api/auth/refresh", request.url);
-  redirectUrl.searchParams.set("redirectTo", nextPath);
+  redirectUrl.searchParams.set("redirect", nextPath);
 
   return NextResponse.redirect(redirectUrl);
 }
