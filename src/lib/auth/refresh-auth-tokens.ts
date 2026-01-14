@@ -42,7 +42,7 @@ export const refreshAuthTokens = ({
 
     const willExpireSoon =
       new Date().getTime() - refreshToken.createdAtIso.getTime() <=
-      ONE_MINUTE_IN_MILLI;
+      ONE_MINUTE_IN_MILLI * 2;
 
     if (willExpireSoon) {
       logger.debug("Refresh cookie is valid, revoking");
