@@ -13,7 +13,7 @@ export const useSetThemeEffect = () => {
       }
 
       const hour = new Date().getHours();
-      const isLightHours = hour >= 6 && hour < 18;
+      const isLightHours = hour >= 10 && hour < 18;
       const theme = isLightHours ? "light" : "dark";
       const shouldBeDark = theme === "dark";
       document.documentElement.classList.toggle("dark", shouldBeDark);
