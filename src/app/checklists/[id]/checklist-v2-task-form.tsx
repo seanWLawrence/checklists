@@ -199,7 +199,9 @@ export const ChecklistV2TaskForm: React.FC<{
                   </div>
 
                   {filteredItems.length === 0 && (
-                    <p className="text-xs text-zinc-700">(No items)</p>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-300">
+                      (No items)
+                    </p>
                   )}
                 </fieldset>
               </div>
