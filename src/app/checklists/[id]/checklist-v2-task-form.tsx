@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
@@ -15,6 +14,7 @@ import { MenuButton } from "@/components/menu-button";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
 import { RelativeTime } from "@/components/relative-time";
+import { LinkButton } from "@/components/link-button";
 
 const filterCompletedItemsIfHidden = ({
   items,
@@ -105,14 +105,13 @@ export const ChecklistV2TaskForm: React.FC<{
             }, [] as TimeEstimate[])}
           />
 
-          <Link
+          <LinkButton
             href={`/checklists/${structuredChecklist.id}/edit`}
+            variant="ghost"
             className="underline underline-offset-2"
           >
-            <Button type="button" variant="ghost">
-              Edit
-            </Button>
-          </Link>
+            Edit
+          </LinkButton>
         </div>
 
         <RelativeTime date={structuredChecklist.updatedAtIso} />

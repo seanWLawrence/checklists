@@ -1,6 +1,4 @@
-import Link from "next/link";
-
-import { Button } from "@/components/button";
+import { LinkButton } from "@/components/link-button";
 import { getUser } from "@/lib/auth/get-user";
 import { redirect } from "next/navigation";
 
@@ -13,23 +11,17 @@ const Home: React.FC = async () => {
 
   return (
     <main className="flex flex-wrap mr-1">
-      <Link href="/checklists">
-        <Button variant="outline" className="mr-2 mb-2">
-          Checklists
-        </Button>
-      </Link>
+      <LinkButton href="/checklists" variant="outline" className="mr-2 mb-2">
+        Checklists
+      </LinkButton>
 
-      <Link href="/journals">
-        <Button variant="outline" className="mr-2 mb-2">
-          Journals
-        </Button>
-      </Link>
+      <LinkButton href="/journals" variant="outline" className="mr-2 mb-2">
+        Journals
+      </LinkButton>
 
-      <Link href="/notes">
-        <Button variant="outline" className="mr-2 mb-2">
-          Notes
-        </Button>
-      </Link>
+      <LinkButton href="/notes" variant="outline" className="mr-2 mb-2">
+        Notes
+      </LinkButton>
     </main>
   );
 };

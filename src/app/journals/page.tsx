@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { redirect } from "next/navigation";
 
 import { Heading } from "@/components/heading";
 import { CreatedAtLocal } from "./journal.types";
 import { Button } from "@/components/button";
+import { LinkButton } from "@/components/link-button";
 import { groupCreatedAtLocals } from "./lib/group-created-at-locals.lib";
 import { prettyDate } from "./lib/pretty-date.lib";
 import { parseSinceYear } from "./lib/parse-since-year.lib";
@@ -87,16 +87,16 @@ const Journals: React.FC<{
                                 new Date(createdAtLocalB).getTime(),
                             )
                             .map((createdAtLocal) => (
-                              <Link
+                              <LinkButton
                                 href={`/journals/${createdAtLocal}`}
                                 key={createdAtLocal}
+                                variant="outline"
+                                className="mr-2 mb-2"
                               >
-                                <Button variant="outline" className="mr-2 mb-2">
-                                  {prettyDate(createdAtLocal, {
-                                    withYear: false,
-                                  })}
-                                </Button>
-                              </Link>
+                                {prettyDate(createdAtLocal, {
+                                  withYear: false,
+                                })}
+                              </LinkButton>
                             ))}
                         </div>
 

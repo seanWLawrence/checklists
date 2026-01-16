@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/button";
+import { LinkButton } from "@/components/link-button";
 import { Heading } from "@/components/heading";
 
 import { ChecklistV2 } from "./checklist-v2.types";
@@ -49,11 +48,14 @@ const ChecklistsV2: React.FC = async () => {
                 <div className="flex flex-wrap" key={firstChar}>
                   {checklists.map(({ id, name }) => {
                     return (
-                      <Link href={`/checklists/${id}`} key={id}>
-                        <Button variant="outline" className="mr-2 mb-2">
-                          {name}
-                        </Button>
-                      </Link>
+                      <LinkButton
+                        href={`/checklists/${id}`}
+                        key={id}
+                        variant="outline"
+                        className="mr-2 mb-2"
+                      >
+                        {name}
+                      </LinkButton>
                     );
                   })}
                 </div>

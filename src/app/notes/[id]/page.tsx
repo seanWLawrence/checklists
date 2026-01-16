@@ -2,8 +2,7 @@ import { EitherAsync } from "purify-ts";
 import { UUID } from "@/lib/types";
 import { getNote } from "../model/get-note.model";
 import { Heading } from "@/components/heading";
-import { Button } from "@/components/button";
-import Link from "next/link";
+import { LinkButton } from "@/components/link-button";
 import { PrettyContent } from "./pretty-content.client";
 import { RelativeTime } from "@/components/relative-time";
 
@@ -22,14 +21,13 @@ const NoteView: React.FC<{ params: Params }> = async (props) => {
           <div className="flex items-center space-x-2">
             <Heading level={1}>{note.name}</Heading>
 
-            <Link
+            <LinkButton
               href={`/notes/${note.id}/edit`}
+              variant="ghost"
               className="underline underline-offset-2"
             >
-              <Button type="button" variant="ghost">
-                Edit
-              </Button>
-            </Link>
+              Edit
+            </LinkButton>
           </div>
         </div>
 

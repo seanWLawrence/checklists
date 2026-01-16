@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/button";
+import { LinkButton } from "@/components/link-button";
 import { Heading } from "@/components/heading";
 
 import { EitherAsync } from "purify-ts/EitherAsync";
@@ -21,11 +20,14 @@ const Notes: React.FC = async () => {
           <div className="flex flex-wrap">
             {notes.map(({ id, name }) => {
               return (
-                <Link href={`/notes/${id}`} key={id}>
-                  <Button variant="outline" className="mr-2 mb-2">
-                    {name}
-                  </Button>
-                </Link>
+                <LinkButton
+                  href={`/notes/${id}`}
+                  key={id}
+                  variant="outline"
+                  className="mr-2 mb-2"
+                >
+                  {name}
+                </LinkButton>
               );
             })}
           </div>

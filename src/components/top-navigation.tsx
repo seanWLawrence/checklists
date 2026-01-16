@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "./button";
+import { LinkButton } from "./link-button";
 import { MenuButton } from "./menu-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
@@ -34,73 +35,57 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               data-testid="top-navigation-links"
             >
               <div className="flex space-x-1 items-center">
-                <Link href="/checklists">
-                  <Button variant="ghost" type="button">
-                    Checklists
-                  </Button>
-                </Link>
+                <LinkButton href="/checklists" variant="ghost">
+                  Checklists
+                </LinkButton>
 
                 <span>/</span>
 
-                <Link href="/checklists/new">
-                  <Button variant="ghost" type="button">
-                    New checklist
-                  </Button>
-                </Link>
+                <LinkButton href="/checklists/new" variant="ghost">
+                  New checklist
+                </LinkButton>
               </div>
 
               <div className="flex space-x-1 items-center">
-                <Link href="/journals">
-                  <Button variant="ghost" type="button">
-                    Journals
-                  </Button>
-                </Link>
+                <LinkButton href="/journals" variant="ghost">
+                  Journals
+                </LinkButton>
 
                 <span>/</span>
 
-                <Link href="/journals/new">
-                  <Button variant="ghost" type="button">
-                    New journal
-                  </Button>
-                </Link>
+                <LinkButton href="/journals/new" variant="ghost">
+                  New journal
+                </LinkButton>
 
                 <span>/</span>
 
-                <Link
+                <LinkButton
                   href={`/journals/analytics/${defaultJournalAnalyticsSince}`}
+                  variant="ghost"
                 >
-                  <Button variant="ghost" type="button">
-                    Analytics
-                  </Button>
-                </Link>
+                  Analytics
+                </LinkButton>
               </div>
 
               <div className="flex space-x-1 items-center">
-                <Link href="/notes">
-                  <Button variant="ghost" type="button">
-                    Notes
-                  </Button>
-                </Link>
+                <LinkButton href="/notes" variant="ghost">
+                  Notes
+                </LinkButton>
 
                 <span>/</span>
 
-                <Link href="/notes/new">
-                  <Button variant="ghost" type="button">
-                    New note
-                  </Button>
-                </Link>
+                <LinkButton href="/notes/new" variant="ghost">
+                  New note
+                </LinkButton>
               </div>
 
-              <Link href="/user-credential-generator">
-                <Button variant="ghost" type="button">
-                  Generate credentials
-                </Button>
-              </Link>
+              <LinkButton href="/user-credential-generator" variant="ghost">
+                Generate credentials
+              </LinkButton>
 
               <form action={logoutAction}>
                 <Button variant="ghost">Sign out</Button>
               </form>
-
             </div>
           }
         ></MenuButton>
