@@ -10,7 +10,7 @@ import {
   TimeEstimate,
 } from "../checklist-v2.types";
 import { Maybe } from "purify-ts/Maybe";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
@@ -41,11 +41,53 @@ export const ChecklistV2TaskForm: React.FC<{
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef(false);
+  const queuedRef = useRef(false);
 
   const toggleShowCompleted = useCallback(
     () => setShowCompleted((prev) => !prev),
     [],
   );
+
+  const scheduleAutoSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      if (inFlightRef.current) {
+        queuedRef.current = true;
+        return;
+      }
+
+      inFlightRef.current = true;
+
+      Maybe.fromNullable(formRef.current).ifJust(async (x) => {
+        const formData = new FormData(x);
+        formData.set("skipRedirect", "true");
+
+        try {
+          await updateChecklistV2Action(formData);
+        } finally {
+          inFlightRef.current = false;
+
+          if (queuedRef.current) {
+            queuedRef.current = false;
+            scheduleAutoSave();
+          }
+        }
+      });
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-4 max-w-prose">
@@ -167,6 +209,7 @@ export const ChecklistV2TaskForm: React.FC<{
                                   defaultChecked={completed}
                                   name={`item__${id}`}
                                   note={note}
+                                  onChange={scheduleAutoSave}
                                 >
                                   {"This is hidden"}
                                 </Checkbox>
@@ -180,6 +223,7 @@ export const ChecklistV2TaskForm: React.FC<{
                                 defaultChecked={completed}
                                 name={`item__${id}`}
                                 note={note}
+                                onChange={scheduleAutoSave}
                               >
                                 <div className="flex justify-between w-full">
                                   <span>{name}</span>
@@ -216,21 +260,6 @@ export const ChecklistV2TaskForm: React.FC<{
             required
           />
         </form>
-
-        <div className="justify-end flex">
-          <form
-            action={() => {
-              Maybe.fromNullable(formRef.current).ifJust(async (x) => {
-                const formData = new FormData(x);
-                await updateChecklistV2Action(formData);
-              });
-            }}
-          >
-            <SubmitButton type="submit" variant="primary">
-              Save
-            </SubmitButton>
-          </form>
-        </div>
       </div>
     </div>
   );

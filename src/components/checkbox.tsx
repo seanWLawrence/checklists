@@ -1,58 +1,46 @@
 "use client";
-import {
-  KeyboardEventHandler,
-  MouseEventHandler,
-  useCallback,
-  useId,
-  useState,
-} from "react";
+import { ChangeEventHandler, useCallback, useId, useState } from "react";
 import { cn } from "@/lib/cn";
 
-const keysToTriggerChecked = new Set<string>(["Enter", " ", "Return"]);
-
 export const Checkbox: React.FC<
-  { children: React.ReactNode; note?: string } & Pick<
+  {
+    children: React.ReactNode;
+    note?: string;
+    onCheckedChange?: (checked: boolean) => void;
+  } & Pick<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "defaultChecked" | "name" | "checked"
+    "defaultChecked" | "name" | "checked" | "onChange"
   >
-> = ({ children, note, ...rest }) => {
+> = ({ children, note, onCheckedChange, ...rest }) => {
   const [checked, setChecked] = useState<boolean>(
     !!(rest.defaultChecked ?? rest.checked),
   );
   const id = useId();
 
-  const toggleCheckedKeyDown: KeyboardEventHandler<HTMLLabelElement> =
-    useCallback((e) => {
-      const key = e.key;
+  const { onChange, ...inputProps } = rest;
 
-      if (keysToTriggerChecked.has(key)) {
-        setChecked((prev) => !prev);
-      }
-    }, []);
-
-  const toggleCheckedClick: MouseEventHandler<HTMLLabelElement> = useCallback(
-    (e) => {
-      e.preventDefault();
-      setChecked((prev) => !prev);
+  const handleChange: ChangeEventHandler<HTMLInputElement> = useCallback(
+    (event) => {
+      const next = event.target.checked;
+      setChecked(next);
+      onCheckedChange?.(next);
+      onChange?.(event);
     },
-    [],
+    [onCheckedChange, onChange],
   );
 
   return (
     <label
       className="flex flex-col space-y-.5 cursor-pointer p-1 rounded-lg"
       htmlFor={id}
-      onKeyDown={toggleCheckedKeyDown}
-      onClick={toggleCheckedClick}
-      tabIndex={1}
     >
       <input
         type="checkbox"
-        className="hidden"
+        className="sr-only"
         checked={checked}
+        onChange={handleChange}
         id={id}
-        readOnly
-        name={rest.name}
+        name={inputProps.name}
       />
 
       <span

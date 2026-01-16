@@ -20,6 +20,8 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 export const updateChecklistV2Action = async (
   formData: FormData,
 ): Promise<void> => {
+  const skipRedirect = formData.get("skipRedirect") === "true";
+
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await fromPromise(
       validateUserLoggedIn({ variant: 'server-action' }),
@@ -79,7 +81,9 @@ export const updateChecklistV2Action = async (
   });
 
   if (response.isRight()) {
-    redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+    if (!skipRedirect) {
+      redirect(`/checklists/${response.extract().id}`, RedirectType.push);
+    }
   }
 
   if (response.isLeft()) {
