@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
 import {
@@ -76,9 +77,9 @@ export const ChecklistV2TaskForm: React.FC<{
                         );
                       }}
                     >
-                      <Button type="submit" variant="ghost">
+                      <SubmitButton type="submit" variant="ghost">
                         Reset completed
-                      </Button>
+                      </SubmitButton>
                     </form>
 
                     <Button
@@ -225,9 +226,9 @@ export const ChecklistV2TaskForm: React.FC<{
               });
             }}
           >
-            <Button type="submit" variant="primary">
+            <SubmitButton type="submit" variant="primary">
               Save
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </div>

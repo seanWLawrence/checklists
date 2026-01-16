@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Heading } from "@/components/heading";
 import { Note } from "../types";
 import { Label } from "@/components/label";
@@ -53,9 +53,9 @@ export const NoteForm: React.FC<{
                       );
                     }}
                   >
-                    <Button type="submit" variant="ghost">
+                    <SubmitButton type="submit" variant="ghost">
                       Duplicate
-                    </Button>
+                    </SubmitButton>
                   </form>
                 )}
 
@@ -71,9 +71,9 @@ export const NoteForm: React.FC<{
                         });
                     }}
                   >
-                    <Button type="submit" variant="ghost">
+                    <SubmitButton type="submit" variant="ghost">
                       Delete
-                    </Button>
+                    </SubmitButton>
                   </form>
                 )}
               </div>
@@ -119,9 +119,9 @@ export const NoteForm: React.FC<{
         </Label>
 
         <div className="flex justify-end w-full max-w-xl">
-          <Button type="submit" variant="primary">
+          <SubmitButton type="submit" variant="primary">
             Save
-          </Button>
+          </SubmitButton>
         </div>
       </form>
     </div>

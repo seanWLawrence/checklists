@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
@@ -33,7 +33,7 @@ const Login: React.FC = async () => {
         />
       </Label>
 
-      <Button variant="primary">Log in</Button>
+      <SubmitButton variant="primary">Log in</SubmitButton>
     </form>
   );
 };

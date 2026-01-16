@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { Heading } from "@/components/heading";
@@ -28,7 +28,7 @@ const GenerateUserCredentials: React.FC = () => {
           />
         </Label>
 
-        <Button variant="outline">Generate</Button>
+        <SubmitButton variant="outline">Generate</SubmitButton>
       </form>
 
       <div className="space-y-2">

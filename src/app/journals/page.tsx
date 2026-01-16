@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Heading } from "@/components/heading";
 import { CreatedAtLocal } from "./journal.types";
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { LinkButton } from "@/components/link-button";
 import { groupCreatedAtLocals } from "./lib/group-created-at-locals.lib";
 import { prettyDate } from "./lib/pretty-date.lib";
@@ -62,7 +62,7 @@ const Journals: React.FC<{
             />
           </Label>
 
-          <Button variant="primary">Filter</Button>
+          <SubmitButton variant="primary">Filter</SubmitButton>
         </form>
 
         <div className="space-y-1">

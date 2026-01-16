@@ -1,4 +1,4 @@
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 
@@ -25,7 +25,7 @@ export const SinceFilterForm: React.FC<{
         />
       </Label>
 
-      <Button variant="primary">Filter</Button>
+      <SubmitButton variant="primary">Filter</SubmitButton>
     </form>
   );
 };

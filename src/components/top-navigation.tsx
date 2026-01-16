@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { Button } from "./button";
 import { LinkButton } from "./link-button";
 import { MenuButton } from "./menu-button";
+import { SubmitButton } from "./submit-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { CreatedAtLocal } from "@/app/journals/journal.types";
@@ -84,7 +84,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               </LinkButton>
 
               <form action={logoutAction}>
-                <Button variant="ghost">Sign out</Button>
+                <SubmitButton variant="ghost">Sign out</SubmitButton>
               </form>
             </div>
           }

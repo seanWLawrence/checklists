@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Heading } from "@/components/heading";
 import { CreatedAtLocal, Journal } from "../journal.types";
 import { Label } from "@/components/label";
@@ -189,9 +189,9 @@ export const JournalForm: React.FC<{
         </div>
 
         <div className="flex justify-end w-full max-w-xl">
-          <Button type="submit" variant="primary">
+          <SubmitButton type="submit" variant="primary">
             Save
-          </Button>
+          </SubmitButton>
         </div>
       </form>
     </div>
