@@ -11,7 +11,7 @@ import { constantTimeStringComparison } from "./constant-time-string-comparison"
 import { revalidatePath } from "next/cache";
 import { getSingleItem } from "../db/get-single-item";
 import { Key, UserCredentials } from "../types";
-import { secureHash } from "./secure-hash";
+import { secureHashWithSalt } from "./secure-hash-with-salt";
 
 const getUserCredentialsKey = ({ username }: { username: string }): Key =>
   `user#${username}#credentials`;
@@ -21,7 +21,7 @@ export const login = async ({
   authSecret: authSecretEither = AUTH_SECRET,
   getStringFromFormDataFn = getStringFromFormData,
   getSingleItemFn = getSingleItem,
-  secureHashFn = secureHash,
+  secureHashWithSaltFn = secureHashWithSalt,
   setAuthTokensAndCookiesFn = setAuthTokensAndCookies,
   redirectFn = redirect,
   revalidatePathFn = revalidatePath,
@@ -30,7 +30,7 @@ export const login = async ({
   authSecret?: Either<unknown, string>;
   getStringFromFormDataFn?: typeof getStringFromFormData;
   getSingleItemFn?: typeof getSingleItem;
-  secureHashFn?: typeof secureHash;
+  secureHashWithSaltFn?: typeof secureHashWithSalt;
   setAuthTokensAndCookiesFn?: typeof setAuthTokensAndCookies;
   redirectFn?: typeof redirect;
   revalidatePathFn?: typeof revalidatePath;
@@ -61,7 +61,7 @@ export const login = async ({
       );
 
       const { hash: inputPasswordHash } = await fromPromise(
-        secureHashFn({
+        secureHashWithSaltFn({
           value: password,
           saltFn: () => Either.of(userCredentialsFromDatabase.salt),
         }),

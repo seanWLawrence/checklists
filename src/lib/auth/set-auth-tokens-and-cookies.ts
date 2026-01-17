@@ -1,7 +1,7 @@
 import "server-only";
 import { Either, EitherAsync } from "purify-ts";
 import { setAccessJwtCookie } from "./set-access-jwt-cookie";
-import { secureHash } from "./secure-hash";
+import { secureHashWithSalt } from "./secure-hash-with-salt";
 import { generateAccessJwt } from "./generate-access-jwt";
 import { createItem } from "../db/create-item";
 import { expire } from "../db/expire";
@@ -21,7 +21,7 @@ export interface SetAuthTokensAndCookiesParams {
   generateRefreshTokenFn?: typeof randomChars;
   setAccessJwtCookieFn?: typeof setAccessJwtCookie;
   setRefreshTokenCookieFn?: typeof setRefreshTokenCookie;
-  secureHashFn?: typeof secureHash;
+  secureHashWithSaltFn?: typeof secureHashWithSalt;
   createItemFn?: typeof createItem;
   expireFn?: typeof expire;
 }
@@ -33,7 +33,7 @@ export const setAuthTokensAndCookies = ({
   generateRefreshTokenFn = randomChars,
   setAccessJwtCookieFn = setAccessJwtCookie,
   setRefreshTokenCookieFn = setRefreshTokenCookie,
-  secureHashFn = secureHash,
+  secureHashWithSaltFn = secureHashWithSalt,
   createItemFn = createItem,
   expireFn = expire,
 }: SetAuthTokensAndCookiesParams): EitherAsync<unknown, void> => {
@@ -49,7 +49,7 @@ export const setAuthTokensAndCookies = ({
 
     const token = await liftEither(generateRefreshTokenFn({}));
 
-    const { hash, salt } = await fromPromise(secureHashFn({ value: token }));
+    const { hash, salt } = await fromPromise(secureHashWithSaltFn({ value: token }));
 
     const refreshTokenKey = getRefreshTokenKey({ token });
 

@@ -8,6 +8,7 @@ import { getUser } from "@/lib/auth/get-user";
 export async function proxy(request: NextRequest) {
   const url = new URL(request.url);
   const isLoginPage = url.pathname === "/login";
+  const isSharePage = url.pathname.startsWith("/checklists/share");
   const userMaybe = await getUser({ request });
 
   const shouldPreventInifiniteLoginRedirectLoop =
@@ -15,6 +16,7 @@ export async function proxy(request: NextRequest) {
 
   if (
     userMaybe.isJust() ||
+    isSharePage ||
     request.method !== "GET" ||
     shouldPreventInifiniteLoginRedirectLoop
   ) {

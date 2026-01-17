@@ -43,22 +43,25 @@ export const internal__defaultHashFn = ({
   });
 };
 
-export interface SecureHashParams {
+export interface SecureHashWithSaltParams {
   value: string;
   saltFn?: typeof randomChars;
   hashFn?: typeof internal__defaultHashFn;
 }
 
-export interface SecureHashPayload {
+export interface SecureHashWithSaltPayload {
   hash: string;
   salt: string;
 }
 
-export const secureHash = ({
+export const secureHashWithSalt = ({
   value,
   saltFn = randomChars,
   hashFn = internal__defaultHashFn,
-}: SecureHashParams): EitherAsync<unknown, SecureHashPayload> => {
+}: SecureHashWithSaltParams): EitherAsync<
+  unknown,
+  SecureHashWithSaltPayload
+> => {
   return EitherAsync(async ({ fromPromise, liftEither }) => {
     const salt = await liftEither(saltFn({}));
 

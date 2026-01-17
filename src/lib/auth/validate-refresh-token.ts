@@ -5,7 +5,7 @@ import { getSingleItem } from "../db/get-single-item";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { RefreshToken } from "./auth.types";
 import { THIRTY_DAYS_IN_MILLISECONDS } from "./auth.constants";
-import { secureHash } from "./secure-hash";
+import { secureHashWithSalt } from "./secure-hash-with-salt";
 import { Either } from "purify-ts/Either";
 import { logger } from "../logger";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
@@ -13,13 +13,13 @@ import { constantTimeStringComparison } from "./constant-time-string-comparison"
 export interface ValidateRefreshTokenParams {
   token: string;
   getSingleItemFn?: typeof getSingleItem;
-  secureHashFn?: typeof secureHash;
+  secureHashWithSaltFn?: typeof secureHashWithSalt;
 }
 
 export const validateRefreshToken = ({
   token,
   getSingleItemFn = getSingleItem,
-  secureHashFn = secureHash,
+  secureHashWithSaltFn = secureHashWithSalt,
 }: ValidateRefreshTokenParams): EitherAsync<unknown, RefreshToken> => {
   return EitherAsync(async ({ fromPromise, throwE }) => {
     logger.debug("Validating refresh token");
@@ -32,7 +32,7 @@ export const validateRefreshToken = ({
     );
 
     const hashedToken = await fromPromise(
-      secureHashFn({
+      secureHashWithSaltFn({
         value: token,
         saltFn: () => Either.of(refreshTokenFromDb.salt),
       }),

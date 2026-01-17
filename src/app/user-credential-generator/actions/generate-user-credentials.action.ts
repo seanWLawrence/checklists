@@ -4,7 +4,7 @@ import { EitherAsync } from "purify-ts";
 
 import { logger } from "@/lib/logger";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
-import { secureHash } from "@/lib/auth/secure-hash";
+import { secureHashWithSalt } from "@/lib/auth/secure-hash-with-salt";
 
 export const generateUserCredentialsAction = async (
   _prevState: unknown,
@@ -19,7 +19,7 @@ export const generateUserCredentialsAction = async (
     );
 
     const { hash: passwordHash, salt } = await fromPromise(
-      secureHash({
+      secureHashWithSalt({
         value: password,
       }),
     );

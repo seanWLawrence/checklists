@@ -1,11 +1,11 @@
 import { test, vi } from "vitest";
-import { secureHash } from "./secure-hash";
+import { secureHashWithSalt } from "./secure-hash-with-salt";
 import { Left, Right } from "purify-ts/Either";
 
-test("secureHash fails if saltFn fails", async ({ expect }) => {
+test("fails if saltFn fails", async ({ expect }) => {
   const saltFn = vi.fn().mockReturnValue(Left("some error"));
 
-  const result = await secureHash({
+  const result = await secureHashWithSalt({
     saltFn,
     value: "value",
   });
@@ -14,12 +14,12 @@ test("secureHash fails if saltFn fails", async ({ expect }) => {
   expect(result.extract()).toBe("some error");
 });
 
-test("secureHash fails if hashFn fails", async ({ expect }) => {
+test("fails if hashFn fails", async ({ expect }) => {
   const saltFn = vi.fn().mockReturnValue(Right("salt"));
 
   const hashFn = vi.fn().mockResolvedValue(Left("some error"));
 
-  const result = await secureHash({
+  const result = await secureHashWithSalt({
     saltFn,
     hashFn,
     value: "value",
@@ -29,12 +29,12 @@ test("secureHash fails if hashFn fails", async ({ expect }) => {
   expect(result.extract()).toBe("some error");
 });
 
-test("secureHash returns hash and salt if succeeds", async ({ expect }) => {
+test("returns hash and salt if succeeds", async ({ expect }) => {
   const saltFn = vi.fn().mockReturnValue(Right("salt"));
 
   const hashFn = vi.fn().mockResolvedValue(Right("hash"));
 
-  const result = await secureHash({
+  const result = await secureHashWithSalt({
     saltFn,
     hashFn,
     value: "value",

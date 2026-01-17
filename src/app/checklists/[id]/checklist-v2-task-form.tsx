@@ -16,6 +16,7 @@ import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
 import { RelativeTime } from "@/components/relative-time";
 import { LinkButton } from "@/components/link-button";
+import { updateChecklistV2SharedAction } from "../actions/update-checklist-v2-shared.action";
 
 const filterCompletedItemsIfHidden = ({
   items,
@@ -34,7 +35,8 @@ const filterCompletedItemsIfHidden = ({
 export const ChecklistV2TaskForm: React.FC<{
   structuredChecklist: ChecklistV2Structured &
     Pick<ChecklistV2, "id" | "name" | "updatedAtIso">;
-}> = ({ structuredChecklist }) => {
+  shareAccess?: { token: string };
+}> = ({ structuredChecklist, shareAccess }) => {
   const hasCompletedItems = structuredChecklist.sections.some((section) => {
     return section.items.some((item) => item.completed);
   });
@@ -65,10 +67,16 @@ export const ChecklistV2TaskForm: React.FC<{
 
       Maybe.fromNullable(formRef.current).ifJust(async (x) => {
         const formData = new FormData(x);
-        formData.set("skipRedirect", "true");
+        if (!shareAccess) {
+          formData.set("skipRedirect", "true");
+        }
 
         try {
-          await updateChecklistV2Action(formData);
+          if (shareAccess) {
+            await updateChecklistV2SharedAction(formData);
+          } else {
+            await updateChecklistV2Action(formData);
+          }
         } finally {
           inFlightRef.current = false;
 
@@ -79,7 +87,7 @@ export const ChecklistV2TaskForm: React.FC<{
         }
       });
     }, 500);
-  }, []);
+  }, [shareAccess]);
 
   useEffect(() => {
     return () => {
@@ -114,7 +122,11 @@ export const ChecklistV2TaskForm: React.FC<{
                               }
                             }
 
-                            await updateChecklistV2Action(formData);
+                            if (shareAccess) {
+                              await updateChecklistV2SharedAction(formData);
+                            } else {
+                              await updateChecklistV2Action(formData);
+                            }
                           },
                         );
                       }}
@@ -148,13 +160,15 @@ export const ChecklistV2TaskForm: React.FC<{
             }, [] as TimeEstimate[])}
           />
 
-          <LinkButton
-            href={`/checklists/${structuredChecklist.id}/edit`}
-            variant="ghost"
-            className="underline underline-offset-2"
-          >
-            Edit
-          </LinkButton>
+          {!shareAccess && (
+            <LinkButton
+              href={`/checklists/${structuredChecklist.id}/edit`}
+              variant="ghost"
+              className="underline underline-offset-2"
+            >
+              Edit
+            </LinkButton>
+          )}
         </div>
 
         <RelativeTime date={structuredChecklist.updatedAtIso} />
@@ -169,6 +183,20 @@ export const ChecklistV2TaskForm: React.FC<{
           />
 
           <input type="hidden" value={structuredChecklist.name} name="name" />
+          {shareAccess && (
+            <>
+              <input
+                type="hidden"
+                name="shareToken"
+                value={shareAccess.token}
+              />
+              <input
+                type="hidden"
+                name="checklistId"
+                value={structuredChecklist.id}
+              />
+            </>
+          )}
 
           {structuredChecklist.sections.map(({ id, name, items }) => {
             const filteredItems = filterCompletedItemsIfHidden({

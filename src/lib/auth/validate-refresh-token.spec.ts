@@ -20,12 +20,12 @@ test("fails if the token hash fails", async ({ expect }) => {
     .fn()
     .mockResolvedValue(Right({ hash: "some hash", salt: "some salt" }));
 
-  const secureHashFn = vi.fn().mockResolvedValue(Left("some error"));
+  const secureHashWithSaltFn = vi.fn().mockResolvedValue(Left("some error"));
 
   const result = await validateRefreshToken({
     token,
     getSingleItemFn,
-    secureHashFn,
+    secureHashWithSaltFn,
   });
 
   expect(result.isLeft()).toBe(true);
@@ -37,14 +37,14 @@ test("fails if the token hash doesnt match", async ({ expect }) => {
     .fn()
     .mockResolvedValue(Right({ hash: "some hash", salt: "some salt" }));
 
-  const secureHashFn = vi
+  const secureHashWithSaltFn = vi
     .fn()
     .mockResolvedValue(Right({ hash: "some hash 2" }));
 
   const result = await validateRefreshToken({
     token,
     getSingleItemFn,
-    secureHashFn,
+    secureHashWithSaltFn,
   });
 
   expect(result.isLeft()).toBe(true);
@@ -62,12 +62,12 @@ test("fails if the token was issued more than 30 days ago", async ({
     }),
   );
 
-  const secureHashFn = vi.fn().mockResolvedValue(Right({ hash: "some hash" }));
+  const secureHashWithSaltFn = vi.fn().mockResolvedValue(Right({ hash: "some hash" }));
 
   const result = await validateRefreshToken({
     token,
     getSingleItemFn,
-    secureHashFn,
+    secureHashWithSaltFn,
   });
 
   expect(result.isLeft()).toBe(true);
@@ -86,12 +86,12 @@ test("returns refresh token if succeeds", async ({ expect }) => {
     }),
   );
 
-  const secureHashFn = vi.fn().mockResolvedValue(Right({ hash: "some hash" }));
+  const secureHashWithSaltFn = vi.fn().mockResolvedValue(Right({ hash: "some hash" }));
 
   const result = await validateRefreshToken({
     token,
     getSingleItemFn,
-    secureHashFn,
+    secureHashWithSaltFn,
   });
 
   expect(result.isRight()).toBe(true);
