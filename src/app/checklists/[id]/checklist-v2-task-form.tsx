@@ -10,13 +10,18 @@ import {
   TimeEstimate,
 } from "../checklist-v2.types";
 import { Maybe } from "purify-ts/Maybe";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { MenuButton } from "@/components/menu-button";
 import { TimeEstimateBadge } from "@/components/time-estimate-badge";
 import { updateChecklistV2Action } from "../actions/update-checklist-v2.action";
 import { RelativeTime } from "@/components/relative-time";
 import { LinkButton } from "@/components/link-button";
 import { updateChecklistV2SharedAction } from "../actions/update-checklist-v2-shared.action";
+import { useChecklistPolling } from "./hooks/useChecklistPolling";
+import { useChecklistDebouncedAutosave } from "./hooks/useChecklistDebouncedAutosave";
+
+const POLLING_INTERVAL_IN_MILLI = 5000;
+const AUTO_SAVE_DELAY_IN_MILLI = 1000;
 
 const filterCompletedItemsIfHidden = ({
   items,
@@ -36,73 +41,49 @@ export const ChecklistV2TaskForm: React.FC<{
   structuredChecklist: ChecklistV2Structured &
     Pick<ChecklistV2, "id" | "name" | "updatedAtIso">;
   shareAccess?: { token: string };
+  pollingIntervalMs?: number;
 }> = ({ structuredChecklist, shareAccess }) => {
-  const hasCompletedItems = structuredChecklist.sections.some((section) => {
+  const [currentChecklist, setCurrentChecklist] = useState(structuredChecklist);
+
+  const hasCompletedItems = currentChecklist.sections.some((section) => {
     return section.items.some((item) => item.completed);
   });
 
-  const formRef = useRef<HTMLFormElement | null>(null);
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inFlightRef = useRef(false);
-  const queuedRef = useRef(false);
 
   const toggleShowCompleted = useCallback(
     () => setShowCompleted((prev) => !prev),
     [],
   );
 
-  const scheduleAutoSave = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+  const formRef = useRef<HTMLFormElement | null>(null);
+  /**
+   * Holds the active debounce timer.
+   * If it’s non‑null, it means “a save is scheduled but hasn’t started yet.”
+   */
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    saveTimeoutRef.current = setTimeout(() => {
-      if (inFlightRef.current) {
-        queuedRef.current = true;
-        return;
-      }
+  const { debouncedAutosave } = useChecklistDebouncedAutosave({
+    delayMs: AUTO_SAVE_DELAY_IN_MILLI,
+    formRef,
+    saveTimeoutRef,
+    shareAccess,
+  });
 
-      inFlightRef.current = true;
-
-      Maybe.fromNullable(formRef.current).ifJust(async (x) => {
-        const formData = new FormData(x);
-        if (!shareAccess) {
-          formData.set("skipRedirect", "true");
-        }
-
-        try {
-          if (shareAccess) {
-            await updateChecklistV2SharedAction(formData);
-          } else {
-            await updateChecklistV2Action(formData);
-          }
-        } finally {
-          inFlightRef.current = false;
-
-          if (queuedRef.current) {
-            queuedRef.current = false;
-            scheduleAutoSave();
-          }
-        }
-      });
-    }, 500);
-  }, [shareAccess]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
+  useChecklistPolling({
+    checklistId: currentChecklist.id,
+    shareAccess,
+    pollingIntervalMs: POLLING_INTERVAL_IN_MILLI,
+    saveTimeoutRef,
+    setCurrentChecklist,
+  });
 
   return (
     <div className="space-y-4 max-w-prose">
       <div className="flex flex-col space-y-1">
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1 items-center">
-            <Heading level={1}>{structuredChecklist.name}</Heading>
+            <Heading level={1}>{currentChecklist.name}</Heading>
 
             {hasCompletedItems && (
               <MenuButton
@@ -150,7 +131,7 @@ export const ChecklistV2TaskForm: React.FC<{
           </div>
 
           <TimeEstimateBadge
-            timeEstimates={structuredChecklist.sections.reduce((acc, x) => {
+            timeEstimates={currentChecklist.sections.reduce((acc, x) => {
               x.items.forEach((item) => {
                 if (!item.completed && item.timeEstimate) {
                   acc.push(item.timeEstimate);
@@ -162,7 +143,7 @@ export const ChecklistV2TaskForm: React.FC<{
 
           {!shareAccess && (
             <LinkButton
-              href={`/checklists/${structuredChecklist.id}/edit`}
+              href={`/checklists/${currentChecklist.id}/edit`}
               variant="ghost"
               className="underline underline-offset-2"
             >
@@ -171,18 +152,18 @@ export const ChecklistV2TaskForm: React.FC<{
           )}
         </div>
 
-        <RelativeTime date={structuredChecklist.updatedAtIso} />
+        <RelativeTime date={currentChecklist.updatedAtIso} />
       </div>
 
       <div className="space-y-4">
         <form ref={formRef} className="space-y-4">
           <input
             type="hidden"
-            value={JSON.stringify(structuredChecklist)}
+            value={JSON.stringify(currentChecklist)}
             name="checklist"
           />
 
-          <input type="hidden" value={structuredChecklist.name} name="name" />
+          <input type="hidden" value={currentChecklist.name} name="name" />
           {shareAccess && (
             <>
               <input
@@ -193,19 +174,19 @@ export const ChecklistV2TaskForm: React.FC<{
               <input
                 type="hidden"
                 name="checklistId"
-                value={structuredChecklist.id}
+                value={currentChecklist.id}
               />
             </>
           )}
 
-          {structuredChecklist.sections.map(({ id, name, items }) => {
+          {currentChecklist.sections.map(({ id, name, items }) => {
             const filteredItems = filterCompletedItemsIfHidden({
               showCompleted,
               items,
             });
 
             return (
-              <div key={id}>
+              <div key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}>
                 <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
                   <Heading
                     level="legend"
@@ -232,12 +213,15 @@ export const ChecklistV2TaskForm: React.FC<{
                           // Hidden so they won't appear, but will get submitted
                           if (completed && !showCompleted) {
                             return (
-                              <div className="hidden" key={id}>
+                              <div
+                                className="hidden"
+                                key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}
+                              >
                                 <Checkbox
                                   defaultChecked={completed}
                                   name={`item__${id}`}
                                   note={note}
-                                  onChange={scheduleAutoSave}
+                                  onChange={debouncedAutosave}
                                 >
                                   {"This is hidden"}
                                 </Checkbox>
@@ -246,12 +230,15 @@ export const ChecklistV2TaskForm: React.FC<{
                           }
 
                           return (
-                            <li key={id} className="flex flex-col space-y-.5">
+                            <li
+                              key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}
+                              className="flex flex-col space-y-.5"
+                            >
                               <Checkbox
                                 defaultChecked={completed}
                                 name={`item__${id}`}
                                 note={note}
-                                onChange={scheduleAutoSave}
+                                onChange={debouncedAutosave}
                               >
                                 <div className="flex justify-between w-full">
                                   <span>{name}</span>
@@ -283,7 +270,7 @@ export const ChecklistV2TaskForm: React.FC<{
           <input
             name="metadata"
             type="hidden"
-            value={JSON.stringify(structuredChecklist)}
+            value={JSON.stringify(currentChecklist)}
             readOnly
             required
           />

@@ -62,3 +62,12 @@ export const ChecklistV2Structured = Codec.interface({
 export type ChecklistV2Structured = GetType<typeof ChecklistV2Structured>;
 
 type TimeEstimateValue = `${number}m` | `${number}h`;
+
+export const ChecklistV2Polled = Codec.interface({
+  id: UUID,
+  name: string,
+  content: string,
+  updatedAtIso: string,
+});
+
+export type ChecklistV2Polled = GetType<typeof ChecklistV2Polled>;
