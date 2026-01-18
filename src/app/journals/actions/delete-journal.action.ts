@@ -10,14 +10,14 @@ import { CreatedAtLocal } from "../journal.types";
 import { getJournalKey } from "../model/get-journal.model";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { deleteJournalImages } from "../lib/delete-journal-images.lib";
+import { deleteJournalAssets } from "../lib/journal-asset-utils.lib";
 
 export const deleteJournalAction = async (
   formData: FormData,
 ): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     const createdAtLocal = await liftEither(
@@ -35,7 +35,12 @@ export const deleteJournalAction = async (
           }),
         ],
       })
-        .chain(() => deleteJournalImages({ createdAtLocal }))
+        .chain(() =>
+          deleteJournalAssets({ createdAtLocal, assetType: "images" }),
+        )
+        .chain(() =>
+          deleteJournalAssets({ createdAtLocal, assetType: "audios" }),
+        )
         .ifRight(() => {
           const dateId = createdAtLocal;
           logger.info(`Successfully deleted journal with ID '${dateId}'`);

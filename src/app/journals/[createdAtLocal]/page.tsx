@@ -9,8 +9,9 @@ import { groupJournalContentSections } from "./group-journal-content-sections";
 import { getJournal } from "../model/get-journal.model";
 import { prettyDate } from "../lib/pretty-date.lib";
 import { RelativeTime } from "@/components/relative-time";
-import { getJournalImageInfo } from "../lib/get-journal-image-url.lib";
 import { JournalImage } from "../components/journal-image";
+import { getJournalAssetInfo } from "../lib/journal-asset-utils.lib";
+import { JournalAudio } from "../components/journal-audio";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -51,7 +52,14 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
-    const imageInfoMaybe = await getJournalImageInfo({ createdAtLocal });
+    const imageInfoMaybe = await getJournalAssetInfo({
+      createdAtLocal,
+      assetType: "images",
+    });
+    const audioInfoMaybe = await getJournalAssetInfo({
+      createdAtLocal,
+      assetType: "audios",
+    });
 
     return (
       <main className="space-y-2 max-w-prose">
@@ -126,6 +134,13 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
         {imageInfoMaybe.isJust() && (
           <p className="text-xs text-zinc-600">
             {imageInfoMaybe.extract().caption}
+          </p>
+        )}
+
+        <JournalAudio audioUrl={audioInfoMaybe.map((x) => x.url).extract()} />
+        {audioInfoMaybe.isJust() && (
+          <p className="text-xs text-zinc-600">
+            {audioInfoMaybe.extract().caption}
           </p>
         )}
       </main>

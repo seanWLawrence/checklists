@@ -9,8 +9,9 @@ import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form"
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
 import { JournalImage } from "./journal-image";
+import { JournalAudio } from "./journal-audio";
 import { useState } from "react";
-import { MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
+import { MAX_AUDIO_SIZE_MB, MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -27,7 +28,9 @@ export const JournalForm: React.FC<{
   journal?: Journal;
   imageUrl?: string;
   imageCaption?: string;
-}> = ({ journal, imageUrl, imageCaption }) => {
+  audioUrl?: string;
+  audioCaption?: string;
+}> = ({ journal, imageUrl, imageCaption, audioUrl, audioCaption }) => {
   /**
    * Using unsafeDecode since the inputs are fully controlled
    */
@@ -37,6 +40,11 @@ export const JournalForm: React.FC<{
   );
   const formattedImageSizeMb =
     currentImageSizeMb === null ? "0" : currentImageSizeMb.toFixed(1);
+  const [currentAudioSizeMb, setCurrentAudioSizeMb] = useState<number | null>(
+    null,
+  );
+  const formattedAudioSizeMb =
+    currentAudioSizeMb === null ? "0" : currentAudioSizeMb.toFixed(1);
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -142,7 +150,7 @@ export const JournalForm: React.FC<{
           required
         />
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <JournalImage imageUrl={imageUrl} />
 
           {!imageUrl && (
@@ -170,7 +178,7 @@ export const JournalForm: React.FC<{
                 }}
               />
 
-              <Label label="Caption">
+              <Label label="Image caption">
                 <Input
                   type="text"
                   name="imageCaption"
@@ -179,6 +187,56 @@ export const JournalForm: React.FC<{
                   disabled={!!imageUrl}
                   className={
                     imageUrl
+                      ? "opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800"
+                      : ""
+                  }
+                />
+              </Label>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <JournalAudio audioUrl={audioUrl} />
+
+          {audioUrl && audioCaption && (
+            <p className="text-xs text-zinc-600">{audioCaption}</p>
+          )}
+
+          {!audioUrl && (
+            <div className="space-y-1 flex flex-col">
+              <div className="flex space-x-1 items-center max-w-min">
+                <Label htmlFor="audio" label="Audio" />
+
+                <span className="text-xs text-zinc-500">
+                  {formattedAudioSizeMb}/{MAX_AUDIO_SIZE_MB}mb
+                </span>
+              </div>
+
+              <input
+                type="file"
+                id="audio"
+                name="audio"
+                accept="audio/*"
+                capture="user"
+                className="w-full max-w-prose text-sm"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0] ?? null;
+
+                  setCurrentAudioSizeMb(
+                    file ? file.size / (1024 * 1024) : null,
+                  );
+                }}
+              />
+
+              <Label label="Audio caption">
+                <Input
+                  type="text"
+                  name="audioTitle"
+                  defaultValue={audioCaption}
+                  disabled={!!audioUrl}
+                  className={
+                    audioUrl
                       ? "opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800"
                       : ""
                   }

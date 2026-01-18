@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 import { EitherAsync } from "purify-ts";
+import { Maybe } from "purify-ts/Maybe";
 
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
@@ -16,9 +17,12 @@ import { getJournalKey } from "../model/get-journal.model";
 import { createItem } from "@/lib/db/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
-import { uploadJournalImage } from "../lib/upload-journal-image.lib";
-import { moveJournalImagesIfTheyExist } from "../lib/move-journal-images-if-they-exist.lib";
-import { deleteJournalImages } from "../lib/delete-journal-images.lib";
+import { getAudioFromFormData } from "@/lib/form-data/get-audio-from-form-data";
+import {
+  deleteJournalAssets,
+  moveJournalAssetsIfTheyExist,
+  uploadJournalAsset,
+} from "../lib/journal-asset-utils.lib";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -83,6 +87,11 @@ export const updateJournalAction = async (
       name: "image",
     }).toMaybe();
 
+    const audioMaybe = getAudioFromFormData({
+      formData,
+      name: "audio",
+    }).toMaybe();
+
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
@@ -123,6 +132,8 @@ export const updateJournalAction = async (
           item: journal,
         })
           .chain(async (createdJournal) => {
+            let chain = EitherAsync(async () => createdJournal);
+
             if (imageMaybe.isJust()) {
               const image = imageMaybe.extract();
 
@@ -130,23 +141,72 @@ export const updateJournalAction = async (
                 getStringFromFormData({ name: "imageCaption", formData }),
               );
 
-              return uploadJournalImage({
-                createdAtLocal,
-                image,
-                caption,
-              })
+              chain = chain
                 .chain(() =>
-                  deleteJournalImages({
+                  uploadJournalAsset({
+                    createdAtLocal,
+                    assetType: "images",
+                    file: image,
+                    caption,
+                    fallbackExtension: "jpg",
+                  }).map(() => createdJournal),
+                )
+                .chain(() =>
+                  deleteJournalAssets({
                     createdAtLocal: existingCreatedAtLocal,
+                    assetType: "images",
                   }),
                 )
                 .map(() => createdJournal);
+            } else {
+              chain = chain.chain(() =>
+                moveJournalAssetsIfTheyExist({
+                  fromCreatedAtLocal: existingCreatedAtLocal,
+                  toCreatedAtLocal: createdJournal.createdAtLocal,
+                  assetType: "images",
+                }).map(() => createdJournal),
+              );
             }
 
-            return moveJournalImagesIfTheyExist({
-              fromCreatedAtLocal: existingCreatedAtLocal,
-              toCreatedAtLocal: createdJournal.createdAtLocal,
-            }).map(() => createdJournal);
+            if (audioMaybe.isJust()) {
+              const audio = audioMaybe.extract();
+              const caption = Maybe.fromNullable(formData.get("audioCaption"))
+                .chain((value) =>
+                  typeof value === "string"
+                    ? Maybe.of(value.trim())
+                    : Maybe.empty(),
+                )
+                .filter((value) => value.length > 0)
+                .orDefault(audio.name);
+
+              chain = chain
+                .chain(() =>
+                  uploadJournalAsset({
+                    createdAtLocal,
+                    assetType: "audios",
+                    file: audio,
+                    caption,
+                    fallbackExtension: "m4a",
+                  }).map(() => createdJournal),
+                )
+                .chain(() =>
+                  deleteJournalAssets({
+                    createdAtLocal: existingCreatedAtLocal,
+                    assetType: "audios",
+                  }),
+                )
+                .map(() => createdJournal);
+            } else {
+              chain = chain.chain(() =>
+                moveJournalAssetsIfTheyExist({
+                  fromCreatedAtLocal: existingCreatedAtLocal,
+                  toCreatedAtLocal: createdJournal.createdAtLocal,
+                  assetType: "audios",
+                }).map(() => createdJournal),
+              );
+            }
+
+            return chain;
           })
           .ifRight((x) => {
             const dateId = x.createdAtLocal;
@@ -194,6 +254,8 @@ export const updateJournalAction = async (
         item: journal,
       })
         .chain(async (updatedJournal) => {
+          let chain = EitherAsync(async () => updatedJournal);
+
           if (imageMaybe.isJust()) {
             const image = imageMaybe.extract();
 
@@ -201,14 +263,38 @@ export const updateJournalAction = async (
               getStringFromFormData({ name: "imageCaption", formData }),
             );
 
-            return uploadJournalImage({
-              createdAtLocal,
-              image,
-              caption,
-            }).map(() => updatedJournal);
+            chain = chain.chain(() =>
+              uploadJournalAsset({
+                createdAtLocal,
+                assetType: "images",
+                file: image,
+                caption,
+                fallbackExtension: "jpg",
+              }).map(() => updatedJournal),
+            );
           }
 
-          return EitherAsync(async () => updatedJournal);
+          if (audioMaybe.isJust()) {
+            const audio = audioMaybe.extract();
+            const caption = Maybe.fromNullable(formData.get("audioCaption"))
+              .chain((value) =>
+                typeof value === "string" ? Maybe.of(value.trim()) : Maybe.empty(),
+              )
+              .filter((value) => value.length > 0)
+              .orDefault(audio.name);
+
+            chain = chain.chain(() =>
+              uploadJournalAsset({
+                createdAtLocal,
+                assetType: "audios",
+                file: audio,
+                caption,
+                fallbackExtension: "m4a",
+              }).map(() => updatedJournal),
+            );
+          }
+
+          return chain;
         })
         .ifRight((x) => {
           const dateId = x.createdAtLocal;

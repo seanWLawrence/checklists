@@ -5,7 +5,10 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { UUID } from "@/lib/types";
 import { getSingleItem } from "@/lib/db/get-single-item";
 import { getChecklistV2Key } from "@/app/checklists/model/get-checklist-v2.model";
-import { ChecklistV2 } from "@/app/checklists/checklist-v2.types";
+import {
+  ChecklistV2,
+  ChecklistV2Polled,
+} from "@/app/checklists/checklist-v2.types";
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +39,7 @@ export async function GET(
       name: checklist.name,
       content: checklist.content,
       updatedAtIso: checklist.updatedAtIso.toISOString(),
-    };
+    } satisfies ChecklistV2Polled;
   });
 
   if (response.isLeft()) {

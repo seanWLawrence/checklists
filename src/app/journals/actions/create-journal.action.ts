@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 import { EitherAsync, intersect } from "purify-ts";
+import { Maybe } from "purify-ts/Maybe";
 
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
@@ -14,7 +15,8 @@ import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/db/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
-import { uploadJournalImage } from "../lib/upload-journal-image.lib";
+import { getAudioFromFormData } from "@/lib/form-data/get-audio-from-form-data";
+import { uploadJournalAsset } from "../lib/journal-asset-utils.lib";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -84,12 +86,19 @@ export const createJournalAction = async (
       name: "image",
     }).toMaybe();
 
+    const audioMaybe = getAudioFromFormData({
+      formData,
+      name: "audio",
+    }).toMaybe();
+
     return fromPromise(
       createItem({
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
         .chain(async (createdJournal) => {
+          let chain = EitherAsync(async () => createdJournal);
+
           if (imageMaybe.isJust()) {
             const image = imageMaybe.extract();
 
@@ -97,14 +106,38 @@ export const createJournalAction = async (
               getStringFromFormData({ name: "imageCaption", formData }),
             );
 
-            return uploadJournalImage({
-              createdAtLocal,
-              image,
-              caption,
-            }).map(() => createdJournal);
+            chain = chain.chain(() =>
+              uploadJournalAsset({
+                createdAtLocal,
+                assetType: "images",
+                file: image,
+                caption,
+                fallbackExtension: "jpg",
+              }).map(() => createdJournal),
+            );
           }
 
-          return EitherAsync(async () => createdJournal);
+          if (audioMaybe.isJust()) {
+            const audio = audioMaybe.extract();
+            const caption = Maybe.fromNullable(formData.get("audioCaption"))
+              .chain((value) =>
+                typeof value === "string" ? Maybe.of(value.trim()) : Maybe.empty(),
+              )
+              .filter((value) => value.length > 0)
+              .orDefault(audio.name);
+
+            chain = chain.chain(() =>
+              uploadJournalAsset({
+                createdAtLocal,
+                assetType: "audios",
+                file: audio,
+                caption,
+                fallbackExtension: "m4a",
+              }).map(() => createdJournal),
+            );
+          }
+
+          return chain;
         })
         .ifLeft((e) => {
           logger.error(`Failed to create journal`);
