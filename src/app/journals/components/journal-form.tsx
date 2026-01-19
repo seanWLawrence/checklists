@@ -231,7 +231,6 @@ export const JournalForm: React.FC<{
                 name="audio"
                 accept="audio/*"
                 className="w-full max-w-prose text-sm"
-                capture
                 onChange={(event) => {
                   const file = event.currentTarget.files?.[0] ?? null;
 
