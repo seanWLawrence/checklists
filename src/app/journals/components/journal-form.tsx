@@ -12,6 +12,7 @@ import { JournalImage } from "./journal-image";
 import { JournalAudio } from "./journal-audio";
 import { useState } from "react";
 import { MAX_AUDIO_SIZE_MB, MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
+import { Fieldset } from "@/components/fieldset";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -58,11 +59,7 @@ export const JournalForm: React.FC<{
         action={journal ? updateJournalAction : createJournalAction}
         className="space-y-2"
       >
-        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
-          <Heading level="legend" className="flex items-center space-x-2">
-            <span className="mr-1">Main</span>
-          </Heading>
-
+        <Fieldset legend={"Main"}>
           <Label label="Date" className="max-w-min">
             <Input
               type="date"
@@ -81,13 +78,9 @@ export const JournalForm: React.FC<{
               required
             />
           </Label>
-        </fieldset>
+        </Fieldset>
 
-        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
-          <Heading level="legend" className="flex items-center space-x-2">
-            <span className="mr-1">Levels</span>
-          </Heading>
-
+        <Fieldset legend={"Levels"}>
           <Label label="Energy level (low to high)">
             <input
               type="range"
@@ -142,7 +135,7 @@ export const JournalForm: React.FC<{
               required
             />
           </Label>
-        </fieldset>
+        </Fieldset>
 
         {journal && (
           <input
@@ -164,11 +157,7 @@ export const JournalForm: React.FC<{
           />
         )}
 
-        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg max-w-prose w-full">
-          <Heading level="legend" className="flex items-center space-x-2">
-            <span className="mr-1">Image</span>
-          </Heading>
-
+        <Fieldset legend={"Image"} className="max-w-prose w-full">
           <JournalImage imageUrl={imageUrl} />
 
           {!imageUrl && (
@@ -212,13 +201,9 @@ export const JournalForm: React.FC<{
               </Label>
             </div>
           )}
-        </fieldset>
+        </Fieldset>
 
-        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
-          <Heading level="legend" className="flex items-center space-x-2">
-            <span className="mr-1">Audio</span>
-          </Heading>
-
+        <Fieldset legend={"Audio"}>
           <JournalAudio audioUrl={audioUrl} />
 
           {audioUrl && audioCaption && (
@@ -266,7 +251,7 @@ export const JournalForm: React.FC<{
               </Label>
             </div>
           )}
-        </fieldset>
+        </Fieldset>
 
         <div className="flex justify-end w-full max-w-xl">
           <SubmitButton type="submit" variant="primary">

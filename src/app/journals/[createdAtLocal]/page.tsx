@@ -12,6 +12,7 @@ import { RelativeTime } from "@/components/relative-time";
 import { JournalImage } from "../components/journal-image";
 import { getJournalAssetInfo } from "../lib/journal-asset-utils.lib";
 import { JournalAudio } from "../components/journal-audio";
+import { Fieldset } from "@/components/fieldset";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -23,7 +24,7 @@ const prettyContent = (content: string): React.ReactNode => {
           {sections.map((section, index) => {
             return (
               <div key={`${section.heading}-${index}`} className="space-y-1">
-                <Heading level={2}>{section.heading}</Heading>
+                <Heading level={3}>{section.heading}</Heading>
 
                 <ul>
                   {section.children.map((row, index) => (
@@ -78,70 +79,84 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <RelativeTime date={journal.updatedAtIso} />
         </div>
 
-        <Label label="Energy level (low to high)">
-          <input
-            type="range"
-            readOnly
-            value={journal?.energyLevel}
-            min="1"
-            max="5"
-          />
-        </Label>
+        <Fieldset legend="Content">
+          <div className="space-y-1">{prettyContent(journal.content)}</div>
+        </Fieldset>
 
-        <Label label="Mood (low to high)">
-          <input
-            type="range"
-            value={journal?.moodLevel}
-            readOnly
-            min="1"
-            max="5"
-          />
-        </Label>
+        <Fieldset legend="Levels">
+          <Label label="Energy level (low to high)">
+            <input
+              type="range"
+              readOnly
+              value={journal?.energyLevel}
+              min="1"
+              max="5"
+            />
+          </Label>
 
-        <Label label="Health (low to high)">
-          <input
-            type="range"
-            value={journal?.healthLevel}
-            readOnly
-            min="1"
-            max="5"
-          />
-        </Label>
+          <Label label="Mood (low to high)">
+            <input
+              type="range"
+              value={journal?.moodLevel}
+              readOnly
+              min="1"
+              max="5"
+            />
+          </Label>
 
-        <Label label="Creativity (low to high)">
-          <input
-            type="range"
-            value={journal?.creativityLevel}
-            readOnly
-            min="1"
-            max="5"
-          />
-        </Label>
+          <Label label="Health (low to high)">
+            <input
+              type="range"
+              value={journal?.healthLevel}
+              readOnly
+              min="1"
+              max="5"
+            />
+          </Label>
 
-        <Label label="Relationships (low to high)">
-          <input
-            type="range"
-            value={journal?.relationshipsLevel}
-            readOnly
-            min="1"
-            max="5"
-          />
-        </Label>
+          <Label label="Creativity (low to high)">
+            <input
+              type="range"
+              value={journal?.creativityLevel}
+              readOnly
+              min="1"
+              max="5"
+            />
+          </Label>
 
-        <div className="space-y-1">{prettyContent(journal.content)}</div>
+          <Label label="Relationships (low to high)">
+            <input
+              type="range"
+              value={journal?.relationshipsLevel}
+              readOnly
+              min="1"
+              max="5"
+            />
+          </Label>
+        </Fieldset>
 
-        <JournalImage imageUrl={imageInfoMaybe.map((x) => x.url).extract()} />
         {imageInfoMaybe.isJust() && (
-          <p className="text-xs text-zinc-600">
-            {imageInfoMaybe.extract().caption}
-          </p>
+          <Fieldset legend="Image">
+            <JournalImage
+              imageUrl={imageInfoMaybe.map((x) => x.url).extract()}
+            />
+            <p className="text-xs text-zinc-600">
+              {imageInfoMaybe.extract().caption}
+            </p>
+          </Fieldset>
         )}
 
-        <JournalAudio audioUrl={audioInfoMaybe.map((x) => x.url).extract()} />
         {audioInfoMaybe.isJust() && (
-          <p className="text-xs text-zinc-600">
-            {audioInfoMaybe.extract().caption}
-          </p>
+          <Fieldset legend="Audio">
+            <JournalAudio
+              audioUrl={audioInfoMaybe.map((x) => x.url).extract()}
+            />
+            {
+              <p className="text-xs text-zinc-600">
+                {audioInfoMaybe.extract().caption}
+              </p>
+            }
+          </Fieldset>
         )}
       </main>
     );

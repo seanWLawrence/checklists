@@ -19,6 +19,7 @@ import { LinkButton } from "@/components/link-button";
 import { updateChecklistV2SharedAction } from "../actions/update-checklist-v2-shared.action";
 import { useChecklistPolling } from "./hooks/useChecklistPolling";
 import { useChecklistDebouncedAutosave } from "./hooks/useChecklistDebouncedAutosave";
+import { Fieldset } from "@/components/fieldset";
 
 const POLLING_INTERVAL_IN_MILLI = 5000;
 const AUTO_SAVE_DELAY_IN_MILLI = 1000;
@@ -187,25 +188,24 @@ export const ChecklistV2TaskForm: React.FC<{
 
             return (
               <div key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}>
-                <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
-                  <Heading
-                    level="legend"
-                    className="flex items-center space-x-2"
-                  >
-                    <span className="mr-1">{name}</span>
+                <Fieldset
+                  legend={
+                    <>
+                      <span className="mr-1">{name}</span>
 
-                    <div className="text-xs font-normal">
-                      <TimeEstimateBadge
-                        timeEstimates={items.reduce((acc, x) => {
-                          if (!x.completed && x.timeEstimate) {
-                            acc.push(x.timeEstimate);
-                          }
-                          return acc;
-                        }, [] as TimeEstimate[])}
-                      />
-                    </div>
-                  </Heading>
-
+                      <div className="text-xs font-normal">
+                        <TimeEstimateBadge
+                          timeEstimates={items.reduce((acc, x) => {
+                            if (!x.completed && x.timeEstimate) {
+                              acc.push(x.timeEstimate);
+                            }
+                            return acc;
+                          }, [] as TimeEstimate[])}
+                        />
+                      </div>
+                    </>
+                  }
+                >
                   <div>
                     <ul className="space-y-4">
                       {items.map(
@@ -262,7 +262,7 @@ export const ChecklistV2TaskForm: React.FC<{
                       (No items)
                     </p>
                   )}
-                </fieldset>
+                </Fieldset>
               </div>
             );
           })}
