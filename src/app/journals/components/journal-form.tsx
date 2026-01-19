@@ -58,60 +58,91 @@ export const JournalForm: React.FC<{
         action={journal ? updateJournalAction : createJournalAction}
         className="space-y-2"
       >
-        <Label label="Energy level (low to high)">
-          <input
-            type="range"
-            name="energyLevel"
-            min="1"
-            max="5"
-            defaultValue={journal?.energyLevel}
-            required
-          />
-        </Label>
+        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
+          <Heading level="legend" className="flex items-center space-x-2">
+            <span className="mr-1">Main</span>
+          </Heading>
 
-        <Label label="Mood (low to high)">
-          <input
-            type="range"
-            name="moodLevel"
-            min="1"
-            max="5"
-            defaultValue={journal?.moodLevel}
-            required
-          />
-        </Label>
+          <Label label="Date" className="max-w-min">
+            <Input
+              type="date"
+              defaultValue={journal?.createdAtLocal ?? todayLocal}
+              name="createdAtLocal"
+              required
+            />
+          </Label>
 
-        <Label label="Health (low to high)">
-          <input
-            type="range"
-            name="healthLevel"
-            min="1"
-            max="5"
-            defaultValue={journal?.healthLevel}
-            required
-          />
-        </Label>
+          <Label label="Content">
+            <textarea
+              name="content"
+              defaultValue={journal?.content ?? DEFAULT_TEMPLATE}
+              className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              rows={20}
+              required
+            />
+          </Label>
+        </fieldset>
 
-        <Label label="Creativity (low to high)">
-          <input
-            type="range"
-            name="creativityLevel"
-            min="1"
-            max="5"
-            defaultValue={journal?.creativityLevel}
-            required
-          />
-        </Label>
+        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
+          <Heading level="legend" className="flex items-center space-x-2">
+            <span className="mr-1">Levels</span>
+          </Heading>
 
-        <Label label="Relationships (low to high)">
-          <input
-            type="range"
-            name="relationshipsLevel"
-            min="1"
-            max="5"
-            defaultValue={journal?.relationshipsLevel}
-            required
-          />
-        </Label>
+          <Label label="Energy level (low to high)">
+            <input
+              type="range"
+              name="energyLevel"
+              min="1"
+              max="5"
+              defaultValue={journal?.energyLevel}
+              required
+            />
+          </Label>
+
+          <Label label="Mood (low to high)">
+            <input
+              type="range"
+              name="moodLevel"
+              min="1"
+              max="5"
+              defaultValue={journal?.moodLevel}
+              required
+            />
+          </Label>
+
+          <Label label="Health (low to high)">
+            <input
+              type="range"
+              name="healthLevel"
+              min="1"
+              max="5"
+              defaultValue={journal?.healthLevel}
+              required
+            />
+          </Label>
+
+          <Label label="Creativity (low to high)">
+            <input
+              type="range"
+              name="creativityLevel"
+              min="1"
+              max="5"
+              defaultValue={journal?.creativityLevel}
+              required
+            />
+          </Label>
+
+          <Label label="Relationships (low to high)">
+            <input
+              type="range"
+              name="relationshipsLevel"
+              min="1"
+              max="5"
+              defaultValue={journal?.relationshipsLevel}
+              required
+            />
+          </Label>
+        </fieldset>
 
         {journal && (
           <input
@@ -133,24 +164,11 @@ export const JournalForm: React.FC<{
           />
         )}
 
-        <Label label="Date" className="max-w-min">
-          <Input
-            type="date"
-            defaultValue={journal?.createdAtLocal ?? todayLocal}
-            name="createdAtLocal"
-            required
-          />
-        </Label>
+        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg max-w-prose w-full">
+          <Heading level="legend" className="flex items-center space-x-2">
+            <span className="mr-1">Image</span>
+          </Heading>
 
-        <textarea
-          name="content"
-          defaultValue={journal?.content ?? DEFAULT_TEMPLATE}
-          className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 max-w-prose w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-          rows={20}
-          required
-        />
-
-        <div className="space-y-4">
           <JournalImage imageUrl={imageUrl} />
 
           {!imageUrl && (
@@ -194,9 +212,13 @@ export const JournalForm: React.FC<{
               </Label>
             </div>
           )}
-        </div>
+        </fieldset>
 
-        <div className="space-y-2">
+        <fieldset className="space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48">
+          <Heading level="legend" className="flex items-center space-x-2">
+            <span className="mr-1">Audio</span>
+          </Heading>
+
           <JournalAudio audioUrl={audioUrl} />
 
           {audioUrl && audioCaption && (
@@ -232,7 +254,7 @@ export const JournalForm: React.FC<{
               <Label label="Audio caption">
                 <Input
                   type="text"
-                  name="audioTitle"
+                  name="audioCaption"
                   defaultValue={audioCaption}
                   disabled={!!audioUrl}
                   className={
@@ -244,7 +266,7 @@ export const JournalForm: React.FC<{
               </Label>
             </div>
           )}
-        </div>
+        </fieldset>
 
         <div className="flex justify-end w-full max-w-xl">
           <SubmitButton type="submit" variant="primary">
