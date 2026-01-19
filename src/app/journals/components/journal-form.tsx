@@ -88,6 +88,7 @@ export const JournalForm: React.FC<{
               min="1"
               max="5"
               defaultValue={journal?.energyLevel}
+              className="accent-blue-500"
               required
             />
           </Label>
@@ -99,6 +100,7 @@ export const JournalForm: React.FC<{
               min="1"
               max="5"
               defaultValue={journal?.moodLevel}
+              className="accent-blue-500"
               required
             />
           </Label>
@@ -110,6 +112,7 @@ export const JournalForm: React.FC<{
               min="1"
               max="5"
               defaultValue={journal?.healthLevel}
+              className="accent-blue-500"
               required
             />
           </Label>
@@ -121,6 +124,7 @@ export const JournalForm: React.FC<{
               min="1"
               max="5"
               defaultValue={journal?.creativityLevel}
+              className="accent-blue-500"
               required
             />
           </Label>
@@ -132,6 +136,7 @@ export const JournalForm: React.FC<{
               min="1"
               max="5"
               defaultValue={journal?.relationshipsLevel}
+              className="accent-blue-500"
               required
             />
           </Label>
