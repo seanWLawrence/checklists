@@ -13,6 +13,7 @@ import { JournalAudio } from "./journal-audio";
 import { useState } from "react";
 import { MAX_AUDIO_SIZE_MB, MAX_IMAGE_SIZE_MB } from "@/lib/upload.constants";
 import { Fieldset } from "@/components/fieldset";
+import { AudioRecorderInput } from "@/components/audio-recorder-input";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -225,15 +226,10 @@ export const JournalForm: React.FC<{
                 </span>
               </div>
 
-              <input
-                type="file"
+              <AudioRecorderInput
                 id="audio"
                 name="audio"
-                accept="audio/*"
-                className="w-full max-w-prose text-sm"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0] ?? null;
-
+                onFileSelected={(file) => {
                   setCurrentAudioSizeMb(
                     file ? file.size / (1024 * 1024) : null,
                   );
