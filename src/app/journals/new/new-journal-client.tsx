@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { JournalForm } from "../components/journal-form";
 import { journalExistsAction } from "../actions/journal-exists.action";
 import { CreatedAtLocal } from "../journal.types";
+import { Maybe } from "purify-ts/Maybe";
 
 export const NewJournalClient: React.FC = () => {
   const router = useRouter();
@@ -18,7 +19,11 @@ export const NewJournalClient: React.FC = () => {
 
       journalExistsAction(todayLocal.extract()).then((exists) => {
         if (isMounted && exists) {
-          router.replace(`/journals/${todayLocal.extract()}/edit`);
+          Maybe.fromFalsy(
+            window.confirm("Journal exists for today. Want to edit it?"),
+          ).ifJust(() => {
+            router.replace(`/journals/${todayLocal.extract()}/edit`);
+          });
         }
       });
     }
