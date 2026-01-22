@@ -91,6 +91,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               value={journal?.energyLevel}
               min="1"
               max="5"
+              className="accent-blue-500"
             />
           </Label>
 
@@ -101,6 +102,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               readOnly
               min="1"
               max="5"
+              className="accent-blue-500"
             />
           </Label>
 
@@ -111,6 +113,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               readOnly
               min="1"
               max="5"
+              className="accent-blue-500"
             />
           </Label>
 
@@ -121,6 +124,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               readOnly
               min="1"
               max="5"
+              className="accent-blue-500"
             />
           </Label>
 
@@ -131,6 +135,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               readOnly
               min="1"
               max="5"
+              className="accent-blue-500"
             />
           </Label>
         </Fieldset>
