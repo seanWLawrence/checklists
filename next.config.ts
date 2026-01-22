@@ -7,20 +7,21 @@ import { MAX_IMAGE_SIZE } from "./src/lib/upload.constants";
 const scriptSrcDevOnly =
   process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
 
-const IMAGE_HOSTNAME = process.env.IMAGE_HOSTNAME;
+const BLOB_HOSTNAME = process.env.BLOB_HOSTNAME;
 
-invariant(IMAGE_HOSTNAME, "IMAGE_HOSTNAME must be set");
+invariant(BLOB_HOSTNAME, "BLOB_HOSTNAME must be set");
+const BLOB_ORIGIN = new URL(BLOB_HOSTNAME).origin;
 
 const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' ${scriptSrcDevOnly};
     style-src 'self' 'unsafe-inline';
-    img-src 'self';
+    img-src 'self' ${BLOB_ORIGIN};
     font-src 'self';
-    connect-src 'self';
+    connect-src 'self' ${BLOB_ORIGIN};
     frame-src 'none';
     object-src 'none';
-    media-src 'self';
+    media-src 'self' ${BLOB_ORIGIN};
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
@@ -38,7 +39,7 @@ export default {
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
   images: {
-    remotePatterns: [new URL(IMAGE_HOSTNAME)],
+    remotePatterns: [new URL(BLOB_HOSTNAME)],
   },
   async headers() {
     const headers = [
