@@ -23,7 +23,7 @@ const cspHeader = `
     connect-src 'self' ${BLOB_ORIGIN};
     frame-src 'none';
     object-src 'none';
-    media-src 'self' ${BLOB_ORIGIN};
+    media-src 'self' ${BLOB_ORIGIN} blob:;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
