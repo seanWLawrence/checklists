@@ -217,7 +217,7 @@ export const JournalForm: React.FC<{
           )}
 
           {!audioUrl && (
-            <div className="space-y-1 flex flex-col">
+            <div className="space-y-2 flex flex-col">
               <div className="flex space-x-1 items-center max-w-min">
                 <Label htmlFor="audio" label="Audio" />
 
@@ -241,13 +241,24 @@ export const JournalForm: React.FC<{
                   type="text"
                   name="audioCaption"
                   defaultValue={audioCaption}
-                  disabled={!!audioUrl}
+                  disabled={!!audioUrl || !currentAudioSizeMb}
                   className={
                     audioUrl
                       ? "opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800"
                       : ""
                   }
                 />
+
+                <Label
+                  label="Transcribe"
+                  className="space-x-2 w-min flex flex-row items-start mt-2"
+                >
+                  <input
+                    type="checkbox"
+                    name="transcribeAudioFile"
+                    disabled={!!audioUrl || !currentAudioSizeMb}
+                  />
+                </Label>
               </Label>
             </div>
           )}

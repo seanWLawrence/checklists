@@ -23,13 +23,15 @@ import {
   moveJournalAssetsIfTheyExist,
   uploadJournalAsset,
 } from "../lib/journal-asset-utils.lib";
+import { transcribeJournalAudioIntoContent } from "../lib/transcribe-audio-into-content.lib";
+import { getBooleanFromFormData } from "@/lib/form-data/get-boolean-from-form-data";
 
 export const updateJournalAction = async (
   formData: FormData,
 ): Promise<void> => {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     const metadata = await liftEither(
@@ -48,7 +50,7 @@ export const updateJournalAction = async (
       ),
     );
 
-    const content = await liftEither(
+    let content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
     );
 
@@ -91,6 +93,21 @@ export const updateJournalAction = async (
       formData,
       name: "audio",
     }).toMaybe();
+
+    const shouldTranscribe = getBooleanFromFormData({
+      formData,
+      name: "transcribeAudioFile",
+    });
+
+    if (audioMaybe.isJust() && shouldTranscribe) {
+      const audio = audioMaybe.extract();
+
+      const transcribedContent = await fromPromise(
+        transcribeJournalAudioIntoContent({ audio }),
+      );
+
+      content += transcribedContent;
+    }
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
@@ -278,7 +295,9 @@ export const updateJournalAction = async (
             const audio = audioMaybe.extract();
             const caption = Maybe.fromNullable(formData.get("audioCaption"))
               .chain((value) =>
-                typeof value === "string" ? Maybe.of(value.trim()) : Maybe.empty(),
+                typeof value === "string"
+                  ? Maybe.of(value.trim())
+                  : Maybe.empty(),
               )
               .filter((value) => value.length > 0)
               .orDefault(audio.name);

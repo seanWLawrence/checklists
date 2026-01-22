@@ -28,7 +28,10 @@ const prettyContent = (content: string): React.ReactNode => {
 
                 <ul>
                   {section.children.map((row, index) => (
-                    <li className="list-disc ml-4" key={`${row}-${index}`}>
+                    <li
+                      className="list-disc ml-4 text-sm"
+                      key={`${row}-${index}`}
+                    >
                       {row}
                     </li>
                   ))}

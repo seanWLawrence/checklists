@@ -1,6 +1,8 @@
 import { NextConfig } from "next";
 import invariant from "tiny-invariant";
-import { MAX_IMAGE_SIZE } from "./src/lib/upload.constants";
+import { MAX_AUDIO_SIZE } from "./src/lib/upload.constants";
+
+invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
@@ -31,9 +33,9 @@ const cspHeader = `
 export default {
   experimental: {
     serverActions: {
-      bodySizeLimit: MAX_IMAGE_SIZE,
+      bodySizeLimit: MAX_AUDIO_SIZE,
     },
-    proxyClientMaxBodySize: MAX_IMAGE_SIZE,
+    proxyClientMaxBodySize: MAX_AUDIO_SIZE,
   },
   poweredByHeader: false,
   crossOrigin: "anonymous",
