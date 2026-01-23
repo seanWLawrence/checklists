@@ -11,6 +11,11 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.14",
+    "@aws-sdk/client-s3": "^3.974.0",
+    "@aws-sdk/credential-providers": "^3.974.0",
+    "@aws-sdk/lib-storage": "^3.974.0",
+    "@aws-sdk/s3-request-presigner": "^3.974.0",
+    "@dotenvx/dotenvx": "^1.52.0",
     "@tailwindcss/typography": "^0.5.19",
     "@vercel/blob": "^2.0.0",
     "@vercel/kv": "^3.0.0",
@@ -37,6 +42,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@aws-sdk/types": "^3.973.0",
     "@serwist/turbopack": "^9.3.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/markdown-it": "^14.1.2",

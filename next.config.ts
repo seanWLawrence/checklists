@@ -1,6 +1,9 @@
 import { NextConfig } from "next";
 import invariant from "tiny-invariant";
 import { MAX_AUDIO_SIZE } from "./src/lib/upload.constants";
+import { config } from "@dotenvx/dotenvx";
+
+config();
 
 invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
 
@@ -9,10 +12,7 @@ invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
 const scriptSrcDevOnly =
   process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
 
-const BLOB_HOSTNAME = process.env.BLOB_HOSTNAME;
-
-invariant(BLOB_HOSTNAME, "BLOB_HOSTNAME must be set");
-const BLOB_ORIGIN = new URL(BLOB_HOSTNAME).origin;
+const BLOB_ORIGIN = "";
 
 const cspHeader = `
     default-src 'self';
@@ -40,9 +40,10 @@ export default {
   poweredByHeader: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
-  images: {
-    remotePatterns: [new URL(BLOB_HOSTNAME)],
-  },
+  // TODO enable with s3
+  // images: {
+  //   remotePatterns: [new URL(BLOB_HOSTNAME)],
+  // },
   async headers() {
     const headers = [
       { key: "x-Frame-Options", value: "DENY" },
