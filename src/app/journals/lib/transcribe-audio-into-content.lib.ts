@@ -24,7 +24,6 @@ export const transcribeJournalAudioIntoContent = ({
       const transcriptResponse = await transcribe({
         model: openai.transcription("whisper-1"),
         audio: new Uint8Array(await audio.arrayBuffer()),
-        abortSignal: AbortSignal.timeout(1000 * 60 * 2),
       });
 
       const transcript = transcriptResponse.text.trim();

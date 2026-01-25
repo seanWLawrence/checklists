@@ -1,10 +1,7 @@
 import { NextConfig } from "next";
 import invariant from "@/lib/invariant";
 import { MAX_AUDIO_SIZE } from "./src/lib/upload.constants";
-import { config } from "@dotenvx/dotenvx";
 import { RemotePattern } from "next/dist/shared/lib/image-config";
-
-config();
 
 invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
 invariant(process.env.AWS_BUCKET_NAME, "Missing AWS_BUCKET_NAME");

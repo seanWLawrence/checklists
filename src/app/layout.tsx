@@ -9,10 +9,6 @@ import "highlight.js/styles/tokyo-night-dark.css";
 import { ThemeSetter } from "@/components/theme-setter.client";
 import { AuthRefreshInterval } from "@/components/auth-refresh-interval.client";
 
-import { config } from "@dotenvx/dotenvx";
-
-config();
-
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
 const APP_TITLE_TEMPLATE = "%s - App";

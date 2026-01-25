@@ -1,10 +1,7 @@
 import "server-only";
 
-import { config } from "@dotenvx/dotenvx";
 import { Maybe } from "purify-ts/Maybe";
 import { isProduction } from "./environment";
-
-config();
 
 export const AWS_ROLE_SESSION_NAME = "checklists-session";
 

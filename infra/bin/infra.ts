@@ -7,8 +7,7 @@ import { config } from "@dotenvx/dotenvx";
 import assert from "node:assert";
 
 config({
-  envKeysFile: resolve(__dirname, "../../.env.keys"),
-  path: resolve(__dirname, "../../.env"),
+  path: resolve(__dirname, "../../.env.local"),
 });
 
 assert(process.env.AWS_ACCOUNT, "Missing AWS_ACCOUNT in CDK");
