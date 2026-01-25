@@ -7,10 +7,10 @@ import { EitherAsync } from "purify-ts";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
 import { CreatedAtLocal } from "../journal.types";
-import { getJournalKey } from "../model/get-journal.model";
+import { getJournal, getJournalKey } from "../model/get-journal.model";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { deleteJournalAssets } from "../lib/journal-asset-utils.lib";
+import { deleteObject } from "@/lib/aws/s3/delete-object";
 
 export const deleteJournalAction = async (
   formData: FormData,
@@ -26,6 +26,8 @@ export const deleteJournalAction = async (
       ),
     );
 
+    const journal = await fromPromise(getJournal(createdAtLocal));
+
     return fromPromise(
       deleteAllItems({
         keys: [
@@ -35,12 +37,19 @@ export const deleteJournalAction = async (
           }),
         ],
       })
-        .chain(() =>
-          deleteJournalAssets({ createdAtLocal, assetType: "images" }),
-        )
-        .chain(() =>
-          deleteJournalAssets({ createdAtLocal, assetType: "audios" }),
-        )
+        .chain(() => {
+          const audioAssetPaths =
+            journal.audioAssets?.map((audioAsset) => audioAsset.path) ?? [];
+
+          const imageAssetPaths =
+            journal.imageAssets?.map((imageAsset) => imageAsset.path) ?? [];
+
+          const allAssetPaths = [...audioAssetPaths, ...imageAssetPaths];
+
+          return EitherAsync.all(
+            allAssetPaths.map((path) => deleteObject({ path })),
+          );
+        })
         .ifRight(() => {
           const dateId = createdAtLocal;
           logger.info(`Successfully deleted journal with ID '${dateId}'`);

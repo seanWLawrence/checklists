@@ -3,28 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 import { EitherAsync } from "purify-ts";
-import { Maybe } from "purify-ts/Maybe";
 
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
 import { Journal, CreatedAtLocal, Level } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { Metadata } from "@/lib/types";
 import { updateItem } from "@/lib/db/update-item";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { getJournalKey } from "../model/get-journal.model";
 import { createItem } from "@/lib/db/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
-import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
-import { getAudioFromFormData } from "@/lib/form-data/get-audio-from-form-data";
-import {
-  deleteJournalAssets,
-  moveJournalAssetsIfTheyExist,
-  uploadJournalAsset,
-} from "../lib/journal-asset-utils.lib";
-import { transcribeJournalAudioIntoContent } from "../lib/transcribe-audio-into-content.lib";
-import { getBooleanFromFormData } from "@/lib/form-data/get-boolean-from-form-data";
+import { getFilesFromFormData } from "@/lib/form-data/get-files-from-form-data";
+import { getAllTranscriptionContents } from "../lib/get-all-transcription-contents";
+import { putJournalAssets } from "../lib/put-journal-assets";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -34,8 +26,8 @@ export const updateJournalAction = async (
       validateUserLoggedIn({ variant: "server-action" }),
     );
 
-    const metadata = await liftEither(
-      getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
+    const existingJournal = await liftEither(
+      getJsonFromFormData({ name: "journal", formData, decoder: Journal }),
     );
 
     const existingCreatedAtLocal = await liftEither(
@@ -84,32 +76,37 @@ export const updateJournalAction = async (
         .chain(Level.decode),
     );
 
-    const imageMaybe = getImageFromFormData({
-      formData,
-      name: "image",
-    }).toMaybe();
+    const imageFiles = await liftEither(
+      getFilesFromFormData({
+        formData,
+        name: "images",
+      }),
+    );
 
-    const audioMaybe = getAudioFromFormData({
-      formData,
-      name: "audio",
-    }).toMaybe();
-
-    const shouldTranscribe = getBooleanFromFormData({
-      formData,
-      name: "transcribeAudioFile",
-    });
-
-    if (audioMaybe.isJust() && shouldTranscribe) {
-      const audio = audioMaybe.extract();
-
-      const transcribedContent = await fromPromise(
-        transcribeJournalAudioIntoContent({ audio }),
-      );
-
-      content += transcribedContent;
-    }
+    const audioFiles = await liftEither(
+      getFilesFromFormData({
+        formData,
+        name: "audios",
+      }),
+    );
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
+
+    const transcriptionContents = await fromPromise(
+      getAllTranscriptionContents({ formData, audioFiles }),
+    );
+
+    if (transcriptionContents.length > 0) {
+      content = content.trim() + `\n\n${transcriptionContents}`;
+    }
+
+    const { audioAssets, imageAssets } = await fromPromise(
+      putJournalAssets({
+        formData,
+        audioFiles,
+        imageFiles,
+      }),
+    );
 
     if (dateChanged) {
       logger.debug("Date was changed, deleting existing journal");
@@ -126,7 +123,10 @@ export const updateJournalAction = async (
 
       const journal = await liftEither(
         Journal.decode({
-          ...metadataToDatabaseDto({ ...metadata, updatedAtIso: new Date() }),
+          ...metadataToDatabaseDto({
+            ...existingJournal,
+            updatedAtIso: new Date(),
+          }),
           user,
           createdAtLocal,
           content,
@@ -135,6 +135,14 @@ export const updateJournalAction = async (
           healthLevel,
           creativityLevel,
           relationshipsLevel,
+          imageAssets: [
+            ...(existingJournal?.imageAssets ?? []),
+            ...imageAssets,
+          ],
+          audioAssets: [
+            ...(existingJournal?.audioAssets ?? []),
+            ...audioAssets,
+          ],
         }),
       );
 
@@ -148,83 +156,6 @@ export const updateJournalAction = async (
             getJournalKey({ createdAtLocal, user: item.user }),
           item: journal,
         })
-          .chain(async (createdJournal) => {
-            let chain = EitherAsync(async () => createdJournal);
-
-            if (imageMaybe.isJust()) {
-              const image = imageMaybe.extract();
-
-              const caption = await liftEither(
-                getStringFromFormData({ name: "imageCaption", formData }),
-              );
-
-              chain = chain
-                .chain(() =>
-                  uploadJournalAsset({
-                    createdAtLocal,
-                    assetType: "images",
-                    file: image,
-                    caption,
-                    fallbackExtension: "jpg",
-                  }).map(() => createdJournal),
-                )
-                .chain(() =>
-                  deleteJournalAssets({
-                    createdAtLocal: existingCreatedAtLocal,
-                    assetType: "images",
-                  }),
-                )
-                .map(() => createdJournal);
-            } else {
-              chain = chain.chain(() =>
-                moveJournalAssetsIfTheyExist({
-                  fromCreatedAtLocal: existingCreatedAtLocal,
-                  toCreatedAtLocal: createdJournal.createdAtLocal,
-                  assetType: "images",
-                }).map(() => createdJournal),
-              );
-            }
-
-            if (audioMaybe.isJust()) {
-              const audio = audioMaybe.extract();
-              const caption = Maybe.fromNullable(formData.get("audioCaption"))
-                .chain((value) =>
-                  typeof value === "string"
-                    ? Maybe.of(value.trim())
-                    : Maybe.empty(),
-                )
-                .filter((value) => value.length > 0)
-                .orDefault(audio.name);
-
-              chain = chain
-                .chain(() =>
-                  uploadJournalAsset({
-                    createdAtLocal,
-                    assetType: "audios",
-                    file: audio,
-                    caption,
-                    fallbackExtension: "m4a",
-                  }).map(() => createdJournal),
-                )
-                .chain(() =>
-                  deleteJournalAssets({
-                    createdAtLocal: existingCreatedAtLocal,
-                    assetType: "audios",
-                  }),
-                )
-                .map(() => createdJournal);
-            } else {
-              chain = chain.chain(() =>
-                moveJournalAssetsIfTheyExist({
-                  fromCreatedAtLocal: existingCreatedAtLocal,
-                  toCreatedAtLocal: createdJournal.createdAtLocal,
-                  assetType: "audios",
-                }).map(() => createdJournal),
-              );
-            }
-
-            return chain;
-          })
           .ifRight((x) => {
             const dateId = x.createdAtLocal;
             logger.info(`Successfully updated journal with date '${dateId}'`);
@@ -251,7 +182,10 @@ export const updateJournalAction = async (
 
     const journal = await liftEither(
       Journal.decode({
-        ...metadataToDatabaseDto({ ...metadata, updatedAtIso: new Date() }),
+        ...metadataToDatabaseDto({
+          ...existingJournal,
+          updatedAtIso: new Date(),
+        }),
         user,
         createdAtLocal,
         content,
@@ -260,6 +194,8 @@ export const updateJournalAction = async (
         healthLevel,
         creativityLevel,
         relationshipsLevel,
+        imageAssets: [...(existingJournal?.imageAssets ?? []), ...imageAssets],
+        audioAssets: [...(existingJournal?.audioAssets ?? []), ...audioAssets],
       }),
     );
 
@@ -270,51 +206,6 @@ export const updateJournalAction = async (
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
-        .chain(async (updatedJournal) => {
-          let chain = EitherAsync(async () => updatedJournal);
-
-          if (imageMaybe.isJust()) {
-            const image = imageMaybe.extract();
-
-            const caption = await liftEither(
-              getStringFromFormData({ name: "imageCaption", formData }),
-            );
-
-            chain = chain.chain(() =>
-              uploadJournalAsset({
-                createdAtLocal,
-                assetType: "images",
-                file: image,
-                caption,
-                fallbackExtension: "jpg",
-              }).map(() => updatedJournal),
-            );
-          }
-
-          if (audioMaybe.isJust()) {
-            const audio = audioMaybe.extract();
-            const caption = Maybe.fromNullable(formData.get("audioCaption"))
-              .chain((value) =>
-                typeof value === "string"
-                  ? Maybe.of(value.trim())
-                  : Maybe.empty(),
-              )
-              .filter((value) => value.length > 0)
-              .orDefault(audio.name);
-
-            chain = chain.chain(() =>
-              uploadJournalAsset({
-                createdAtLocal,
-                assetType: "audios",
-                file: audio,
-                caption,
-                fallbackExtension: "m4a",
-              }).map(() => updatedJournal),
-            );
-          }
-
-          return chain;
-        })
         .ifRight((x) => {
           const dateId = x.createdAtLocal;
           logger.info(`Successfully updated journal with date '${dateId}'`);
@@ -336,6 +227,7 @@ export const updateJournalAction = async (
         }),
     );
   }).ifLeft((error) => {
+    logger.error("Failed to update journal");
     logger.error(error);
   });
 

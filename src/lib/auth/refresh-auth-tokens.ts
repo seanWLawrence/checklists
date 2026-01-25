@@ -4,7 +4,7 @@ import { logger } from "../logger";
 import { validateRefreshToken } from "./validate-refresh-token";
 import { revokeRefreshToken } from "./revoke-refresh-token";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
-import { AUTH_SECRET } from "./auth.constants";
+import { AUTH_SECRET } from "@/lib/secrets";
 import { cookies } from "next/headers";
 import { User } from "../types";
 import { NextRequest } from "next/server";

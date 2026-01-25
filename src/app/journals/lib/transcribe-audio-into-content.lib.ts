@@ -5,7 +5,7 @@ import { openai } from "@ai-sdk/openai";
 import { EitherAsync } from "purify-ts";
 import { logger } from "@/lib/logger";
 
-const TRANSCRIPTION_PREFIX = "\n\n## From audio\n";
+const TRANSCRIPTION_PREFIX = "## From audio - ";
 const MAX_TRANSCRIPTION_BYTES = 25 * 1024 * 1024;
 
 export const transcribeJournalAudioIntoContent = ({
@@ -34,7 +34,15 @@ export const transcribeJournalAudioIntoContent = ({
 
       logger.debug(transcript);
 
-      return TRANSCRIPTION_PREFIX + transcript.split(".").join("\n");
+      return (
+        TRANSCRIPTION_PREFIX +
+        `${Intl.DateTimeFormat("en-US", {
+          hour: "numeric", // 12-hour
+          minute: "2-digit",
+          hour12: true,
+        }).format(new Date())}\n` +
+        transcript.split(".").join("\n")
+      );
     } catch (error) {
       return throwE(error);
     }

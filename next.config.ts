@@ -1,34 +1,47 @@
 import { NextConfig } from "next";
-import invariant from "tiny-invariant";
+import invariant from "@/lib/invariant";
 import { MAX_AUDIO_SIZE } from "./src/lib/upload.constants";
 import { config } from "@dotenvx/dotenvx";
+import { RemotePattern } from "next/dist/shared/lib/image-config";
 
 config();
 
 invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
+invariant(process.env.AWS_BUCKET_NAME, "Missing AWS_BUCKET_NAME");
+invariant(process.env.AWS_REGION, "Missing AWS_REGION");
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
 const scriptSrcDevOnly =
   process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
 
-const BLOB_ORIGIN = "";
+const S3_BUCKET_HOSTNAME = `${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+const S3_BUCKET_ORIGIN = `https://${S3_BUCKET_HOSTNAME}`;
 
 const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' ${scriptSrcDevOnly};
     style-src 'self' 'unsafe-inline';
-    img-src 'self' ${BLOB_ORIGIN};
+    img-src 'self' ${S3_BUCKET_ORIGIN};
     font-src 'self';
-    connect-src 'self' ${BLOB_ORIGIN};
+    connect-src 'self' ${S3_BUCKET_ORIGIN};
     frame-src 'none';
     object-src 'none';
-    media-src 'self' ${BLOB_ORIGIN} blob:;
+    media-src 'self' ${S3_BUCKET_ORIGIN} blob:;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
     upgrade-insecure-requests;
 `;
+
+const remotePatterns: RemotePattern[] = [
+  {
+    protocol: "https",
+    hostname: S3_BUCKET_HOSTNAME,
+    port: "",
+    pathname: `/**`,
+  },
+];
 
 export default {
   experimental: {
@@ -40,10 +53,10 @@ export default {
   poweredByHeader: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
-  // TODO enable with s3
-  // images: {
-  //   remotePatterns: [new URL(BLOB_HOSTNAME)],
-  // },
+  images: {
+    remotePatterns,
+    unoptimized: process.env.NODE_ENV === "development",
+  },
   async headers() {
     const headers = [
       { key: "x-Frame-Options", value: "DENY" },

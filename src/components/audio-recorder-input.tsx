@@ -1,11 +1,6 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/cn";
+import { Button } from "./button";
 
 type RecorderStatus = "idle" | "recording" | "paused" | "stopped" | "error";
 
@@ -28,27 +23,13 @@ const canRecordAudio = (): boolean => {
 };
 
 export const AudioRecorderInput: React.FC<{
-  id?: string;
-  name: string;
-  accept?: string;
-  disabled?: boolean;
-  className?: string;
-  onFileSelected?: (file: File | null) => void;
-}> = ({
-  id,
-  name,
-  accept = "audio/*",
-  disabled,
-  className,
-  onFileSelected,
-}) => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  onChange: (file: File | null) => void;
+}> = ({ onChange }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Avoids setting state in effect
   const isMounted = useSyncExternalStore(
@@ -66,52 +47,20 @@ export const AudioRecorderInput: React.FC<{
   // Cleanup only
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-
       streamRef.current?.getTracks().forEach((track) => track.stop());
     };
-  }, [previewUrl]);
-
-  const setFileOnInput = (file: File | null) => {
-    const input = fileInputRef.current;
-
-    if (!input) {
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-
-    if (file) {
-      dataTransfer.items.add(file);
-    }
-
-    input.files = dataTransfer.files;
-  };
+  }, []);
 
   const handleFileChange = (file: File | null) => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+    if (!file) {
+      setStatus("idle");
     }
 
-    if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      setPreviewUrl(null);
-    }
-
-    onFileSelected?.(file);
-  };
-
-  const handleManualChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] ?? null;
-
-    handleFileChange(file);
+    onChange(file);
   };
 
   const startRecording = async () => {
-    if (!recorderAvailable || disabled) {
+    if (!recorderAvailable) {
       setStatus("error");
       setErrorMessage("Recording isn't available on this device.");
       return;
@@ -124,12 +73,7 @@ export const AudioRecorderInput: React.FC<{
     setErrorMessage(null);
     chunksRef.current = [];
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-
-    setFileOnInput(null);
+    handleFileChange(null);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -159,7 +103,6 @@ export const AudioRecorderInput: React.FC<{
         const filename = `journal-audio-${Date.now()}.${extension}`;
         const file = new File([blob], filename, { type: mimeType });
 
-        setFileOnInput(file);
         handleFileChange(file);
 
         stream.getTracks().forEach((track) => track.stop());
@@ -195,70 +138,45 @@ export const AudioRecorderInput: React.FC<{
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
-  };
 
-  const clearRecording = () => {
-    setFileOnInput(null);
-    handleFileChange(null);
-    setStatus("idle");
+    // Hack for onstop to complete before resetting to idle
+    setTimeout(() => {
+      setStatus("idle");
+    }, 1000);
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={"flex flex-col space-y-2"}>
       {isMounted && recorderAvailable ? (
-        <div className="flex items-center space-x-2">
+        <div
+          className={cn("flex items-center space-x-2", {
+            "border-zinc-200 rounded-md py-1.5 px-3 border-1":
+              status !== "idle" && status !== "error",
+          })}
+        >
           {(status === "idle" || status === "error") && (
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={disabled}
-              className="text-xs px-2 py-1 rounded border-2 border-zinc-900 disabled:opacity-60"
-            >
+            <Button type="button" onClick={startRecording} variant="outline">
               Record
-            </button>
+            </Button>
           )}
 
           {status === "recording" && (
-            <button
-              type="button"
-              onClick={pauseRecording}
-              disabled={disabled}
-              className="text-xs px-2 py-1 rounded border-2 border-zinc-900 disabled:opacity-60"
-            >
+            <Button type="button" variant="ghost" onClick={pauseRecording}>
               Pause
-            </button>
+            </Button>
           )}
 
           {status === "paused" && (
-            <button
-              type="button"
-              onClick={resumeRecording}
-              disabled={disabled}
-              className="text-xs px-2 py-1 rounded border-2 border-zinc-900 disabled:opacity-60"
-            >
+            <Button type="button" variant="ghost" onClick={resumeRecording}>
               Resume
-            </button>
+            </Button>
           )}
 
           {(status === "recording" || status === "paused") && (
-            <button
-              type="button"
-              onClick={finishRecording}
-              disabled={disabled}
-              className="text-xs px-2 py-1 rounded border-2 border-zinc-900 disabled:opacity-60"
-            >
+            <Button type="button" variant="outline" onClick={finishRecording}>
               Finish
-            </button>
+            </Button>
           )}
-
-          <button
-            type="button"
-            onClick={clearRecording}
-            disabled={disabled || (!previewUrl && status !== "stopped")}
-            className="text-xs px-2 py-1 rounded border-2 border-zinc-900 disabled:opacity-60"
-          >
-            Clear
-          </button>
 
           {status === "recording" && (
             <span className="text-xs text-rose-600">Recording…</span>
@@ -275,24 +193,6 @@ export const AudioRecorderInput: React.FC<{
       ) : null}
 
       {errorMessage && <p className="text-xs text-rose-600">{errorMessage}</p>}
-
-      {previewUrl && (
-        <audio controls preload="metadata" className="w-full">
-          <source src={previewUrl} />
-          Your browser does not support the audio element.
-        </audio>
-      )}
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        id={id}
-        name={name}
-        accept={accept}
-        onChange={handleManualChange}
-        disabled={disabled || status === "recording"}
-        className="w-full max-w-prose text-sm"
-      />
     </div>
   );
 };

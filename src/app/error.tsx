@@ -16,20 +16,16 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html>
-      <body>
-        <div className="space-y-2">
-          <div className="flex flex-col space-y-1 bg-red-100 text-red-800 p-4 rounded">
-            <h2>Something went wrong!</h2>
-            <p>{error.message}</p>
-            <p>{String(error)}</p>
-          </div>
+    <div className="space-y-2">
+      <div className="flex flex-col space-y-1 bg-red-100 text-red-800 p-4 rounded">
+        <h2>Something went wrong!</h2>
+        <p>{error.message}</p>
+        <p>{String(error)}</p>
+      </div>
 
-          <Button onClick={() => reset()} variant="primary">
-            Try again
-          </Button>
-        </div>
-      </body>
-    </html>
+      <Button onClick={() => reset()} variant="primary">
+        Try again
+      </Button>
+    </div>
   );
 }

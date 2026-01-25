@@ -6,7 +6,8 @@ import { generateAccessJwt } from "./generate-access-jwt";
 import { createItem } from "../db/create-item";
 import { expire } from "../db/expire";
 import { User } from "../types";
-import { AUTH_SECRET, THIRTY_DAYS_IN_SECONDS } from "./auth.constants";
+import { AUTH_SECRET } from "@/lib/secrets";
+import { THIRTY_DAYS_IN_SECONDS } from "./auth.constants";
 import { logger } from "../logger";
 import { randomChars } from "./random-chars";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
@@ -49,7 +50,9 @@ export const setAuthTokensAndCookies = ({
 
     const token = await liftEither(generateRefreshTokenFn({}));
 
-    const { hash, salt } = await fromPromise(secureHashWithSaltFn({ value: token }));
+    const { hash, salt } = await fromPromise(
+      secureHashWithSaltFn({ value: token }),
+    );
 
     const refreshTokenKey = getRefreshTokenKey({ token });
 

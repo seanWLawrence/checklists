@@ -17,7 +17,7 @@ export const buttonClassName = ({
         variant === "outline",
       "border-2 border-transparent hover:bg-zinc-100 active:bg-zinc-200 transition-all duration-100 dark:text-zinc-200 dark:hover:bg-zinc-800 dark:active:bg-zinc-700":
         variant === "ghost",
-      "border-2 border-zinc-900 bg-zinc-900 text-zinc-50 shadow-[rgba(0,0,0,.25)_3px_3px_0px] active:shadow-none transition-all duration-100 dark:border-zinc-300 dark:bg-zinc-300 dark:text-zinc-950":
+      "border-2 border-zinc-900 bg-zinc-900 text-zinc-50 shadow-[rgba(0,0,0,.25)_3px_3px_0px] active:shadow-none transition-all duration-100 dark:border-zinc-300 dark:bg-zinc-200 dark:text-zinc-950":
         variant === "primary",
     },
     className,

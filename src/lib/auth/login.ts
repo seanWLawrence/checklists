@@ -3,7 +3,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { redirect } from "next/navigation";
 import { Either } from "purify-ts/Either";
 
-import { AUTH_SECRET } from "./auth.constants";
+import { AUTH_SECRET } from "@/lib/secrets";
 import { getStringFromFormData } from "../form-data/get-string-from-form-data";
 import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";

@@ -1,7 +1,5 @@
 import "server-only";
-import { Either } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
-import invariant from "tiny-invariant";
 
 const MILLISECONDS_IN_A_SECOND = 1000;
 const SECONDS_IN_A_MINUTE = 60;
@@ -29,14 +27,6 @@ export const REFRESH_TOKEN_COOKIE_NAME = Maybe.fromNullable(
   .map(() => "__Host-refresh")
   // Localhost doesn't work with Host__ prefix
   .orDefault("refresh");
-
-export const AUTH_SECRET = Either.encase(() => {
-  const authSecret = process.env.AUTH_SECRET;
-
-  invariant(authSecret, "Missing AUTH_SECRET environment variable");
-
-  return authSecret;
-});
 
 export const AUD = Maybe.fromNullable(
   process.env.VERCEL_PROJECT_PRODUCTION_URL,

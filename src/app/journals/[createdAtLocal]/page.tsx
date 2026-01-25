@@ -9,10 +9,10 @@ import { groupJournalContentSections } from "./group-journal-content-sections";
 import { getJournal } from "../model/get-journal.model";
 import { prettyDate } from "../lib/pretty-date.lib";
 import { RelativeTime } from "@/components/relative-time";
-import { JournalImage } from "../components/journal-image";
-import { getJournalAssetInfo } from "../lib/journal-asset-utils.lib";
-import { JournalAudio } from "../components/journal-audio";
+import { Image } from "../../../components/image";
+import { Audio } from "../../../components/audio";
 import { Fieldset } from "@/components/fieldset";
+import { getPresignedUrl } from "@/lib/aws/s3/get-presigned-url";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -56,14 +56,28 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
-    const imageInfoMaybe = await getJournalAssetInfo({
-      createdAtLocal,
-      assetType: "images",
-    });
-    const audioInfoMaybe = await getJournalAssetInfo({
-      createdAtLocal,
-      assetType: "audios",
-    });
+    const imageAssets = journal.imageAssets ?? [];
+    const audioAssets = journal.audioAssets ?? [];
+
+    const imageUrls = imageAssets.length
+      ? await fromPromise(
+          EitherAsync.all(
+            imageAssets.map((imageAsset) =>
+              getPresignedUrl({ path: imageAsset.path }),
+            ),
+          ),
+        )
+      : [];
+
+    const audioUrls = audioAssets.length
+      ? await fromPromise(
+          EitherAsync.all(
+            audioAssets.map((audioAsset) =>
+              getPresignedUrl({ path: audioAsset.path }),
+            ),
+          ),
+        )
+      : [];
 
     return (
       <main className="space-y-2 max-w-prose">
@@ -143,27 +157,41 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           </Label>
         </Fieldset>
 
-        {imageInfoMaybe.isJust() && (
-          <Fieldset legend="Image">
-            <JournalImage
-              imageUrl={imageInfoMaybe.map((x) => x.url).extract()}
-            />
-            <p className="text-xs text-zinc-600">
-              {imageInfoMaybe.extract().caption}
-            </p>
+        {imageUrls.length > 0 && (
+          <Fieldset legend="Images">
+            {imageUrls.map((url, index) => {
+              // We know it's available since we have imageUrls from it! And it would've already failed if it wasn't loaded properly
+              const caption = journal.imageAssets![index].caption;
+
+              return (
+                <div key={url} className="space-y-1">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {caption}
+                  </p>
+
+                  <Image src={url} alt={caption} />
+                </div>
+              );
+            })}
           </Fieldset>
         )}
 
-        {audioInfoMaybe.isJust() && (
-          <Fieldset legend="Audio">
-            <JournalAudio
-              audioUrl={audioInfoMaybe.map((x) => x.url).extract()}
-            />
-            {
-              <p className="text-xs text-zinc-600">
-                {audioInfoMaybe.extract().caption}
-              </p>
-            }
+        {audioUrls.length > 0 && (
+          <Fieldset legend="Audio files">
+            {audioUrls.map((url, index) => {
+              // We know it's available since we have audioUrls from it! And it would've already failed if it wasn't loaded properly
+              const caption = journal.audioAssets![index].caption;
+
+              return (
+                <div key={url} className="space-y-1">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {caption}
+                  </p>
+
+                  <Audio src={url} />
+                </div>
+              );
+            })}
           </Fieldset>
         )}
       </main>

@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 import { EitherAsync, intersect } from "purify-ts";
-import { Maybe } from "purify-ts/Maybe";
 
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
@@ -14,11 +13,9 @@ import { getJournalKey } from "../model/get-journal.model";
 import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/db/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { getImageFromFormData } from "@/lib/form-data/get-image-from-form-data";
-import { getAudioFromFormData } from "@/lib/form-data/get-audio-from-form-data";
-import { uploadJournalAsset } from "../lib/journal-asset-utils.lib";
-import { transcribeJournalAudioIntoContent } from "../lib/transcribe-audio-into-content.lib";
-import { getBooleanFromFormData } from "@/lib/form-data/get-boolean-from-form-data";
+import { getAllTranscriptionContents } from "../lib/get-all-transcription-contents";
+import { getFilesFromFormData } from "@/lib/form-data/get-files-from-form-data";
+import { putJournalAssets } from "../lib/put-journal-assets";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -70,30 +67,35 @@ export const createJournalAction = async (
         .chain(Level.decode),
     );
 
-    const imageMaybe = getImageFromFormData({
-      formData,
-      name: "image",
-    }).toMaybe();
+    const imageFiles = await liftEither(
+      getFilesFromFormData({
+        formData,
+        name: "images",
+      }),
+    );
 
-    const audioMaybe = getAudioFromFormData({
-      formData,
-      name: "audio",
-    }).toMaybe();
+    const audioFiles = await liftEither(
+      getFilesFromFormData({
+        formData,
+        name: "audios",
+      }),
+    );
 
-    const shouldTranscribe = getBooleanFromFormData({
-      formData,
-      name: "transcribeAudioFile",
-    });
+    const transcriptionContents = await fromPromise(
+      getAllTranscriptionContents({ formData, audioFiles }),
+    );
 
-    if (audioMaybe.isJust() && shouldTranscribe) {
-      const audio = audioMaybe.extract();
-
-      const transcribedContent = await fromPromise(
-        transcribeJournalAudioIntoContent({ audio }),
-      );
-
-      content += transcribedContent;
+    if (transcriptionContents.length > 0) {
+      content = content.trim() + `\n\n${transcriptionContents}`;
     }
+
+    const { audioAssets, imageAssets } = await fromPromise(
+      putJournalAssets({
+        formData,
+        audioFiles,
+        imageFiles,
+      }),
+    );
 
     const journal = await liftEither(
       intersect(JournalBase, Metadata).decode({
@@ -105,6 +107,8 @@ export const createJournalAction = async (
         healthLevel,
         creativityLevel,
         relationshipsLevel,
+        imageAssets,
+        audioAssets,
       }),
     );
 
@@ -113,51 +117,6 @@ export const createJournalAction = async (
         getKeyFn: (item) => getJournalKey({ createdAtLocal, user: item.user }),
         item: journal,
       })
-        .chain(async (createdJournal) => {
-          let chain = EitherAsync(async () => createdJournal);
-
-          if (imageMaybe.isJust()) {
-            const image = imageMaybe.extract();
-
-            const caption = await liftEither(
-              getStringFromFormData({ name: "imageCaption", formData }),
-            );
-
-            chain = chain.chain(() =>
-              uploadJournalAsset({
-                createdAtLocal,
-                assetType: "images",
-                file: image,
-                caption,
-                fallbackExtension: "jpg",
-              }).map(() => createdJournal),
-            );
-          }
-
-          if (audioMaybe.isJust()) {
-            const audio = audioMaybe.extract();
-            const caption = Maybe.fromNullable(formData.get("audioCaption"))
-              .chain((value) =>
-                typeof value === "string"
-                  ? Maybe.of(value.trim())
-                  : Maybe.empty(),
-              )
-              .filter((value) => value.length > 0)
-              .orDefault(audio.name);
-
-            chain = chain.chain(() =>
-              uploadJournalAsset({
-                createdAtLocal,
-                assetType: "audios",
-                file: audio,
-                caption,
-                fallbackExtension: "m4a",
-              }).map(() => createdJournal),
-            );
-          }
-
-          return chain;
-        })
         .ifLeft((e) => {
           logger.error(`Failed to create journal`);
           logger.error(e);

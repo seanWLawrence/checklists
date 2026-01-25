@@ -3,7 +3,6 @@ import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
-import { Stack } from "aws-cdk-lib/core";
 
 export class BucketConstruct extends Construct {
   public readonly bucket: s3.Bucket;
