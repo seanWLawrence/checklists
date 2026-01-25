@@ -14,14 +14,13 @@ export class BucketConstruct extends Construct {
 
     this.user = new iam.User(this, "user", {});
     this.role = new iam.Role(this, "role", { assumedBy: this.user });
+    this.role.grantAssumeRole(this.user);
 
     this.bucket = new s3.Bucket(this, "bucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    this.bucket.grantDelete(this.role);
-    this.bucket.grantPut(this.role);
-    this.bucket.grantRead(this.role);
+    this.bucket.grantReadWrite(this.role);
 
     const accessKey = new iam.AccessKey(this, "access-key", {
       user: this.user,

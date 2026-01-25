@@ -14,7 +14,11 @@ export const transcribeJournalAudioIntoContent = ({
   audio: File;
 }): EitherAsync<unknown, string> => {
   return EitherAsync(async ({ throwE }) => {
-    if (audio.size > MAX_TRANSCRIPTION_BYTES) {
+    if (audio.size >= MAX_TRANSCRIPTION_BYTES) {
+      logger.warn(
+        `Audio file too large to transcribe: ${audio.size} bytes. Skipping translation.`,
+      );
+
       return "";
     }
 
@@ -43,7 +47,8 @@ export const transcribeJournalAudioIntoContent = ({
         transcript.split(".").join("\n")
       );
     } catch (error) {
+      logger.error("Error during audio transcription:", error);
       return throwE(error);
     }
-  }).ifLeft(logger.error);
+  });
 };
