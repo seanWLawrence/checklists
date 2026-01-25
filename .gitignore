@@ -42,3 +42,5 @@ dump.rdb
 # Serwist for PWA
 public/sw*
 public/swe-worker*
+
+/volume/cache/*
