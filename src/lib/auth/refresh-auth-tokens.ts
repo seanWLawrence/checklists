@@ -78,7 +78,7 @@ export const refreshAuthTokens = ({
         authSecret: AUTH_SECRET,
         user: refreshToken.user,
         // Skipping refresh token creation since it's not expiring soon
-        setRefreshTokenCookieFn: async () => void 0,
+        setRefreshTokenFn: () => EitherAsync(async () => void 0),
       }),
     );
 
