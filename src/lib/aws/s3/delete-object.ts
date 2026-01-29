@@ -8,9 +8,9 @@ import { logger } from "../../logger";
 import { AWS_BUCKET_NAME } from "@/lib/secrets";
 
 export const deleteObject = ({
-  path,
+  filename,
 }: {
-  path: string;
+  filename: string;
 }): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
     try {
@@ -19,7 +19,7 @@ export const deleteObject = ({
       await client.send(
         new DeleteObjectCommand({
           Bucket: await liftEither(AWS_BUCKET_NAME),
-          Key: path,
+          Key: filename,
         }),
       );
     } catch (error) {

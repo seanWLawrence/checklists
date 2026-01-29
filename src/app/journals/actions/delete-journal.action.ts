@@ -38,16 +38,11 @@ export const deleteJournalAction = async (
         ],
       })
         .chain(() => {
-          const audioAssetPaths =
-            journal.audioAssets?.map((audioAsset) => audioAsset.path) ?? [];
-
-          const imageAssetPaths =
-            journal.imageAssets?.map((imageAsset) => imageAsset.path) ?? [];
-
-          const allAssetPaths = [...audioAssetPaths, ...imageAssetPaths];
+          const allAssetFilenames =
+            journal.assets?.map((asset) => asset.filename) ?? [];
 
           return EitherAsync.all(
-            allAssetPaths.map((path) => deleteObject({ path })),
+            allAssetFilenames.map((filename) => deleteObject({ filename })),
           );
         })
         .ifRight(() => {

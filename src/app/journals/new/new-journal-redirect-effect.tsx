@@ -2,12 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { JournalForm } from "../components/journal-form";
 import { journalExistsAction } from "../actions/journal-exists.action";
 import { CreatedAtLocal } from "../journal.types";
 import { Maybe } from "purify-ts/Maybe";
 
-export const NewJournalClient: React.FC = () => {
+export const NewJournalRedirectEffect: React.FC = () => {
   const router = useRouter();
   const todayLocal = CreatedAtLocal.decode(new Date());
 
@@ -33,5 +32,5 @@ export const NewJournalClient: React.FC = () => {
     };
   }, [router, todayLocal]);
 
-  return <JournalForm />;
+  return null;
 };

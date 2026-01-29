@@ -9,10 +9,9 @@ import { groupJournalContentSections } from "./group-journal-content-sections";
 import { getJournal } from "../model/get-journal.model";
 import { prettyDate } from "../lib/pretty-date.lib";
 import { RelativeTime } from "@/components/relative-time";
-import { Image } from "../../../components/image";
-import { Audio } from "../../../components/audio";
+import { AssetList } from "@/components/asset-list";
 import { Fieldset } from "@/components/fieldset";
-import { getPresignedUrl } from "@/lib/aws/s3/get-presigned-url";
+import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 
 const prettyContent = (content: string): React.ReactNode => {
   return groupJournalContentSections(content)
@@ -56,28 +55,21 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
-    const imageAssets = journal.imageAssets ?? [];
-    const audioAssets = journal.audioAssets ?? [];
+    const assets = journal.assets ?? [];
 
-    const imageUrls = imageAssets.length
-      ? await fromPromise(
-          EitherAsync.all(
-            imageAssets.map((imageAsset) =>
-              getPresignedUrl({ path: imageAsset.path }),
-            ),
-          ),
-        )
-      : [];
+    const assetUrls = await fromPromise(
+      EitherAsync.all(
+        assets.map((asset) => {
+          return EitherAsync(async ({ fromPromise }) => {
+            const previewUrl = await fromPromise(
+              getPresignedGetObjectUrl({ filename: asset.filename }),
+            );
 
-    const audioUrls = audioAssets.length
-      ? await fromPromise(
-          EitherAsync.all(
-            audioAssets.map((audioAsset) =>
-              getPresignedUrl({ path: audioAsset.path }),
-            ),
-          ),
-        )
-      : [];
+            return { asset, previewUrl };
+          });
+        }),
+      ),
+    );
 
     return (
       <main className="space-y-2 max-w-prose">
@@ -96,9 +88,11 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <RelativeTime date={journal.updatedAtIso} />
         </div>
 
-        <Fieldset legend="Content">
-          <div className="space-y-1">{prettyContent(journal.content)}</div>
-        </Fieldset>
+        {!!journal.content.trim() && (
+          <Fieldset legend="Content">
+            <div className="space-y-1">{prettyContent(journal.content)}</div>
+          </Fieldset>
+        )}
 
         <Fieldset legend="Levels">
           <Label label="Energy level (low to high)">
@@ -157,41 +151,14 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           </Label>
         </Fieldset>
 
-        {imageUrls.length > 0 && (
-          <Fieldset legend="Images">
-            {imageUrls.map((url, index) => {
-              // We know it's available since we have imageUrls from it! And it would've already failed if it wasn't loaded properly
-              const caption = journal.imageAssets![index].caption;
-
-              return (
-                <div key={url} className="space-y-1">
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                    {caption}
-                  </p>
-
-                  <Image src={url} alt={caption} />
-                </div>
-              );
-            })}
-          </Fieldset>
-        )}
-
-        {audioUrls.length > 0 && (
-          <Fieldset legend="Audio files">
-            {audioUrls.map((url, index) => {
-              // We know it's available since we have audioUrls from it! And it would've already failed if it wasn't loaded properly
-              const caption = journal.audioAssets![index].caption;
-
-              return (
-                <div key={url} className="space-y-1">
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                    {caption}
-                  </p>
-
-                  <Audio src={url} />
-                </div>
-              );
-            })}
+        {assetUrls.length > 0 && (
+          <Fieldset legend="Assets">
+            <AssetList
+              assets={assetUrls.map(({ asset, previewUrl }) => ({
+                ...asset,
+                previewUrl,
+              }))}
+            />
           </Fieldset>
         )}
       </main>
