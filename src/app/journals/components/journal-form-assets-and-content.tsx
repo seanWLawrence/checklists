@@ -61,7 +61,7 @@ export const JournalFormAssetsAndContent: React.FC<{
         </Label>
       </Fieldset>
 
-      <Fieldset legend="Assets" className="max-w-prose w-full space-y-4">
+      <Fieldset legend="Assets" className="max-w-prose w-full">
         <AssetManager
           name={assetsName}
           initialAssets={initialAssets}

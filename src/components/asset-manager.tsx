@@ -39,8 +39,9 @@ export const AssetManager: React.FC<{
 }> = ({ name, initialAssets, onTranscribeChange }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [assets, setAssets] = useState<AssetItem[]>(initialAssets);
-  const [transcribeStatusByFilename, setTranscribeStatusByFilename] =
-    useState<Record<string, "idle" | "loading" | "done" | "error">>({});
+  const [transcribeStatusByFilename, setTranscribeStatusByFilename] = useState<
+    Record<string, "idle" | "loading" | "done" | "error">
+  >({});
 
   useEffect(() => {
     return () => {
@@ -237,7 +238,13 @@ export const AssetManager: React.FC<{
         multiple
       />
 
-      <input type="hidden" name={name} value={serializedAssets} readOnly />
+      <input
+        type="hidden"
+        name={name}
+        value={serializedAssets}
+        readOnly
+        className="sr-only"
+      />
 
       <AssetList
         assets={assets}

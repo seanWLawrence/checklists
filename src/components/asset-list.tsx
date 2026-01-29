@@ -43,6 +43,10 @@ export const AssetList: React.FC<{
     }
   };
 
+  if (!sortedAssets.length) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       {sortedAssets.map((asset) => {
