@@ -3,7 +3,7 @@
 import { logger } from "@/lib/logger";
 import { useEffect, useRef } from "react";
 
-const REFRESH_ENDPOINT = "/api/auth/refresh?redirectTo=false";
+const REFRESH_ENDPOINT = "/api/auth/refresh?redirect=false";
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
 
 const shouldRefresh = () => {

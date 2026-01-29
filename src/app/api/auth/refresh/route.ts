@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { refreshAuthTokens } from "@/lib/auth/refresh-auth-tokens";
+import { logger } from "@/lib/logger";
 
 const getSafeRedirectToPath = (request: NextRequest): string | null => {
   const url = new URL(request.url);
@@ -25,7 +26,7 @@ export const GET = async (request: NextRequest) => {
           return NextResponse.json(
             { ok: true, status },
             {
-              status: 204,
+              status: 200,
               headers: { "Cache-Control": "no-store" },
             },
           );
@@ -54,7 +55,9 @@ export const GET = async (request: NextRequest) => {
         return NextResponse.redirect(new URL(redirectPath, request.url));
       }
     })
-    .mapLeft(() => {
+    .mapLeft((error) => {
+      logger.error("Failed to refresh tokens in route", error);
+      
       if (skipRedirect) {
         return NextResponse.json(
           { ok: false },

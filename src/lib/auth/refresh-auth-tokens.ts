@@ -20,7 +20,7 @@ export const refreshAuthTokens = ({
   request?: { cookies: NextRequest["cookies"] };
 }): EitherAsync<unknown, { status: RefreshAuthTokensStatus; user: User }> => {
   return EitherAsync(async ({ fromPromise }) => {
-    const userMaybe = await getUser({});
+    const userMaybe = await getUser({ request });
 
     if (userMaybe.isJust()) {
       return { user: userMaybe.extract(), status: "tokensUnchanged" as const };
