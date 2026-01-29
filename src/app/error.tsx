@@ -20,7 +20,6 @@ export default function GlobalError({
       <div className="flex flex-col space-y-1 bg-red-100 text-red-800 p-4 rounded">
         <h2>Something went wrong!</h2>
         <p>{error.message}</p>
-        <p>{String(error)}</p>
       </div>
 
       <Button onClick={() => reset()} variant="primary">

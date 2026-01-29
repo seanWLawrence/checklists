@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
@@ -8,11 +8,13 @@ import { getS3Client } from "./get-s3-client";
 import { logger } from "../../logger";
 import { AWS_BUCKET_NAME } from "@/lib/secrets";
 
-export const getPresignedUrl = ({
-  path,
-  expiresInSeconds = 60,
+export const getPresignedPutObjectUrl = ({
+  filename: path,
+  contentType,
+  expiresInSeconds = 300,
 }: {
-  path: string;
+  filename: string;
+  contentType?: string;
   expiresInSeconds?: number;
 }): EitherAsync<unknown, string> => {
   return EitherAsync(async ({ throwE, fromPromise, liftEither }) => {
@@ -21,16 +23,17 @@ export const getPresignedUrl = ({
 
       const url = await getSignedUrl(
         client,
-        new GetObjectCommand({
+        new PutObjectCommand({
           Bucket: await liftEither(AWS_BUCKET_NAME),
           Key: path,
+          ContentType: contentType,
         }),
         { expiresIn: expiresInSeconds },
       );
 
       return url;
     } catch (error) {
-      logger.error("Error generating presigned URL", error);
+      logger.error("Error generating presigned PUT URL", error);
 
       return throwE(error);
     }

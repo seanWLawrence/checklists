@@ -2,21 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
-import { EitherAsync } from "purify-ts";
+import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { Journal, CreatedAtLocal, Level } from "../journal.types";
+import { Journal, CreatedAtLocal, Level, JournalAsset } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { updateItem } from "@/lib/db/update-item";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
 import { getJournalKey } from "../model/get-journal.model";
 import { createItem } from "@/lib/db/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
-import { getFilesFromFormData } from "@/lib/form-data/get-files-from-form-data";
-import { getAllTranscriptionContents } from "../lib/get-all-transcription-contents";
-import { putJournalAssets } from "../lib/put-journal-assets";
+import { array } from "purify-ts/Codec";
+import { Metadata } from "@/lib/types";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -26,8 +25,8 @@ export const updateJournalAction = async (
       validateUserLoggedIn({ variant: "server-action" }),
     );
 
-    const existingJournal = await liftEither(
-      getJsonFromFormData({ name: "journal", formData, decoder: Journal }),
+    const metadata = await liftEither(
+      getJsonFromFormData({ name: "metadata", formData, decoder: Metadata }),
     );
 
     const existingCreatedAtLocal = await liftEither(
@@ -42,7 +41,7 @@ export const updateJournalAction = async (
       ),
     );
 
-    let content = await liftEither(
+    const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
     );
 
@@ -76,37 +75,15 @@ export const updateJournalAction = async (
         .chain(Level.decode),
     );
 
-    const imageFiles = await liftEither(
-      getFilesFromFormData({
+    const assets = await liftEither(
+      getJsonFromFormData({
         formData,
-        name: "images",
-      }),
-    );
-
-    const audioFiles = await liftEither(
-      getFilesFromFormData({
-        formData,
-        name: "audios",
+        name: "assets",
+        decoder: array(JournalAsset),
       }),
     );
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
-
-    const transcriptionContents = await fromPromise(
-      getAllTranscriptionContents({ formData, audioFiles }),
-    );
-
-    if (transcriptionContents.length > 0) {
-      content = content.trim() + `\n\n${transcriptionContents}`;
-    }
-
-    const { audioAssets, imageAssets } = await fromPromise(
-      putJournalAssets({
-        formData,
-        audioFiles,
-        imageFiles,
-      }),
-    );
 
     if (dateChanged) {
       logger.debug("Date was changed, deleting existing journal");
@@ -124,7 +101,7 @@ export const updateJournalAction = async (
       const journal = await liftEither(
         Journal.decode({
           ...metadataToDatabaseDto({
-            ...existingJournal,
+            ...metadata,
             updatedAtIso: new Date(),
           }),
           user,
@@ -135,14 +112,7 @@ export const updateJournalAction = async (
           healthLevel,
           creativityLevel,
           relationshipsLevel,
-          imageAssets: [
-            ...(existingJournal?.imageAssets ?? []),
-            ...imageAssets,
-          ],
-          audioAssets: [
-            ...(existingJournal?.audioAssets ?? []),
-            ...audioAssets,
-          ],
+          assets,
         }),
       );
 
@@ -183,7 +153,7 @@ export const updateJournalAction = async (
     const journal = await liftEither(
       Journal.decode({
         ...metadataToDatabaseDto({
-          ...existingJournal,
+          ...metadata,
           updatedAtIso: new Date(),
         }),
         user,
@@ -194,8 +164,7 @@ export const updateJournalAction = async (
         healthLevel,
         creativityLevel,
         relationshipsLevel,
-        imageAssets: [...(existingJournal?.imageAssets ?? []), ...imageAssets],
-        audioAssets: [...(existingJournal?.audioAssets ?? []), ...audioAssets],
+        assets,
       }),
     );
 

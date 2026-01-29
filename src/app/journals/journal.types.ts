@@ -69,9 +69,20 @@ export const JournalLevels = Codec.interface({
 
 export type JournalLevels = GetType<typeof JournalLevels>;
 
-const JournalAsset = Codec.interface({
+export const JournalAssetVariant = Codec.custom<"audio" | "image">({
+  decode: (input) =>
+    input === "audio" || input === "image"
+      ? Right(input)
+      : Left(`Invalid asset variant '${input}'`),
+  encode: (input) => input,
+});
+
+export type JournalAssetVariant = GetType<typeof JournalAssetVariant>;
+
+export const JournalAsset = Codec.interface({
   caption: string,
-  path: string,
+  filename: string,
+  variant: JournalAssetVariant,
 });
 
 export type JournalAsset = GetType<typeof JournalAsset>;
@@ -80,8 +91,7 @@ export const JournalBase = intersect(
   Codec.interface({
     content: string,
     createdAtLocal: CreatedAtLocal,
-    imageAssets: optional(array(JournalAsset)),
-    audioAssets: optional(array(JournalAsset)),
+    assets: optional(array(JournalAsset)),
   }),
   JournalLevels,
 );

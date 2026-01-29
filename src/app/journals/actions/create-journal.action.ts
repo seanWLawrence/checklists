@@ -6,16 +6,20 @@ import { EitherAsync, intersect } from "purify-ts";
 
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { CreatedAtLocal, Level, JournalBase } from "../journal.types";
+import {
+  CreatedAtLocal,
+  Level,
+  JournalBase,
+  JournalAsset,
+} from "../journal.types";
 import { validateDateIsUnique } from "../lib/validate-date-is-unique.lib";
 import { createItem } from "@/lib/db/create-item";
 import { getJournalKey } from "../model/get-journal.model";
 import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/db/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { getAllTranscriptionContents } from "../lib/get-all-transcription-contents";
-import { getFilesFromFormData } from "@/lib/form-data/get-files-from-form-data";
-import { putJournalAssets } from "../lib/put-journal-assets";
+import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
+import { array } from "purify-ts/Codec";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -33,7 +37,7 @@ export const createJournalAction = async (
 
     await fromPromise(validateDateIsUnique(createdAtLocal));
 
-    let content = await liftEither(
+    const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
     );
 
@@ -67,33 +71,11 @@ export const createJournalAction = async (
         .chain(Level.decode),
     );
 
-    const imageFiles = await liftEither(
-      getFilesFromFormData({
+    const assets = await liftEither(
+      getJsonFromFormData({
+        name: "assets",
         formData,
-        name: "images",
-      }),
-    );
-
-    const audioFiles = await liftEither(
-      getFilesFromFormData({
-        formData,
-        name: "audios",
-      }),
-    );
-
-    const transcriptionContents = await fromPromise(
-      getAllTranscriptionContents({ formData, audioFiles }),
-    );
-
-    if (transcriptionContents.length > 0) {
-      content = content.trim() + `\n\n${transcriptionContents}`;
-    }
-
-    const { audioAssets, imageAssets } = await fromPromise(
-      putJournalAssets({
-        formData,
-        audioFiles,
-        imageFiles,
+        decoder: array(JournalAsset),
       }),
     );
 
@@ -107,8 +89,7 @@ export const createJournalAction = async (
         healthLevel,
         creativityLevel,
         relationshipsLevel,
-        imageAssets,
-        audioAssets,
+        assets,
       }),
     );
 

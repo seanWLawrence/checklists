@@ -1,6 +1,6 @@
 import { Codec, Either, Maybe, Right, Left } from "purify-ts";
 
-export const getJsonFromFormData = <T extends object>({
+export const getJsonFromFormData = <T extends object | object[]>({
   name,
   formData,
   decoder,
