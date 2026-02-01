@@ -6,7 +6,7 @@ import { Maybe } from "purify-ts/Maybe";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { NextRequest } from "next/server";
 
-export const getCookieFromHeaders = ({
+const getCookieFromHeaders = ({
   name,
 }: {
   name: string;

@@ -5,7 +5,7 @@ import { JournalAsset } from "@/app/journals/journal.types";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 
-export interface AssetListItem extends JournalAsset {
+interface AssetListItem extends JournalAsset {
   previewUrl: string;
 }
 

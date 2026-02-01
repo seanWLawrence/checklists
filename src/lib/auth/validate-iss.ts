@@ -3,7 +3,7 @@ import { Either, Left, Right } from "purify-ts/Either";
 import { Maybe } from "purify-ts/Maybe";
 import { logger } from "../logger";
 
-export interface ValidateIssParams {
+interface ValidateIssParams {
   expectedIssMaybe: Maybe<string>;
   actualIss?: string | string[];
 }

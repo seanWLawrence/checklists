@@ -15,7 +15,7 @@ import { Metadata } from "@/lib/types";
 export type CreatedAtLocal =
   `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
 
-export const dateToCreatedAtLocal = (date: Date): CreatedAtLocal => {
+const dateToCreatedAtLocal = (date: Date): CreatedAtLocal => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
 
@@ -102,7 +102,7 @@ export const Journal = intersect(Metadata, JournalBase);
 
 export type Journal = GetType<typeof Journal>;
 
-export type ExperienceCategory =
+type ExperienceCategory =
   | "fun"
   | "funny"
   | "sad"
@@ -119,7 +119,7 @@ const experienceCategories = new Set<ExperienceCategory>([
   "peaceful",
 ]);
 
-export const ExperienceCategory = Codec.custom({
+const ExperienceCategory = Codec.custom({
   decode: (input) => {
     return typeof input === "string" &&
       experienceCategories.has(input as ExperienceCategory)
@@ -129,18 +129,18 @@ export const ExperienceCategory = Codec.custom({
   encode: (input) => input,
 });
 
-export const ExperienceBase = Codec.interface({
+const ExperienceBase = Codec.interface({
   name: string,
   approximateDate: optional(CreatedAtLocal),
   categories: array(ExperienceCategory),
   content: string,
 });
 
-export type ExperienceBase = GetType<typeof ExperienceBase>;
+type ExperienceBase = GetType<typeof ExperienceBase>;
 
-export const Experience = intersect(Metadata, ExperienceBase);
+const Experience = intersect(Metadata, ExperienceBase);
 
-export type Experience = GetType<typeof Experience>;
+type Experience = GetType<typeof Experience>;
 
 export type JournalLevelsRadarChartDataType = {
   name: string;

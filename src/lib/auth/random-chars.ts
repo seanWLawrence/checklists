@@ -9,7 +9,7 @@ export const randomBytes = (): Uint8Array => {
   return buffer;
 };
 
-export interface RandomCharsParams {
+interface RandomCharsParams {
   randomBytesFn?: () => Uint8Array;
 }
 

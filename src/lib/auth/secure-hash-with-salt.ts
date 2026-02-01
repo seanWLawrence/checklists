@@ -2,7 +2,7 @@ import "server-only";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { randomChars } from "./random-chars";
 
-export const internal__defaultHashFn = ({
+const internal__defaultHashFn = ({
   value,
   salt,
 }: {
@@ -43,13 +43,13 @@ export const internal__defaultHashFn = ({
   });
 };
 
-export interface SecureHashWithSaltParams {
+interface SecureHashWithSaltParams {
   value: string;
   saltFn?: typeof randomChars;
   hashFn?: typeof internal__defaultHashFn;
 }
 
-export interface SecureHashWithSaltPayload {
+interface SecureHashWithSaltPayload {
   hash: string;
   salt: string;
 }

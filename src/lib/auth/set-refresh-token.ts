@@ -17,7 +17,7 @@ import { RefreshToken } from "./auth.types";
 import { metadata } from "../db/metadata.factory";
 import { setCookie } from "./set-cookie";
 
-export interface SetRefreshTokenParams {
+interface SetRefreshTokenParams {
   user: User;
   generateRefreshTokenFn?: typeof randomChars;
   secureHashWithSaltFn?: typeof secureHashWithSalt;

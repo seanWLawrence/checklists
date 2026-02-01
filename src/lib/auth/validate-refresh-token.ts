@@ -10,7 +10,7 @@ import { Either } from "purify-ts/Either";
 import { logger } from "../logger";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
 
-export interface ValidateRefreshTokenParams {
+interface ValidateRefreshTokenParams {
   token: string;
   getSingleItemFn?: typeof getSingleItem;
   secureHashWithSaltFn?: typeof secureHashWithSalt;

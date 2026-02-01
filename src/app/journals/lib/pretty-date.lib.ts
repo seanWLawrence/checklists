@@ -1,7 +1,7 @@
 import { CreatedAtLocal } from "../journal.types";
 import { getDateInfo } from "./get-date-info.lib";
 
-export const months = [
+const months = [
   "January",
   "February",
   "March",

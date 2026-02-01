@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
 import { isProduction } from "../environment";
 
-export const defaultSetCookie = async ({
+const defaultSetCookie = async ({
   cookieName,
   value,
   options,

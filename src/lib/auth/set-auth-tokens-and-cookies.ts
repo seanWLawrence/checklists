@@ -8,7 +8,7 @@ import { AUTH_SECRET } from "@/lib/secrets";
 import { logger } from "../logger";
 import { setRefreshToken } from "./set-refresh-token";
 
-export interface SetAuthTokensAndCookiesParams {
+interface SetAuthTokensAndCookiesParams {
   authSecret: Either<unknown, string>;
   user: User;
   generateAccessJwtFn?: typeof generateAccessJwt;

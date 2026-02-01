@@ -3,7 +3,7 @@ import { Redis } from "@upstash/redis";
 import { Either } from "purify-ts/Either";
 import { isProduction } from "../environment";
 
-export type Client = Redis | typeof kv;
+type Client = Redis | typeof kv;
 
 let client: Client | null = null;
 

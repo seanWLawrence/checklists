@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "tags": ["-lintignore"],
+  "ignoreFiles": ["src/app/sw.ts", "infra/**"],
+  "ignoreDependencies": ["vite", "highlight.js", "postcss-load-config"]
+}
