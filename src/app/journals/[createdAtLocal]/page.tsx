@@ -13,7 +13,7 @@ import { AssetList } from "@/components/asset-list";
 import { Fieldset } from "@/components/fieldset";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 
-const prettyContent = (content: string): React.ReactNode => {
+const prettifyContent = (content: string): React.ReactNode | undefined => {
   return groupJournalContentSections(content)
     .map((sections) => {
       return (
@@ -56,6 +56,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
 
     const journal = await fromPromise(getJournal(createdAtLocal));
     const assets = journal.assets ?? [];
+    const prettyContent = prettifyContent(journal.content);
 
     const assetUrls = await fromPromise(
       EitherAsync.all(
@@ -88,9 +89,9 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <RelativeTime date={journal.updatedAtIso} />
         </div>
 
-        {!!journal.content.trim() && (
+        {!!prettyContent && (
           <Fieldset legend="Content">
-            <div className="space-y-1">{prettyContent(journal.content)}</div>
+            <div className="space-y-1">{prettyContent}</div>
           </Fieldset>
         )}
 
