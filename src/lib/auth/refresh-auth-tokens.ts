@@ -17,7 +17,7 @@ type RefreshAuthTokensStatus = "tokensUnchanged" | "tokensRefreshed";
 export const refreshAuthTokens = ({
   request,
 }: {
-  request?: { cookies: NextRequest["cookies"] };
+  request?: { cookies: NextRequest["cookies"]; url: NextRequest["url"] };
 }): EitherAsync<unknown, { status: RefreshAuthTokensStatus; user: User }> => {
   return EitherAsync(async ({ fromPromise }) => {
     const userMaybe = await getUser({ request });
