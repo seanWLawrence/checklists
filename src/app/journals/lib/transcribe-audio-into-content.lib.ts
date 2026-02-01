@@ -27,6 +27,12 @@ export const transcribeJournalAudioIntoContent = ({
       const transcriptResponse = await transcribe({
         model: openai.transcription("whisper-1"),
         audio: new Uint8Array(await audio.arrayBuffer()),
+        providerOptions: {
+          openai: {
+            prompt:
+              "Please provide a clear and concise transcription of the following audio recording. Remove filler words.",
+          },
+        },
       });
 
       const transcript = transcriptResponse.text.trim();

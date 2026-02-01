@@ -37,7 +37,11 @@ export const JournalFormAssetsAndContent: React.FC<{
 
     const heading = `## From audio - ${asset.caption || asset.filename}`;
     const formatted =
-      `${heading} ${timestamp}\n` + trimmed.split(".").join("\n");
+      `${heading} ${timestamp}\n` +
+      trimmed
+        .split(".")
+        .map((x) => x.trim())
+        .join("\n");
 
     setContent((current) =>
       current ? `${current}\n\n${formatted}` : formatted,
