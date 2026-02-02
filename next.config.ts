@@ -1,6 +1,5 @@
 import { NextConfig } from "next";
 import invariant from "@/lib/invariant";
-import { MAX_AUDIO_SIZE } from "./src/lib/upload.constants";
 import { RemotePattern } from "next/dist/shared/lib/image-config";
 
 invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
@@ -41,12 +40,6 @@ const remotePatterns: RemotePattern[] = [
 ];
 
 export default {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: MAX_AUDIO_SIZE,
-    },
-    proxyClientMaxBodySize: MAX_AUDIO_SIZE,
-  },
   poweredByHeader: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["esbuild-wasm"],
