@@ -7,5 +7,5 @@ aws secretsmanager \
   while IFS= read -r line; do
     key="${line%%=*}"
     value="${line#*=}"
-    npx @dotenvx/dotenvx set "$key" "$value" -f .env
+    npx @dotenvx/dotenvx set "$key" "$value" -f .env.local --plain
   done
