@@ -102,45 +102,46 @@ export const Journal = intersect(Metadata, JournalBase);
 
 export type Journal = GetType<typeof Journal>;
 
-type ExperienceCategory =
-  | "fun"
-  | "funny"
-  | "sad"
-  | "challenging"
-  | "pivotal"
-  | "peaceful";
-
-const experienceCategories = new Set<ExperienceCategory>([
-  "fun",
-  "funny",
-  "sad",
-  "challenging",
-  "pivotal",
-  "peaceful",
-]);
-
-const ExperienceCategory = Codec.custom({
-  decode: (input) => {
-    return typeof input === "string" &&
-      experienceCategories.has(input as ExperienceCategory)
-      ? Right(input)
-      : Left(`Invalid ExperienceCategory: '${input}'`);
-  },
-  encode: (input) => input,
-});
-
-const ExperienceBase = Codec.interface({
-  name: string,
-  approximateDate: optional(CreatedAtLocal),
-  categories: array(ExperienceCategory),
-  content: string,
-});
-
-type ExperienceBase = GetType<typeof ExperienceBase>;
-
-const Experience = intersect(Metadata, ExperienceBase);
-
-type Experience = GetType<typeof Experience>;
+// TODO build this feature out
+// type ExperienceCategory =
+//   | "fun"
+//   | "funny"
+//   | "sad"
+//   | "challenging"
+//   | "pivotal"
+//   | "peaceful";
+//
+// const experienceCategories = new Set<ExperienceCategory>([
+//   "fun",
+//   "funny",
+//   "sad",
+//   "challenging",
+//   "pivotal",
+//   "peaceful",
+// ]);
+//
+// const ExperienceCategory = Codec.custom({
+//   decode: (input) => {
+//     return typeof input === "string" &&
+//       experienceCategories.has(input as ExperienceCategory)
+//       ? Right(input)
+//       : Left(`Invalid ExperienceCategory: '${input}'`);
+//   },
+//   encode: (input) => input,
+// });
+//
+// const ExperienceBase = Codec.interface({
+//   name: string,
+//   approximateDate: optional(CreatedAtLocal),
+//   categories: array(ExperienceCategory),
+//   content: string,
+// });
+//
+// type ExperienceBase = GetType<typeof ExperienceBase>;
+//
+// const Experience = intersect(Metadata, ExperienceBase);
+//
+// type Experience = GetType<typeof Experience>;
 
 export type JournalLevelsRadarChartDataType = {
   name: string;
