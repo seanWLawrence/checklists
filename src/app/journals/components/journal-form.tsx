@@ -2,9 +2,9 @@
 
 import { SubmitButton } from "@/components/submit-button";
 import { Heading } from "@/components/heading";
-import { CreatedAtLocal, Journal } from "../journal.types";
+import { Journal } from "../journal.types";
 import { Label } from "@/components/label";
-import { Input } from "@/components/input";
+import { JournalDateInput } from "./journal-date-input";
 import { DeleteJournalForm } from "../[createdAtLocal]/edit/delete-journal-form";
 import { createJournalAction } from "../actions/create-journal.action";
 import { updateJournalAction } from "../actions/update-journal.action";
@@ -27,8 +27,7 @@ const DEFAULT_TEMPLATE =
 export const JournalForm: React.FC<{
   journal?: Journal;
 }> = async ({ journal }) => {
-  const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
-    const todayLocal = await liftEither(CreatedAtLocal.decode(new Date()));
+  const response = await EitherAsync(async ({ fromPromise }) => {
 
     const sortedAssets = await fromPromise(
       EitherAsync.all(
@@ -60,11 +59,10 @@ export const JournalForm: React.FC<{
         >
           <Fieldset legend={"Main"}>
             <Label label="Date" className="max-w-min">
-              <Input
-                type="date"
-                defaultValue={journal?.createdAtLocal ?? todayLocal}
+              <JournalDateInput
                 name="createdAtLocal"
                 required
+                defaultValue={journal?.createdAtLocal}
               />
             </Label>
           </Fieldset>

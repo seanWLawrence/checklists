@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
 import { PieChart } from "./pie-chart";
-import { LineChart, AverageKey } from "./line-chart";
+import { AverageKey } from "./line-chart";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { PieChartData } from "../../lib/get-pie-chart-data.lib";
 import { stubLineChartData } from "../../lib/line-chart-data.stub";
@@ -51,6 +52,11 @@ const LEVEL_TABS: LevelTab[] = [
     name: "Relationships",
   },
 ];
+
+const LineChart = dynamic(
+  () => import("./line-chart").then((mod) => mod.LineChart),
+  { ssr: false, loading: () => <div className="min-h-[200px]" /> },
+);
 
 // TODO cleanup
 

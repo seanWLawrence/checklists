@@ -5,21 +5,12 @@ import { MenuButton } from "./menu-button";
 import { SubmitButton } from "./submit-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
-import { CreatedAtLocal } from "@/app/journals/journal.types";
+import { JournalAnalyticsLink } from "./journal-analytics-link";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
 }) => {
   const userMaybe = await getUserFn({});
-
-  const now = new Date();
-  const oneMonthAgo = new Date();
-  oneMonthAgo.setMonth(now.getMonth() - 1);
-
-  /**
-   * Using unsafeDecode since the inputs are fully controlled
-   */
-  const defaultJournalAnalyticsSince = `${CreatedAtLocal.unsafeDecode(oneMonthAgo)}to${CreatedAtLocal.unsafeDecode(now)}`;
 
   return (
     <nav className="py-2 px-5 flex space-x-1 items-center w-full">
@@ -59,12 +50,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
 
                 <span>/</span>
 
-                <LinkButton
-                  href={`/journals/analytics/${defaultJournalAnalyticsSince}`}
-                  variant="ghost"
-                >
-                  Analytics
-                </LinkButton>
+                <JournalAnalyticsLink />
               </div>
 
               <div className="flex space-x-1 items-center">

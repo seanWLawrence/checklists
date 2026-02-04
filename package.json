@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "CI=true npm test && npm run lint && npm run knip && next build",
-    "start": "next start",
+    "dev": "next dev",
     "lint": "eslint .",
-    "test": "vitest",
-    "knip": "knip"
+    "knip": "knip",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.14",

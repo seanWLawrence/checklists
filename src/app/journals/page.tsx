@@ -11,20 +11,27 @@ import { parseSinceYear } from "./lib/parse-since-year.lib";
 import { getCreatedAtLocalsForYear } from "./model/get-created-at-locals-for-year.model";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
+import { JournalsYearRedirect } from "./components/journals-year-redirect";
 
 export const dynamic = "force-dynamic";
 
 const Journals: React.FC<{
   searchParams?: Promise<{ sinceYear?: string }>;
 }> = async ({ searchParams }) => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const defaultSinceYear = String(currentYear);
+  const resolvedSearchParams = await searchParams;
+  const rawSinceYear = resolvedSearchParams?.sinceYear;
+
+  if (!rawSinceYear || rawSinceYear.trim() === "") {
+    return (
+      <main className="space-y-2">
+        <Heading level={1}>Journals</Heading>
+        <JournalsYearRedirect />
+      </main>
+    );
+  }
 
   const page = await EitherAsync(async ({ fromPromise }) => {
-    const resolvedSearchParams = await searchParams;
-    const rawSinceYear = resolvedSearchParams?.sinceYear;
-    const sinceYear = parseSinceYear(rawSinceYear).orDefault(defaultSinceYear);
+    const sinceYear = parseSinceYear(rawSinceYear).orDefault(rawSinceYear);
 
     const createdAtLocals = await fromPromise(
       getCreatedAtLocalsForYear({ year: sinceYear }),
