@@ -9,6 +9,8 @@ import {
   JournalAssetVariant,
 } from "@/app/journals/journal.types";
 import { logger } from "@/lib/logger";
+import { Image } from "@/components/image";
+import { Audio } from "@/components/audio";
 import {
   AssetsPresignPutObjectBody,
   AssetsPresignPutObjectResponse,
@@ -16,8 +18,20 @@ import {
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Maybe } from "purify-ts/Maybe";
 
-interface AssetItem extends JournalAsset {
+interface UploadedAssetItem extends JournalAsset {
   previewUrl: string;
+}
+
+type UploadStatus = "uploading" | "error";
+
+interface UploadItem {
+  localId: string;
+  file: File;
+  previewUrl: string;
+  caption: string;
+  variant: JournalAssetVariant;
+  status: UploadStatus;
+  error?: string;
 }
 
 const getVariant = (file: File): JournalAssetVariant | null => {
@@ -34,57 +48,65 @@ const getVariant = (file: File): JournalAssetVariant | null => {
 
 export const AssetManager: React.FC<{
   name: string;
-  initialAssets: AssetItem[];
-  onTranscribeChange?: (asset: AssetItem, text: string) => void;
-}> = ({ name, initialAssets, onTranscribeChange }) => {
+  initialUploadedAssets: UploadedAssetItem[];
+  onTranscribeChangeAction?: (
+    uploadedAsset: UploadedAssetItem,
+    text: string,
+  ) => void;
+}> = ({ name, initialUploadedAssets, onTranscribeChangeAction }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [assets, setAssets] = useState<AssetItem[]>(initialAssets);
+  const [uploadedAssets, setUploadedAssets] = useState<UploadedAssetItem[]>(
+    initialUploadedAssets,
+  );
+  // For UI while uploading files, i.e. error handling, previews, etc. before it's in S3
+  const [unsavedUploads, setUnsavedUploads] = useState<UploadItem[]>([]);
   const [transcribeStatusByFilename, setTranscribeStatusByFilename] = useState<
     Record<string, "idle" | "loading" | "done" | "error">
   >({});
 
   useEffect(() => {
     return () => {
-      assets.forEach((asset) => {
+      uploadedAssets.forEach((asset) => {
         URL.revokeObjectURL(asset.previewUrl);
       });
+
+      unsavedUploads.forEach((upload) => {
+        URL.revokeObjectURL(upload.previewUrl);
+      });
     };
-  }, [assets]);
+  }, [uploadedAssets, unsavedUploads]);
 
   const serializedAssets = useMemo(() => {
     return JSON.stringify(
-      assets.map((asset) => ({
+      uploadedAssets.map((asset) => ({
         caption: asset.caption,
         filename: asset.filename,
         variant: asset.variant,
       })),
     );
-  }, [assets]);
+  }, [uploadedAssets]);
 
   const onAddFilesClick = () => {
     inputRef.current?.click();
   };
 
-  const onRecordAudio = async (file: File | null) => {
+  const onRecordAudioFinished = async (file: File | null) => {
     if (!file) {
       return;
     }
 
-    const response = await uploadFile(file).run();
-    if (response.isLeft()) {
-      logger.error("Failed to upload recorded audio", response.extract());
-    }
+    startUpload(file);
   };
 
-  const uploadFile = (file: File): EitherAsync<unknown, void> => {
+  const uploadFile = (
+    file: File,
+  ): EitherAsync<unknown, { filename: string }> => {
     return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
       const variant = await liftEither(
         Maybe.fromNullable(getVariant(file)).toEither(
           "Missing or invalid file type.",
         ),
       );
-
-      const previewUrl = URL.createObjectURL(file);
 
       try {
         const body = await liftEither(
@@ -105,6 +127,7 @@ export const AssetManager: React.FC<{
 
         if (!presignPutResponse.ok) {
           logger.error(presignPutResponse);
+
           return throwE("Failed to fetch presigned URL");
         }
 
@@ -128,17 +151,8 @@ export const AssetManager: React.FC<{
           return throwE("Failed to upload asset.");
         }
 
-        setAssets((current) => [
-          ...current,
-          {
-            filename,
-            variant,
-            caption: file.name,
-            previewUrl,
-          },
-        ]);
+        return { filename };
       } catch (error) {
-        URL.revokeObjectURL(previewUrl);
         logger.error("Failed to upload assets", error);
 
         return throwE(error);
@@ -146,16 +160,84 @@ export const AssetManager: React.FC<{
     });
   };
 
+  const startUpload = (file: File) => {
+    const variant = getVariant(file);
+
+    if (!variant) {
+      logger.error("Missing or invalid file type.");
+
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    const localId = `${file.name}-${file.size}-${file.lastModified}`;
+    const uploadItem: UploadItem = {
+      localId,
+      file,
+      previewUrl,
+      caption: file.name,
+      variant,
+      status: "uploading",
+    };
+
+    setUnsavedUploads((current) => [...current, uploadItem]);
+
+    void performUpload(uploadItem);
+  };
+
+  const performUpload = async (upload: UploadItem) => {
+    setUnsavedUploads((current) =>
+      current.map((item) =>
+        item.localId === upload.localId
+          ? { ...item, status: "uploading", error: undefined }
+          : item,
+      ),
+    );
+
+    const response = await uploadFile(upload.file).run();
+
+    response.caseOf({
+      Left: (error) => {
+        const errorMessage = String(error);
+        logger.error("Failed to upload assets", errorMessage);
+
+        setUnsavedUploads((current) =>
+          current.map((item) =>
+            item.localId === upload.localId
+              ? { ...item, status: "error", error: errorMessage }
+              : item,
+          ),
+        );
+      },
+      Right: ({ filename }) => {
+        setUploadedAssets((current) => [
+          ...current,
+          {
+            filename,
+            variant: upload.variant,
+            caption: upload.caption,
+            previewUrl: upload.previewUrl,
+          },
+        ]);
+
+        setUnsavedUploads((current) =>
+          current.filter((item) => item.localId !== upload.localId),
+        );
+      },
+    });
+  };
+
+  const removeUpload = (upload: UploadItem) => {
+    URL.revokeObjectURL(upload.previewUrl);
+    setUnsavedUploads((current) =>
+      current.filter((item) => item.localId !== upload.localId),
+    );
+  };
+
   const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
 
-    const response = await EitherAsync.all(
-      files.map((file) => uploadFile(file)),
-    );
-
-    if (response.isLeft()) {
-      throw new Error(String(response.extract()));
-    }
+    files.forEach((file) => startUpload(file));
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -163,7 +245,7 @@ export const AssetManager: React.FC<{
   };
 
   const onRemoveClick = async (
-    asset: Pick<AssetItem, "filename" | "previewUrl">,
+    asset: Pick<UploadedAssetItem, "filename" | "previewUrl">,
   ) => {
     const response = await fetch(
       `/api/assets/${encodeURIComponent(asset.filename)}`,
@@ -178,12 +260,12 @@ export const AssetManager: React.FC<{
     }
 
     URL.revokeObjectURL(asset.previewUrl);
-    setAssets((current) =>
+    setUploadedAssets((current) =>
       current.filter((item) => item.filename !== asset.filename),
     );
   };
 
-  const onTranscribeClick = async (asset: AssetItem) => {
+  const onTranscribeClick = async (asset: UploadedAssetItem) => {
     setTranscribeStatusByFilename((current) => ({
       ...current,
       [asset.filename]: "loading",
@@ -205,7 +287,7 @@ export const AssetManager: React.FC<{
 
     const json = await response.json();
     if (typeof json?.text === "string") {
-      onTranscribeChange?.(asset, json.text);
+      onTranscribeChangeAction?.(asset, json.text);
       setTranscribeStatusByFilename((current) => ({
         ...current,
         [asset.filename]: "done",
@@ -219,8 +301,8 @@ export const AssetManager: React.FC<{
     }));
   };
 
-  const onCaptionChange = (asset: AssetItem, caption: string) => {
-    setAssets((current) =>
+  const onCaptionChange = (asset: UploadedAssetItem, caption: string) => {
+    setUploadedAssets((current) =>
       current.map((item) =>
         item.filename === asset.filename ? { ...item, caption } : item,
       ),
@@ -246,8 +328,54 @@ export const AssetManager: React.FC<{
         className="sr-only"
       />
 
+      {unsavedUploads.length > 0 && (
+        <div className="space-y-4">
+          {unsavedUploads.map((upload) => (
+            <div key={upload.localId} className="space-y-2">
+              <div className="flex items-end justify-between text-xs text-zinc-900 dark:text-zinc-100 pb-1">
+                <p className="truncate -mb-1">{upload.caption}</p>
+                <div className="flex space-x-1">
+                  {upload.status === "error" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs"
+                      onClick={() => performUpload(upload)}
+                    >
+                      Retry
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-xs"
+                    onClick={() => removeUpload(upload)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+
+              {upload.variant === "image" ? (
+                <Image src={upload.previewUrl} alt={upload.caption} />
+              ) : (
+                <Audio src={upload.previewUrl} />
+              )}
+
+              <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                {upload.status === "uploading" && "Uploading..."}
+                {upload.status === "error" &&
+                  (upload.error
+                    ? `Upload failed: ${upload.error}`
+                    : "Upload failed.")}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <AssetList
-        assets={assets}
+        assets={uploadedAssets}
         onRemoveClick={onRemoveClick}
         onCaptionChange={onCaptionChange}
         onTranscribeClick={onTranscribeClick}
@@ -259,7 +387,7 @@ export const AssetManager: React.FC<{
           Add files
         </Button>
 
-        <AudioRecorderInput onChange={onRecordAudio} />
+        <AudioRecorderInput onChange={onRecordAudioFinished} />
       </div>
     </div>
   );

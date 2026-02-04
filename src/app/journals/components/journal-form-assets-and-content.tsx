@@ -68,8 +68,8 @@ export const JournalFormAssetsAndContent: React.FC<{
       <Fieldset legend="Assets" className="max-w-prose w-full">
         <AssetManager
           name={assetsName}
-          initialAssets={initialAssets}
-          onTranscribeChange={onTranscribeChange}
+          initialUploadedAssets={initialAssets}
+          onTranscribeChangeAction={onTranscribeChange}
         />
       </Fieldset>
     </>
