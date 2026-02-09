@@ -22,6 +22,28 @@ const canRecordAudio = (): boolean => {
   );
 };
 
+const getPreferredMimeType = (): string | undefined => {
+  if (typeof window === "undefined" || !("MediaRecorder" in window)) {
+    return undefined;
+  }
+
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/ogg;codecs=opus",
+    "audio/webm",
+    "audio/ogg",
+  ];
+
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type));
+};
+
+const formatTimestamp = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${hours}:${minutes}`;
+};
+
 export const AudioRecorderInput: React.FC<{
   onChange: (file: File | null) => void;
 }> = ({ onChange }) => {
@@ -76,9 +98,17 @@ export const AudioRecorderInput: React.FC<{
     handleFileChange(null);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+        },
+      });
       streamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+      const preferredMimeType = getPreferredMimeType();
+      const recorder = new MediaRecorder(stream, {
+        mimeType: preferredMimeType,
+        audioBitsPerSecond: 64_000,
+      });
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -100,7 +130,7 @@ export const AudioRecorderInput: React.FC<{
           recorder.mimeType || chunksRef.current[0]?.type || "audio/webm";
         const blob = new Blob(chunksRef.current, { type: mimeType });
         const extension = getExtensionForMime(mimeType);
-        const filename = `journal-audio-${Date.now()}.${extension}`;
+        const filename = `${formatTimestamp(new Date())}.${extension}`;
         const file = new File([blob], filename, { type: mimeType });
 
         handleFileChange(file);
