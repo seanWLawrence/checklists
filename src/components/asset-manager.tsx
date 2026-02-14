@@ -314,7 +314,7 @@ export const AssetManager: React.FC<{
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,audio/*,.mp3,audio/mpeg"
+        accept="image/*,audio/*,.mp3,.wav,audio/mpeg"
         className="sr-only"
         onChange={onChange}
         multiple
