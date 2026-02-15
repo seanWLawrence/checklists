@@ -28,6 +28,14 @@ export const AWS_BUCKET_NAME = Maybe.fromNullable(
   process.env.AWS_BUCKET_NAME,
 ).toEither("Missing AWS_BUCKET_NAME");
 
+export const AWS_JOURNAL_VECTOR_BUCKET_NAME = Maybe.fromNullable(
+  process.env.AWS_JOURNAL_VECTOR_BUCKET_NAME,
+).toEither("Missing AWS_JOURNAL_VECTOR_BUCKET_NAME");
+
+export const AWS_JOURNAL_VECTOR_INDEX_NAME = Maybe.fromNullable(
+  process.env.AWS_JOURNAL_VECTOR_INDEX_NAME,
+).toEither("Missing AWS_JOURNAL_VECTOR_INDEX_NAME");
+
 // Local MiniIO endpoint for non-production environments
 export const AWS_ENDPOINT = isProduction()
   ? undefined

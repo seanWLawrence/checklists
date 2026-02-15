@@ -5,7 +5,6 @@ import { S3ClientConfig } from "@aws-sdk/client-s3";
 
 import {
   AWS_ACCESS_KEY_ID,
-  AWS_ENDPOINT,
   AWS_REGION,
   AWS_ROLE_ARN,
   AWS_ROLE_DURATION_SECONDS,
@@ -13,19 +12,21 @@ import {
   AWS_SECRET_ACCESS_KEY,
 } from "@/lib/secrets";
 import { EitherAsync } from "purify-ts/EitherAsync";
-export const getClientConfiguration = (): EitherAsync<
-  unknown,
-  S3ClientConfig
-> => {
+
+export const getClientConfiguration = ({
+  endpoint = undefined,
+}: {
+  endpoint?: string;
+} = {}): EitherAsync<unknown, S3ClientConfig> => {
   return EitherAsync(async ({ liftEither }) => {
     const region = await liftEither(AWS_REGION);
     const accessKeyId = await liftEither(AWS_ACCESS_KEY_ID);
     const secretAccessKey = await liftEither(AWS_SECRET_ACCESS_KEY);
 
-    if (AWS_ENDPOINT) {
+    if (endpoint) {
       return {
         region,
-        endpoint: AWS_ENDPOINT,
+        endpoint,
         forcePathStyle: true,
         credentials: { accessKeyId: "minio", secretAccessKey: "minio123" },
       };

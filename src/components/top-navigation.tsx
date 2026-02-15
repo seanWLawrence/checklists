@@ -51,6 +51,12 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 <span>/</span>
 
                 <JournalAnalyticsLink />
+
+                <span>/</span>
+
+                <LinkButton href="/journals/embeddings" variant="ghost">
+                  Embeddings
+                </LinkButton>
               </div>
 
               <div className="flex space-x-1 items-center">
