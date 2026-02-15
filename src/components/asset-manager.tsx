@@ -55,6 +55,8 @@ export const AssetManager: React.FC<{
   ) => void;
 }> = ({ name, initialUploadedAssets, onTranscribeChangeAction }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadedAssetsRef = useRef<UploadedAssetItem[]>(initialUploadedAssets);
+  const unsavedUploadsRef = useRef<UploadItem[]>([]);
   const [uploadedAssets, setUploadedAssets] = useState<UploadedAssetItem[]>(
     initialUploadedAssets,
   );
@@ -65,16 +67,30 @@ export const AssetManager: React.FC<{
   >({});
 
   useEffect(() => {
+    uploadedAssetsRef.current = uploadedAssets;
+  }, [uploadedAssets]);
+
+  useEffect(() => {
+    unsavedUploadsRef.current = unsavedUploads;
+  }, [unsavedUploads]);
+
+  const revokePreviewUrl = (previewUrl: string) => {
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  };
+
+  useEffect(() => {
     return () => {
-      uploadedAssets.forEach((asset) => {
-        URL.revokeObjectURL(asset.previewUrl);
+      uploadedAssetsRef.current.forEach((asset) => {
+        revokePreviewUrl(asset.previewUrl);
       });
 
-      unsavedUploads.forEach((upload) => {
-        URL.revokeObjectURL(upload.previewUrl);
+      unsavedUploadsRef.current.forEach((upload) => {
+        revokePreviewUrl(upload.previewUrl);
       });
     };
-  }, [uploadedAssets, unsavedUploads]);
+  }, []);
 
   const serializedAssets = useMemo(() => {
     return JSON.stringify(
@@ -228,7 +244,7 @@ export const AssetManager: React.FC<{
   };
 
   const removeUpload = (upload: UploadItem) => {
-    URL.revokeObjectURL(upload.previewUrl);
+    revokePreviewUrl(upload.previewUrl);
     setUnsavedUploads((current) =>
       current.filter((item) => item.localId !== upload.localId),
     );
@@ -259,7 +275,7 @@ export const AssetManager: React.FC<{
       return;
     }
 
-    URL.revokeObjectURL(asset.previewUrl);
+    revokePreviewUrl(asset.previewUrl);
     setUploadedAssets((current) =>
       current.filter((item) => item.filename !== asset.filename),
     );
