@@ -59,7 +59,11 @@ export class VectorConstruct extends Construct {
     const policyDocument = new iam.PolicyDocument({
       statements: [
         new iam.PolicyStatement({
-          actions: ["s3vectors:QueryVectors", "s3vectors:GetVectors"],
+          actions: [
+            "s3vectors:QueryVectors",
+            "s3vectors:GetVectors",
+            "s3vectors:PutVectors",
+          ],
           resources: [
             this.vectorBucket.attrVectorBucketArn,
             this.index.attrIndexArn,
