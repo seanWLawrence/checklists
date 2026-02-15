@@ -25,6 +25,13 @@ export class SecretConstruct extends Construct {
       props.journalVectorBucket.vectorBucketName ??
       props.journalVectorBucket.ref;
 
+    const journalVectorIndexName =
+      props.journalVectorIndexName.indexName ??
+      cdk.Fn.select(
+        1,
+        cdk.Fn.split("/index/", props.journalVectorIndexName.attrIndexArn),
+      );
+
     assert(journalVectorBucketName, "Vector bucket name is required");
 
     this.secret = new secretsManager.Secret(this, "secret", {
@@ -46,7 +53,7 @@ export class SecretConstruct extends Construct {
           journalVectorBucketName,
         ),
         AWS_JOURNAL_VECTOR_INDEX_NAME: cdk.SecretValue.unsafePlainText(
-          props.journalVectorIndexName.ref,
+          journalVectorIndexName,
         ),
         AWS_JOURNAL_VECTOR_DIMENSION: cdk.SecretValue.unsafePlainText(
           get("AWS_JOURNAL_VECTOR_DIMENSION")!,
