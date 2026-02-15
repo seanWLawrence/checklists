@@ -27,12 +27,22 @@ const getPreferredMimeType = (): string | undefined => {
     return undefined;
   }
 
-  const candidates = [
+  const ua = navigator.userAgent;
+  const isSafari =
+    /Safari/i.test(ua) &&
+    !/Chrome|Chromium|CriOS|Edg|OPR/i.test(ua);
+
+  const safariCandidates = ["audio/mp4;codecs=mp4a.40.2", "audio/mp4"];
+  const defaultCandidates = [
     "audio/webm;codecs=opus",
     "audio/ogg;codecs=opus",
     "audio/webm",
     "audio/ogg",
   ];
+
+  const candidates = isSafari
+    ? [...safariCandidates, ...defaultCandidates]
+    : [...defaultCandidates, ...safariCandidates];
 
   return candidates.find((type) => MediaRecorder.isTypeSupported(type));
 };
