@@ -1,3 +1,14 @@
+if [ -z "$AWS_SECRET_NAME" ]; then
+  AWS_SECRET_NAME=$(
+    npx @dotenvx/dotenvx get AWS_SECRET_NAME -f .env.local --quiet 2>/dev/null
+  )
+fi
+
+if [ -z "$AWS_SECRET_NAME" ]; then
+  echo "Missing AWS_SECRET_NAME. Set it in .env.local or export it in the shell." >&2
+  exit 1
+fi
+
 aws secretsmanager \
   get-secret-value \
   --secret-id "$AWS_SECRET_NAME" \
