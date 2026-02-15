@@ -14,15 +14,15 @@ export const THIRTY_DAYS_IN_MILLISECONDS = THIRTY_DAYS_IN_SECONDS * 1000;
 
 export const JWT_ALGORITHM = "HS256";
 
-export const ACCESS_JWT_COOKIE_NAME = Maybe.fromNullable(
-  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+export const ACCESS_JWT_COOKIE_NAME = Maybe.fromFalsy(
+  process.env.NODE_ENV === "production",
 )
   .map(() => "__Host-session")
   // Localhost doesn't work with Host__ prefix
   .orDefault("session");
 
-export const REFRESH_TOKEN_COOKIE_NAME = Maybe.fromNullable(
-  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+export const REFRESH_TOKEN_COOKIE_NAME = Maybe.fromFalsy(
+  process.env.NODE_ENV === "production",
 )
   .map(() => "__Host-refresh")
   // Localhost doesn't work with Host__ prefix

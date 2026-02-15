@@ -5,6 +5,10 @@ import { RemotePattern } from "next/dist/shared/lib/image-config";
 invariant(process.env.OPENAI_API_KEY, "Missing OPENAI_API_KEY");
 invariant(process.env.AWS_BUCKET_NAME, "Missing AWS_BUCKET_NAME");
 invariant(process.env.AWS_REGION, "Missing AWS_REGION");
+invariant(
+  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  "Missing VERCEL_PROJECT_PRODUCTION_URL",
+);
 
 // TODO: remove need for unsafe-inline for the PWA to work
 
@@ -60,7 +64,7 @@ export default {
       { key: "Strict-Transport-Security", value: "max-age=31536000" },
     ];
 
-    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    if (process.env.NODE_ENV === "production") {
       headers.push({
         key: "Access-Control-Allow-Origin",
         value: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
