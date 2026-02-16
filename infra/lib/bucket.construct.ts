@@ -20,7 +20,11 @@ export class BucketConstruct extends Construct {
       "VERCEL_PROJECT_PRODUCTION_URL env var is required for S3 CORS.",
     );
 
-    const appOrigin = `https://${productionHost}`;
+    const normalizedHost = productionHost
+      .replace(/^https?:\/\//, "")
+      .replace(/\/+$/, "");
+
+    const appOrigin = `https://${normalizedHost}`;
 
     this.bucket = new s3.Bucket(this, "bucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
