@@ -12,6 +12,12 @@ import { RelativeTime } from "@/components/relative-time";
 import { AssetList } from "@/components/asset-list";
 import { Fieldset } from "@/components/fieldset";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
+import {
+  getCompletedHabitLabels,
+  JOURNAL_HABIT_FIELDS,
+} from "../lib/journal-habits";
+import { SubmitButton } from "@/components/submit-button";
+import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
 
 const prettifyContent = (content: string): React.ReactNode | undefined => {
   return groupJournalContentSections(content)
@@ -57,6 +63,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     const journal = await fromPromise(getJournal(createdAtLocal));
     const assets = journal.assets ?? [];
     const prettyContent = prettifyContent(journal.content);
+    const completedHabits = getCompletedHabitLabels(journal.habits);
 
     const assetUrls = await fromPromise(
       EitherAsync.all(
@@ -92,6 +99,70 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
         {!!prettyContent && (
           <Fieldset legend="Content">
             <div className="space-y-1">{prettyContent}</div>
+          </Fieldset>
+        )}
+
+        <Fieldset legend="AI analysis">
+          <div className="space-y-2 text-sm">
+            {journal.dailySummary && (
+              <div>
+                <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Daily summary
+                </p>
+                <p>{journal.dailySummary}</p>
+              </div>
+            )}
+
+            {journal.sentiment && (
+              <div>
+                <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Sentiment
+                </p>
+                <p>
+                  {journal.sentiment.label} ({journal.sentiment.valence.toFixed(2)})
+                  {typeof journal.sentiment.confidence === "number"
+                    ? ` • confidence ${Math.round(journal.sentiment.confidence * 100)}%`
+                    : ""}
+                </p>
+              </div>
+            )}
+
+            {!journal.dailySummary && !journal.sentiment && (
+              <p className="text-zinc-600 dark:text-zinc-300">
+                No AI analysis yet.
+              </p>
+            )}
+
+            <form action={regenerateJournalAnalysisAction} className="pt-1">
+              <input
+                type="hidden"
+                name="createdAtLocal"
+                value={journal.createdAtLocal}
+              />
+
+              {JOURNAL_HABIT_FIELDS.filter(({ key }) => journal.habits?.[key]).map(
+                ({ key }) => (
+                  <input key={key} type="hidden" name={key} value="true" />
+                ),
+              )}
+
+              <SubmitButton variant="outline">Regenerate analysis</SubmitButton>
+            </form>
+          </div>
+        </Fieldset>
+
+        {completedHabits.length > 0 && (
+          <Fieldset legend="Habits">
+            <ul className="flex flex-wrap gap-2">
+              {completedHabits.map((habit) => (
+                <li
+                  key={habit}
+                  className="rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs"
+                >
+                  {habit}
+                </li>
+              ))}
+            </ul>
           </Fieldset>
         )}
 

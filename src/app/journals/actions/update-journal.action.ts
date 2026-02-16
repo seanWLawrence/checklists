@@ -17,6 +17,8 @@ import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { array } from "purify-ts/Codec";
 import { Metadata } from "@/lib/types";
 import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
+import { getJournalHabitsFromFormData } from "../lib/journal-habits";
+import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -84,6 +86,10 @@ export const updateJournalAction = async (
       }),
     );
 
+    const habits = getJournalHabitsFromFormData({ formData });
+
+    const analysis = await getJournalAiAnalysis({ content, habits });
+
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
     if (dateChanged) {
@@ -114,6 +120,7 @@ export const updateJournalAction = async (
           creativityLevel,
           relationshipsLevel,
           assets,
+          ...analysis,
         }),
       );
 
@@ -166,6 +173,7 @@ export const updateJournalAction = async (
         creativityLevel,
         relationshipsLevel,
         assets,
+        ...analysis,
       }),
     );
 

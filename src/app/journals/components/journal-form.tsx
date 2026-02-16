@@ -12,6 +12,7 @@ import { Fieldset } from "@/components/fieldset";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 import { JournalFormAssetsAndContent } from "./journal-form-assets-and-content";
+import { JOURNAL_HABIT_FIELDS } from "../lib/journal-habits";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -127,6 +128,26 @@ export const JournalForm: React.FC<{
                 required
               />
             </Label>
+          </Fieldset>
+
+          <Fieldset legend="Habits">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {JOURNAL_HABIT_FIELDS.map(({ key, label }) => (
+                <label
+                  key={key}
+                  className="inline-flex items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name={key}
+                    value="true"
+                    defaultChecked={Boolean(journal?.habits?.[key])}
+                    className="accent-blue-500"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
           </Fieldset>
 
           {journal && (

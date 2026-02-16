@@ -21,6 +21,8 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { array } from "purify-ts/Codec";
 import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
+import { getJournalHabitsFromFormData } from "../lib/journal-habits";
+import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -80,6 +82,10 @@ export const createJournalAction = async (
       }),
     );
 
+    const habits = getJournalHabitsFromFormData({ formData });
+
+    const analysis = await getJournalAiAnalysis({ content, habits });
+
     const journal = await liftEither(
       intersect(JournalBase, Metadata).decode({
         ...metadata(user),
@@ -91,6 +97,7 @@ export const createJournalAction = async (
         creativityLevel,
         relationshipsLevel,
         assets,
+        ...analysis,
       }),
     );
 

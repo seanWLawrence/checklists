@@ -5,6 +5,7 @@ import {
   intersect,
   optional,
   array,
+  boolean as booleanCodec,
 } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 import { Metadata } from "@/lib/types";
@@ -69,6 +70,103 @@ export const JournalLevels = Codec.interface({
 
 export type JournalLevels = GetType<typeof JournalLevels>;
 
+export type SentimentLabel = "negative" | "mixed" | "neutral" | "positive";
+
+const sentimentLabels = new Set<SentimentLabel>([
+  "negative",
+  "mixed",
+  "neutral",
+  "positive",
+]);
+
+export const SentimentLabel = Codec.custom<SentimentLabel>({
+  decode: (input) =>
+    typeof input === "string" && sentimentLabels.has(input as SentimentLabel)
+      ? Right(input as SentimentLabel)
+      : Left(`Invalid sentiment label '${input}'`),
+  encode: (input) => input,
+});
+
+export const SentimentValence = Codec.custom<number>({
+  decode: (input) => {
+    const val = Number(input);
+    return Number.isFinite(val) && val >= -1 && val <= 1
+      ? Right(val)
+      : Left(`Invalid sentiment valence '${input}' (expected -1..1)`);
+  },
+  encode: (input) => input,
+});
+
+export const SentimentConfidence = Codec.custom<number>({
+  decode: (input) => {
+    const val = Number(input);
+    return Number.isFinite(val) && val >= 0 && val <= 1
+      ? Right(val)
+      : Left(`Invalid sentiment confidence '${input}' (expected 0..1)`);
+  },
+  encode: (input) => input,
+});
+
+export const JournalSentiment = Codec.interface({
+  valence: SentimentValence,
+  label: SentimentLabel,
+  confidence: optional(SentimentConfidence),
+});
+
+export type JournalSentiment = GetType<typeof JournalSentiment>;
+
+export const JournalHabits = Codec.interface({
+  strengthTraining: optional(booleanCodec),
+  martialArts: optional(booleanCodec),
+  cardio: optional(booleanCodec),
+  mindfulness: optional(booleanCodec),
+  coldExposure: optional(booleanCodec),
+  stretch: optional(booleanCodec),
+  breathwork: optional(booleanCodec),
+  music: optional(booleanCodec),
+  woodworking: optional(booleanCodec),
+  writing: optional(booleanCodec),
+  reading: optional(booleanCodec),
+  filming: optional(booleanCodec),
+  learning: optional(booleanCodec),
+  followSleepSchedule: optional(booleanCodec),
+});
+
+export type JournalHabits = GetType<typeof JournalHabits>;
+
+export const AnalysisUpdatedAtIso = Codec.custom<string>({
+  decode: (input) => {
+    if (typeof input === "string" && !Number.isNaN(new Date(input).getTime())) {
+      return Right(new Date(input).toISOString());
+    }
+    if (input instanceof Date && !Number.isNaN(input.getTime())) {
+      return Right(input.toISOString());
+    }
+    return Left(`Invalid analysisUpdatedAt '${input}'`);
+  },
+  encode: (input) => input,
+});
+
+export const AnalysisVersion = Codec.custom<number>({
+  decode: (input) => {
+    const val = Number(input);
+    return Number.isInteger(val) && val > 0
+      ? Right(val)
+      : Left(`Invalid analysisVersion '${input}'`);
+  },
+  encode: (input) => input,
+});
+
+export const JournalAnalysis = Codec.interface({
+  dailySummary: optional(string),
+  sentiment: optional(JournalSentiment),
+  habits: optional(JournalHabits),
+  analysisUpdatedAt: optional(AnalysisUpdatedAtIso),
+  analysisVersion: optional(AnalysisVersion),
+});
+
+export type JournalAnalysis = GetType<typeof JournalAnalysis>;
+
 export const JournalAssetVariant = Codec.custom<"audio" | "image">({
   decode: (input) =>
     input === "audio" || input === "image"
@@ -88,12 +186,15 @@ export const JournalAsset = Codec.interface({
 export type JournalAsset = GetType<typeof JournalAsset>;
 
 export const JournalBase = intersect(
-  Codec.interface({
-    content: string,
-    createdAtLocal: CreatedAtLocal,
-    assets: optional(array(JournalAsset)),
-  }),
-  JournalLevels,
+  intersect(
+    Codec.interface({
+      content: string,
+      createdAtLocal: CreatedAtLocal,
+      assets: optional(array(JournalAsset)),
+    }),
+    JournalLevels,
+  ),
+  JournalAnalysis,
 );
 
 export type JournalBase = GetType<typeof JournalBase>;
