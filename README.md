@@ -65,6 +65,57 @@ to see how well I do over time, we'll see!
   when you push to the repo
 - Infrastructure (CDK) deploy setup lives in `docs/infra-ci-setup.md`
 
+## Vercel environment variables
+
+Set these in your Vercel project for Production (and Preview if you want those
+deployments to fully work with AWS + embeddings too).
+
+### Required
+
+- `AUTH_SECRET`
+  - Password/JWT signing secret used by auth flows.
+- `APP_ENV`
+  - Use `prod` in production deployments.
+- `VERCEL_PROJECT_PRODUCTION_URL`
+  - Your production host name (for example `app.example.com`, no protocol).
+- `OPENAI_API_KEY`
+  - Required for journal embeddings and audio transcription.
+- `AWS_REGION`
+  - AWS region for S3/S3 Vectors clients (example: `us-east-1`).
+- `AWS_ACCESS_KEY_ID`
+  - Access key used as master credentials for role assumption.
+- `AWS_SECRET_ACCESS_KEY`
+  - Secret for the above access key.
+- `AWS_ROLE_ARN`
+  - Role ARN the app assumes for AWS operations.
+- `AWS_BUCKET_NAME`
+  - S3 bucket name used for journal/checklist asset uploads.
+- `AWS_JOURNAL_VECTOR_BUCKET_NAME`
+  - S3 Vector bucket name for journal embeddings.
+- `AWS_JOURNAL_VECTOR_INDEX_NAME`
+  - S3 Vector index name used for query/upsert/delete.
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+  - Embedding dimension (must match your index, example: `1024`).
+
+### Required via Vercel KV integration
+
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+
+If you connect Vercel KV through the Vercel integration, these are usually
+added automatically.
+
+### Optional tuning
+
+- `JOURNAL_VECTOR_TOP_K`
+  - Candidate count before post-filtering (default `40`).
+- `JOURNAL_VECTOR_MAX_DISTANCE`
+  - Distance cutoff for semantic matches (default `0.9`).
+- `LOG_LEVEL`
+  - Logger level (default `info`).
+- `NEXT_PUBLIC_THEME_OVERRIDE`
+  - Optional client theme override.
+
 ## Technology
 
 - Next.js/React
