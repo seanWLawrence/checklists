@@ -5,14 +5,20 @@ import { InfraStack } from "../lib/infra.stack";
 import { get } from "@dotenvx/dotenvx";
 import assert from "node:assert";
 
-assert(get("AWS_ACCOUNT"), "Missing AWS_ACCOUNT in CDK");
-assert(get("AWS_REGION"), "Missing AWS_REGION in CDK");
+const account = get("AWS_ACCOUNT");
+const region = get("AWS_REGION");
+const appEnvRaw = get("APP_ENV");
+const appEnv = appEnvRaw === "prod" ? "prod" : "dev";
+const stackId = appEnv === "prod" ? "infra-prod" : "infra-dev";
+
+assert(account, "Missing AWS_ACCOUNT in CDK");
+assert(region, "Missing AWS_REGION in CDK");
 
 const app = new cdk.App();
 
-new InfraStack(app, "infra", {
+new InfraStack(app, stackId, {
   env: {
-    account: process.env.AWS_ACCOUNT,
-    region: process.env.AWS_REGION,
+    account,
+    region,
   },
 });

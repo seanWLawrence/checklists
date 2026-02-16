@@ -1,0 +1,73 @@
+name: Infra CDK (Prod)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra-cdk.yml"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "CDK command to run"
+        required: true
+        default: "diff"
+        type: choice
+        options:
+          - diff
+          - deploy
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  cdk-prod:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Setup Node
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            infra/package-lock.json
+
+      - name: Configure AWS credentials (prod)
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
+          aws-region: ${{ vars.AWS_REGION_PROD }}
+          role-session-name: checklists-infra-prod
+
+      - name: Install infra dependencies
+        run: npm ci
+        working-directory: infra
+
+      - name: Resolve account for prod
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "AWS_ACCOUNT=$ACCOUNT_ID" >> "$GITHUB_ENV"
+
+      - name: Set environment values for CDK
+        run: |
+          echo "AWS_REGION=${{ vars.AWS_REGION_PROD }}" >> "$GITHUB_ENV"
+          echo "APP_ENV=prod" >> "$GITHUB_ENV"
+          echo "AWS_JOURNAL_VECTOR_DIMENSION=${{ vars.AWS_JOURNAL_VECTOR_DIMENSION }}" >> "$GITHUB_ENV"
+          echo "VERCEL_PROJECT_PRODUCTION_URL=${{ secrets.VERCEL_PROJECT_PRODUCTION_URL }}" >> "$GITHUB_ENV"
+
+      - name: CDK diff
+        if: ${{ github.event_name == 'push' || inputs.action == 'diff' || inputs.action == 'deploy' }}
+        run: npm run cdk -- diff --all
+        working-directory: infra
+
+      - name: CDK deploy
+        if: ${{ github.event_name == 'push' || inputs.action == 'deploy' }}
+        run: npm run cdk -- deploy --all --require-approval never
+        working-directory: infra
