@@ -64,6 +64,16 @@ to see how well I do over time, we'll see!
 - Connect your cloned repo to Vercel for auto-deployment and it'll auto deploy
   when you push to the repo
 - Infrastructure (CDK) deploy setup lives in `docs/infra-ci-setup.md`
+- Pulling AWS app secrets:
+  - `scripts/pull-aws-secrets.sh` now supports both accounts:
+    - Pulls `dev` secret values into `.env.local`
+    - Prints `prod` secret values as `KEY=VALUE` lines for Vercel paste
+  - Configure either shell env vars or `.env.local` values:
+    - `AWS_SECRET_NAME_DEV` (or legacy fallback `AWS_SECRET_NAME`)
+    - `AWS_SECRET_NAME_PROD`
+    - Optional profiles: `AWS_PROFILE_DEV`, `AWS_PROFILE_PROD`
+  - Run:
+    - `./scripts/pull-aws-secrets.sh`
 
 ## Vercel environment variables
 
