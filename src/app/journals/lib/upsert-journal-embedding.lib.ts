@@ -22,7 +22,7 @@ export const upsertJournalEmbedding = async ({
   journal,
 }: {
   journal: Journal;
-}): Promise<void> => {
+}): Promise<boolean> => {
   const result = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
     const vectorBucketName = await liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME);
     const indexName = await liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME);
@@ -88,4 +88,6 @@ export const upsertJournalEmbedding = async ({
       error,
     );
   });
+
+  return result.isRight();
 };

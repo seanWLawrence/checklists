@@ -6,12 +6,15 @@ import { SubmitButton } from "./submit-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { JournalAnalyticsLink } from "./journal-analytics-link";
-import { isAppProduction } from "@/lib/environment";
+import { isAdminUsername } from "@/lib/auth/is-admin-username";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
 }) => {
   const userMaybe = await getUserFn({});
+  const canAccessVectorAdmin = userMaybe
+    .map((user) => isAdminUsername(user.username))
+    .orDefault(false);
 
   return (
     <nav className="py-2 px-5 flex space-x-1 items-center w-full">
@@ -53,7 +56,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
 
                 <JournalAnalyticsLink />
 
-                {!isAppProduction() && (
+                {canAccessVectorAdmin && (
                   <>
                     <span>/</span>
                     <LinkButton href="/journals/vectors" variant="ghost">

@@ -106,6 +106,9 @@ deployments to fully work with AWS + embeddings too).
   - S3 Vector index name used for query/upsert/delete.
 - `AWS_JOURNAL_VECTOR_DIMENSION`
   - Embedding dimension (must match your index, example: `1024`).
+- `ADMIN_USERNAMES`
+  - Comma-separated usernames allowed to access `/journals/vectors` and run
+    embedding backfill (example: `sean,alice`).
 
 ### Required via Vercel KV integration
 
