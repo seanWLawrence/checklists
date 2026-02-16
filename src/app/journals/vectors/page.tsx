@@ -1,0 +1,132 @@
+import "server-only";
+
+import { EitherAsync } from "purify-ts/EitherAsync";
+
+import { Heading } from "@/components/heading";
+import { Input } from "@/components/input";
+import { Label } from "@/components/label";
+import { SubmitButton } from "@/components/submit-button";
+import { LinkButton } from "@/components/link-button";
+import {
+  AWS_JOURNAL_VECTOR_BUCKET_NAME,
+  AWS_JOURNAL_VECTOR_INDEX_NAME,
+} from "@/lib/secrets";
+import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { listVectors } from "@/lib/aws/s3vectors/list-vectors";
+import { getAppEnvironment, isAppProduction } from "@/lib/environment";
+
+export const dynamic = "force-dynamic";
+
+const parsePageSize = (raw?: string): number => {
+  const value = raw ? Number(raw) : 100;
+  if (!Number.isFinite(value)) {
+    return 100;
+  }
+
+  return Math.max(1, Math.min(500, Math.floor(value)));
+};
+
+const VectorsDebugPage: React.FC<{
+  searchParams?: Promise<{ nextToken?: string; limit?: string }>;
+}> = async ({ searchParams }) => {
+  const { nextToken, limit: rawLimit } = (await searchParams) ?? {};
+  const limit = parsePageSize(rawLimit);
+  const appEnvironment = getAppEnvironment();
+
+  const page = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
+    if (isAppProduction()) {
+      return throwE("Vector debug page is disabled in prod");
+    }
+
+    const user = await fromPromise(validateUserLoggedIn({}));
+    const vectorBucketName = await liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME);
+    const indexName = await liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME);
+
+    const listed = await fromPromise(
+      listVectors({
+        vectorBucketName,
+        indexName,
+        maxResults: limit,
+        nextToken,
+      }),
+    );
+
+    const visibleVectors = listed.vectors.filter((vector) => {
+      const username = vector.metadata?.username;
+      const environment = vector.metadata?.environment;
+      return (
+        typeof username === "string" &&
+        username === user.username &&
+        typeof environment === "string" &&
+        environment === appEnvironment
+      );
+    });
+
+    return (
+      <section className="space-y-4">
+        <Heading level={1}>Journal vectors (debug)</Heading>
+
+        <div className="flex items-center gap-2">
+          <LinkButton href="/journals" variant="outline">
+            Back to journals
+          </LinkButton>
+        </div>
+
+        <form action="/journals/vectors" method="get" className="flex gap-2">
+          <Label label="Page size">
+            <Input name="limit" defaultValue={String(limit)} className="w-28" />
+          </Label>
+          <div className="self-end">
+            <SubmitButton variant="primary">Reload</SubmitButton>
+          </div>
+        </form>
+
+        <div className="text-sm text-zinc-600 space-y-1">
+          <p>Bucket: {vectorBucketName}</p>
+          <p>Index: {indexName}</p>
+          <p>Environment: {appEnvironment}</p>
+          <p>Current page vectors: {listed.vectors.length}</p>
+          <p>Visible for user {user.username}: {visibleVectors.length}</p>
+        </div>
+
+        {visibleVectors.length === 0 ? (
+          <p className="text-sm text-zinc-600">No vectors visible on this page.</p>
+        ) : (
+          <ul className="space-y-2">
+            {visibleVectors.map((vector) => (
+              <li
+                key={vector.key}
+                className="rounded-xl border-2 border-zinc-300 p-3 space-y-1"
+              >
+                <p className="text-xs text-zinc-500 break-all">{vector.key}</p>
+                <pre className="text-xs text-zinc-700 overflow-x-auto">
+                  {JSON.stringify(vector.metadata ?? {}, null, 2)}
+                </pre>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {listed.nextToken && (
+          <form action="/journals/vectors" method="get">
+            <input type="hidden" name="nextToken" value={listed.nextToken} />
+            <input type="hidden" name="limit" value={String(limit)} />
+            <SubmitButton variant="outline">Next page</SubmitButton>
+          </form>
+        )}
+      </section>
+    );
+  }).mapLeft((error) => {
+    return (
+      <div className="space-y-2">
+        <Heading level={1}>Journal vectors (debug)</Heading>
+        <p className="text-sm text-zinc-600">Failed to load vectors.</p>
+        <pre className="text-xs text-red-800">{String(error)}</pre>
+      </div>
+    );
+  });
+
+  return page.extract();
+};
+
+export default VectorsDebugPage;

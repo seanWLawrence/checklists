@@ -6,6 +6,7 @@ import { SubmitButton } from "./submit-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { JournalAnalyticsLink } from "./journal-analytics-link";
+import { isAppProduction } from "@/lib/environment";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
@@ -52,11 +53,14 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
 
                 <JournalAnalyticsLink />
 
-                <span>/</span>
-
-                <LinkButton href="/journals/embeddings" variant="ghost">
-                  Embeddings
-                </LinkButton>
+                {!isAppProduction() && (
+                  <>
+                    <span>/</span>
+                    <LinkButton href="/journals/vectors" variant="ghost">
+                      Vectors
+                    </LinkButton>
+                  </>
+                )}
               </div>
 
               <div className="flex space-x-1 items-center">

@@ -12,114 +12,149 @@ import { getCreatedAtLocalsForYear } from "./model/get-created-at-locals-for-yea
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { JournalsYearRedirect } from "./components/journals-year-redirect";
+import { JournalSearchResults } from "./components/journal-search-results";
+import { searchJournalsSemantic } from "./lib/search-journals-semantic.lib";
 
 export const dynamic = "force-dynamic";
 
 const Journals: React.FC<{
-  searchParams?: Promise<{ sinceYear?: string }>;
+  searchParams?: Promise<{ sinceYear?: string; q?: string }>;
 }> = async ({ searchParams }) => {
   const resolvedSearchParams = await searchParams;
   const rawSinceYear = resolvedSearchParams?.sinceYear;
-
-  if (!rawSinceYear || rawSinceYear.trim() === "") {
-    return (
-      <main className="space-y-2">
-        <Heading level={1}>Journals</Heading>
-        <JournalsYearRedirect />
-      </main>
-    );
-  }
+  const q =
+    typeof resolvedSearchParams?.q === "string"
+      ? resolvedSearchParams.q.trim()
+      : "";
 
   const page = await EitherAsync(async ({ fromPromise }) => {
-    const sinceYear = parseSinceYear(rawSinceYear).orDefault(rawSinceYear);
+    const sinceYear =
+      rawSinceYear && rawSinceYear.trim() !== ""
+        ? parseSinceYear(rawSinceYear).orDefault(rawSinceYear)
+        : undefined;
 
-    const createdAtLocals = await fromPromise(
-      getCreatedAtLocalsForYear({ year: sinceYear }),
-    );
+    const createdAtLocals = sinceYear
+      ? await fromPromise(getCreatedAtLocalsForYear({ year: sinceYear }))
+      : [];
 
-    const groupedJournals = Object.entries(
-      groupCreatedAtLocals(createdAtLocals),
-    );
+    const groupedJournals = sinceYear
+      ? Object.entries(groupCreatedAtLocals(createdAtLocals))
+      : [];
+
+    const matches =
+      q.length > 0
+        ? await fromPromise(
+            searchJournalsSemantic({
+              query: q,
+              sinceYear,
+            }),
+          )
+        : [];
 
     return (
-      <main className="space-y-2">
+      <main className="space-y-4">
         <Heading level={1}>Journals</Heading>
 
         <form
-          className="flex max-w-fit items-end space-x-2 my-4"
+          className="space-y-2"
           action={async (formData) => {
             "use server";
+            const searchText = formData.get("q");
+            const trimmedSearchText =
+              typeof searchText === "string" ? searchText.trim() : "";
             const sinceYear = formData.get("sinceYear");
             const trimmedSinceYear =
               typeof sinceYear === "string" ? sinceYear.trim() : "";
-            const query =
-              trimmedSinceYear !== ""
-                ? encodeURIComponent(trimmedSinceYear)
-                : "";
+            const params = new URLSearchParams();
 
-            redirect(`/journals${query ? `?sinceYear=${query}` : ""}`);
+            if (trimmedSinceYear !== "") {
+              params.set("sinceYear", trimmedSinceYear);
+            }
+
+            if (trimmedSearchText !== "") {
+              params.set("q", trimmedSearchText);
+            }
+
+            redirect(`/journals${params.size > 0 ? `?${params.toString()}` : ""}`);
           }}
         >
-          <Label label={"Year (YYYY)"}>
+          <Label label="Search text">
             <Input
-              name="sinceYear"
-              defaultValue={sinceYear}
-              pattern="\d{4}"
-              className="min-w-28"
+              name="q"
+              defaultValue={q}
+              placeholder="Search by meaning, e.g. stressful week at work"
+              autoComplete="off"
             />
           </Label>
 
-          <SubmitButton variant="primary">Filter</SubmitButton>
+          <div className="flex max-w-fit items-end space-x-2">
+            <Label label={"Year (YYYY)"}>
+              <Input
+                name="sinceYear"
+                defaultValue={sinceYear ?? ""}
+                pattern="\d{4}"
+                className="min-w-28"
+              />
+            </Label>
+
+            <SubmitButton variant="primary">Apply</SubmitButton>
+          </div>
         </form>
 
-        <div className="space-y-1">
-          {groupedJournals.map(([year, monthMap]) => {
-            const groupedMonths = Object.entries(monthMap);
-            const lastMonthIndex = groupedMonths.length - 1;
-            const hasMoreThanOneMonth = groupedMonths.length > 1;
+        <JournalSearchResults q={q} sinceYear={sinceYear} matches={matches} />
 
-            return (
-              <section key={year} className="space-y-4">
-                <Heading level={2}>{year}</Heading>
+        {!sinceYear && <JournalsYearRedirect />}
 
-                <div className="space-y-1">
-                  {groupedMonths.map(([month, createdAtLocals], index) => {
-                    return (
-                      <div key={month}>
-                        <div className="flex flex-wrap">
-                          {[...(createdAtLocals as CreatedAtLocal[])]
-                            .sort(
-                              (createdAtLocalA, createdAtLocalB) =>
-                                new Date(createdAtLocalA).getTime() -
-                                new Date(createdAtLocalB).getTime(),
-                            )
-                            .map((createdAtLocal) => (
-                              <LinkButton
-                                href={`/journals/${createdAtLocal}`}
-                                key={createdAtLocal}
-                                variant="outline"
-                                className="mr-2 mb-2"
-                              >
-                                {prettyDate(createdAtLocal, {
-                                  withYear: false,
-                                })}
-                              </LinkButton>
-                            ))}
+        {sinceYear && (
+          <div className="space-y-1">
+            {groupedJournals.map(([year, monthMap]) => {
+              const groupedMonths = Object.entries(monthMap);
+              const lastMonthIndex = groupedMonths.length - 1;
+              const hasMoreThanOneMonth = groupedMonths.length > 1;
+
+              return (
+                <section key={year} className="space-y-4">
+                  <Heading level={2}>{year}</Heading>
+
+                  <div className="space-y-1">
+                    {groupedMonths.map(([month, createdAtLocals], index) => {
+                      return (
+                        <div key={month}>
+                          <div className="flex flex-wrap">
+                            {[...(createdAtLocals as CreatedAtLocal[])]
+                              .sort(
+                                (createdAtLocalA, createdAtLocalB) =>
+                                  new Date(createdAtLocalA).getTime() -
+                                  new Date(createdAtLocalB).getTime(),
+                              )
+                              .map((createdAtLocal) => (
+                                <LinkButton
+                                  href={`/journals/${createdAtLocal}`}
+                                  key={createdAtLocal}
+                                  variant="outline"
+                                  className="mr-2 mb-2"
+                                >
+                                  {prettyDate(createdAtLocal, {
+                                    withYear: false,
+                                  })}
+                                </LinkButton>
+                              ))}
+                          </div>
+
+                          {hasMoreThanOneMonth && index < lastMonthIndex && (
+                            <hr className="border-t-2 border-t-zinc-300 mt-2 mb-4 max-w-10" />
+                          )}
                         </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
 
-                        {hasMoreThanOneMonth && index < lastMonthIndex && (
-                          <hr className="border-t-2 border-t-zinc-300 mt-2 mb-4 max-w-10" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-
-        {createdAtLocals.length === 0 && <p>No journals found.</p>}
+        {sinceYear && createdAtLocals.length === 0 && <p>No journals found.</p>}
       </main>
     );
   }).mapLeft((error) => {

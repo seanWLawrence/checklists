@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "CI=true npm test && npm run lint && npm run knip && next build",
+    "build": "CI=true npm test && npm run lint && next build",
     "dev": "next dev",
-    "lint": "eslint .",
-    "knip": "knip",
+    "lint": "eslint . && knip",
+    "lint:fix": "eslint . --fix && knip --fix",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest"
@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@serwist/turbopack": "^9.3.0",
+    "@smithy/types": "^4.12.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^25.2.0",

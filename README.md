@@ -63,6 +63,7 @@ to see how well I do over time, we'll see!
 
 - Connect your cloned repo to Vercel for auto-deployment and it'll auto deploy
   when you push to the repo
+- Infrastructure (CDK) deploy setup lives in `docs/infra-ci-setup.md`
 
 ## Technology
 

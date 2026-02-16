@@ -16,6 +16,7 @@ import { createItem } from "@/lib/db/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { array } from "purify-ts/Codec";
 import { Metadata } from "@/lib/types";
+import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
 
 export const updateJournalAction = async (
   formData: FormData,
@@ -201,6 +202,7 @@ export const updateJournalAction = async (
   });
 
   if (response.isRight()) {
+    await upsertJournalEmbedding({ journal: response.extract() });
     redirect(
       `/journals/${response.extract().createdAtLocal}`,
       RedirectType.push,

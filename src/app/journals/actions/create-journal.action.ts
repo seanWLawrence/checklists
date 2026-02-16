@@ -20,6 +20,7 @@ import { metadata } from "@/lib/db/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { array } from "purify-ts/Codec";
+import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
 
 export const createJournalAction = async (
   formData: FormData,
@@ -112,6 +113,7 @@ export const createJournalAction = async (
   });
 
   if (response.isRight()) {
+    await upsertJournalEmbedding({ journal: response.extract() });
     redirect(
       `/journals/${response.extract().createdAtLocal}`,
       RedirectType.push,

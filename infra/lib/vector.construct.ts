@@ -63,6 +63,8 @@ export class VectorConstruct extends Construct {
             "s3vectors:QueryVectors",
             "s3vectors:GetVectors",
             "s3vectors:PutVectors",
+            "s3vectors:ListVectors",
+            "s3vectors:DeleteVectors",
           ],
           resources: [
             this.vectorBucket.attrVectorBucketArn,

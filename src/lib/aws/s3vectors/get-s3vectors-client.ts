@@ -7,6 +7,11 @@ import { getClientConfiguration } from "@/lib/aws/get-client-configuration";
 
 export const getS3VectorsClient = (): EitherAsync<unknown, S3VectorsClient> => {
   return EitherAsync(async ({ fromPromise }) => {
-    return new S3VectorsClient(await fromPromise(getClientConfiguration({})));
+    const config = await fromPromise(getClientConfiguration({}));
+
+    return new S3VectorsClient({
+      region: config.region,
+      credentials: config.credentials,
+    });
   });
 };
