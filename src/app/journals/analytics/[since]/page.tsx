@@ -7,6 +7,12 @@ import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analyt
 import { LevelChartsTabs } from "./level-charts-tabs";
 import { SinceFilterForm } from "../../components/since-filter-form";
 import { Fieldset } from "@/components/fieldset";
+import dynamic from "next/dynamic";
+
+const SentimentLineChart = dynamic(
+  () => import("./sentiment-line-chart").then((mod) => mod.SentimentLineChart),
+  { ssr: false, loading: () => <div className="min-h-[200px]" /> },
+);
 
 /**
  * Get the date range from the route, default to last week
@@ -93,6 +99,66 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                   )}
                 </div>
               </div>
+            </Fieldset>
+
+            <Fieldset legend="Sentiment over time" className="text-left">
+              {ai.sentimentTimeline.length === 0 ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  Not enough sentiment data yet.
+                </p>
+              ) : (
+                <SentimentLineChart data={ai.sentimentTimeline} />
+              )}
+            </Fieldset>
+
+            <Fieldset legend="Habit impact" className="text-left">
+              {ai.habitImpact.length === 0 ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  No habit data yet.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left border-b border-zinc-200 dark:border-zinc-700">
+                        <th className="py-1 pr-3">Habit</th>
+                        <th className="py-1 pr-3">Days</th>
+                        <th className="py-1 pr-3">Mood avg</th>
+                        <th className="py-1 pr-3">Energy avg</th>
+                        <th className="py-1 pr-3">Health avg</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ai.habitImpact.map((habit) => (
+                        <tr
+                          key={habit.key}
+                          className="border-b border-zinc-100 dark:border-zinc-800"
+                        >
+                          <td className="py-1 pr-3">{habit.label}</td>
+                          <td className="py-1 pr-3">
+                            {habit.count} ({habit.percentOfEntries}%)
+                          </td>
+                          <td className="py-1 pr-3">
+                            {typeof habit.averageMood === "number"
+                              ? habit.averageMood.toFixed(2)
+                              : "n/a"}
+                          </td>
+                          <td className="py-1 pr-3">
+                            {typeof habit.averageEnergy === "number"
+                              ? habit.averageEnergy.toFixed(2)
+                              : "n/a"}
+                          </td>
+                          <td className="py-1 pr-3">
+                            {typeof habit.averageHealth === "number"
+                              ? habit.averageHealth.toFixed(2)
+                              : "n/a"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Fieldset>
           </div>
         </div>

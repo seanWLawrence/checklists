@@ -1,22 +1,76 @@
 import { Journal, SentimentLabel } from "../journal.types";
 import { JOURNAL_HABIT_FIELDS } from "./journal-habits";
 
+type LevelKey = "moodLevel" | "energyLevel" | "healthLevel";
+
+type HabitImpact = {
+  key: string;
+  label: string;
+  count: number;
+  percentOfEntries: number;
+  averageMood: number | undefined;
+  averageEnergy: number | undefined;
+  averageHealth: number | undefined;
+};
+
 export type JournalAiAnalytics = {
   totalEntries: number;
   analyzedCount: number;
   averageSentimentValence: number | undefined;
   sentimentLabelCounts: Record<SentimentLabel, number>;
+  sentimentTimeline: Array<{
+    dateMilli: number;
+    valence: number;
+    valenceAvg7: number | undefined;
+  }>;
   topHabits: Array<{
     key: string;
     label: string;
     count: number;
     percentOfEntries: number;
   }>;
+  habitImpact: HabitImpact[];
 };
 
 const round = (value: number, precision = 2): number => {
   const factor = 10 ** precision;
   return Math.round(value * factor) / factor;
+};
+
+const averageLevel = (journals: Journal[], key: LevelKey): number | undefined => {
+  let count = 0;
+  let total = 0;
+
+  for (const journal of journals) {
+    const value = journal[key];
+
+    if (typeof value === "number") {
+      total += value;
+      count += 1;
+    }
+  }
+
+  if (count === 0) {
+    return undefined;
+  }
+
+  return round(total / count);
+};
+
+const sentimentRollingAverage = (
+  data: Array<{ dateMilli: number; valence: number }>,
+  index: number,
+  windowSize = 7,
+): number | undefined => {
+  const start = Math.max(0, index - windowSize + 1);
+  const values = data.slice(start, index + 1).map((row) => row.valence);
+
+  if (values.length === 0) {
+    return undefined;
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return round(total / values.length);
 };
 
 export const getJournalAiAnalytics = (
@@ -36,11 +90,17 @@ export const getJournalAiAnalytics = (
     JOURNAL_HABIT_FIELDS.map(({ key }) => [key, 0]),
   ) as Record<string, number>;
 
+  const sentimentRows: Array<{ dateMilli: number; valence: number }> = [];
+
   for (const journal of journals) {
     if (journal.sentiment) {
       analyzedCount += 1;
       sentimentValenceTotal += journal.sentiment.valence;
       sentimentLabelCounts[journal.sentiment.label] += 1;
+      sentimentRows.push({
+        dateMilli: new Date(journal.createdAtLocal).getTime(),
+        valence: journal.sentiment.valence,
+      });
     }
 
     for (const { key } of JOURNAL_HABIT_FIELDS) {
@@ -68,12 +128,38 @@ export const getJournalAiAnalytics = (
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
+  const sentimentTimeline = [...sentimentRows]
+    .sort((a, b) => a.dateMilli - b.dateMilli)
+    .map((row, index, sorted) => ({
+      ...row,
+      valenceAvg7: sentimentRollingAverage(sorted, index),
+    }));
+
+  const habitImpact = JOURNAL_HABIT_FIELDS.map(({ key, label }) => {
+    const withHabit = journals.filter((journal) => journal.habits?.[key]);
+    const count = withHabit.length;
+
+    return {
+      key,
+      label,
+      count,
+      percentOfEntries: totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0,
+      averageMood: averageLevel(withHabit, "moodLevel"),
+      averageEnergy: averageLevel(withHabit, "energyLevel"),
+      averageHealth: averageLevel(withHabit, "healthLevel"),
+    };
+  })
+    .filter((habit) => habit.count > 0)
+    .sort((a, b) => b.count - a.count);
+
   return {
     totalEntries,
     analyzedCount,
     averageSentimentValence:
       analyzedCount > 0 ? round(sentimentValenceTotal / analyzedCount) : undefined,
     sentimentLabelCounts,
+    sentimentTimeline,
     topHabits,
+    habitImpact,
   };
 };
