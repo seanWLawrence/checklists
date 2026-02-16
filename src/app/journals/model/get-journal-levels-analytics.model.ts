@@ -11,6 +11,10 @@ import {
   getLineChartData,
   LineChartData,
 } from "../lib/get-line-chart-data.lib";
+import {
+  getJournalAiAnalytics,
+  JournalAiAnalytics,
+} from "../lib/get-journal-ai-analytics.lib";
 
 export const getJournalLevelsAnalytics = ({
   from,
@@ -24,6 +28,7 @@ export const getJournalLevelsAnalytics = ({
     radar: RadarChartData;
     pie: PieChartData;
     line: LineChartData;
+    ai: JournalAiAnalytics;
   }
 > => {
   return EitherAsync(async ({ fromPromise }) => {
@@ -62,6 +67,7 @@ export const getJournalLevelsAnalytics = ({
       radar: getRadarChartData(filteredLevels),
       pie: getPieChartData(filteredLevels),
       line: getLineChartData(filteredLevels),
+      ai: getJournalAiAnalytics(filteredLevels),
     };
   })
     .ifRight(() => {

@@ -6,6 +6,7 @@ import { parseSinceRange } from "../../lib/parse-since-range.lib";
 import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analytics.model";
 import { LevelChartsTabs } from "./level-charts-tabs";
 import { SinceFilterForm } from "../../components/since-filter-form";
+import { Fieldset } from "@/components/fieldset";
 
 /**
  * Get the date range from the route, default to last week
@@ -20,7 +21,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
   const page = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const { since, from, to } = await liftEither(parseSinceRange(unsafeSince));
 
-    const { radar, pie, line } = await fromPromise(
+    const { radar, pie, line, ai } = await fromPromise(
       getJournalLevelsAnalytics({ from, to }).run(),
     );
 
@@ -44,6 +45,55 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
             <RadarChart data={radar} />
 
             <LevelChartsTabs pie={pie} line={line} />
+
+            <Fieldset legend="AI analytics" className="text-left">
+              <div className="space-y-3 text-sm">
+                <p>
+                  Entries in range: <strong>{ai.totalEntries}</strong>
+                </p>
+
+                <p>
+                  Entries with analysis: <strong>{ai.analyzedCount}</strong>
+                </p>
+
+                <p>
+                  Average sentiment valence:{" "}
+                  <strong>
+                    {typeof ai.averageSentimentValence === "number"
+                      ? ai.averageSentimentValence.toFixed(2)
+                      : "n/a"}
+                  </strong>
+                </p>
+
+                <div className="space-y-1">
+                  <p className="font-medium">Sentiment labels</p>
+                  <ul className="list-disc ml-4">
+                    <li>Positive: {ai.sentimentLabelCounts.positive}</li>
+                    <li>Neutral: {ai.sentimentLabelCounts.neutral}</li>
+                    <li>Mixed: {ai.sentimentLabelCounts.mixed}</li>
+                    <li>Negative: {ai.sentimentLabelCounts.negative}</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-medium">Top habits</p>
+
+                  {ai.topHabits.length === 0 ? (
+                    <p className="text-zinc-600 dark:text-zinc-300">
+                      No tracked habits yet.
+                    </p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {ai.topHabits.map((habit) => (
+                        <li key={habit.key}>
+                          {habit.label}: <strong>{habit.count}</strong> days ({habit.percentOfEntries}%)
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </Fieldset>
           </div>
         </div>
       </section>
