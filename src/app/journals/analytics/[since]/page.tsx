@@ -117,46 +117,70 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                   No habit data yet.
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="text-left border-b border-zinc-200 dark:border-zinc-700">
-                        <th className="py-1 pr-3">Habit</th>
-                        <th className="py-1 pr-3">Days</th>
-                        <th className="py-1 pr-3">Mood avg</th>
-                        <th className="py-1 pr-3">Energy avg</th>
-                        <th className="py-1 pr-3">Health avg</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ai.habitImpact.map((habit) => (
-                        <tr
-                          key={habit.key}
-                          className="border-b border-zinc-100 dark:border-zinc-800"
-                        >
-                          <td className="py-1 pr-3">{habit.label}</td>
-                          <td className="py-1 pr-3">
-                            {habit.count} ({habit.percentOfEntries}%)
-                          </td>
-                          <td className="py-1 pr-3">
-                            {typeof habit.averageMood === "number"
-                              ? habit.averageMood.toFixed(2)
-                              : "n/a"}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {typeof habit.averageEnergy === "number"
-                              ? habit.averageEnergy.toFixed(2)
-                              : "n/a"}
-                          </td>
-                          <td className="py-1 pr-3">
-                            {typeof habit.averageHealth === "number"
-                              ? habit.averageHealth.toFixed(2)
-                              : "n/a"}
-                          </td>
+                <div className="space-y-2">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                    Δ compares average level on days with the habit vs days without it.
+                  </p>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="text-left border-b border-zinc-200 dark:border-zinc-700">
+                          <th className="py-1 pr-3">Habit</th>
+                          <th className="py-1 pr-3">Days</th>
+                          <th className="py-1 pr-3">Mood avg</th>
+                          <th className="py-1 pr-3">Mood Δ</th>
+                          <th className="py-1 pr-3">Energy avg</th>
+                          <th className="py-1 pr-3">Energy Δ</th>
+                          <th className="py-1 pr-3">Health avg</th>
+                          <th className="py-1 pr-3">Health Δ</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {ai.habitImpact.map((habit) => (
+                          <tr
+                            key={habit.key}
+                            className="border-b border-zinc-100 dark:border-zinc-800"
+                          >
+                            <td className="py-1 pr-3">{habit.label}</td>
+                            <td className="py-1 pr-3">
+                              {habit.count} ({habit.percentOfEntries}%)
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.averageMood === "number"
+                                ? habit.averageMood.toFixed(2)
+                                : "n/a"}
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.moodDelta === "number"
+                                ? `${habit.moodDelta > 0 ? "+" : ""}${habit.moodDelta.toFixed(2)}`
+                                : "n/a"}
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.averageEnergy === "number"
+                                ? habit.averageEnergy.toFixed(2)
+                                : "n/a"}
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.energyDelta === "number"
+                                ? `${habit.energyDelta > 0 ? "+" : ""}${habit.energyDelta.toFixed(2)}`
+                                : "n/a"}
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.averageHealth === "number"
+                                ? habit.averageHealth.toFixed(2)
+                                : "n/a"}
+                            </td>
+                            <td className="py-1 pr-3">
+                              {typeof habit.healthDelta === "number"
+                                ? `${habit.healthDelta > 0 ? "+" : ""}${habit.healthDelta.toFixed(2)}`
+                                : "n/a"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </Fieldset>

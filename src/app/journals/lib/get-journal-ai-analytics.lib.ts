@@ -11,6 +11,12 @@ type HabitImpact = {
   averageMood: number | undefined;
   averageEnergy: number | undefined;
   averageHealth: number | undefined;
+  averageMoodWithoutHabit: number | undefined;
+  averageEnergyWithoutHabit: number | undefined;
+  averageHealthWithoutHabit: number | undefined;
+  moodDelta: number | undefined;
+  energyDelta: number | undefined;
+  healthDelta: number | undefined;
 };
 
 export type JournalAiAnalytics = {
@@ -71,6 +77,17 @@ const sentimentRollingAverage = (
 
   const total = values.reduce((sum, value) => sum + value, 0);
   return round(total / values.length);
+};
+
+const maybeDelta = (
+  withHabit: number | undefined,
+  withoutHabit: number | undefined,
+): number | undefined => {
+  if (typeof withHabit !== "number" || typeof withoutHabit !== "number") {
+    return undefined;
+  }
+
+  return round(withHabit - withoutHabit);
 };
 
 export const getJournalAiAnalytics = (
@@ -137,16 +154,31 @@ export const getJournalAiAnalytics = (
 
   const habitImpact = JOURNAL_HABIT_FIELDS.map(({ key, label }) => {
     const withHabit = journals.filter((journal) => journal.habits?.[key]);
+    const withoutHabit = journals.filter((journal) => !journal.habits?.[key]);
     const count = withHabit.length;
+
+    const averageMood = averageLevel(withHabit, "moodLevel");
+    const averageEnergy = averageLevel(withHabit, "energyLevel");
+    const averageHealth = averageLevel(withHabit, "healthLevel");
+
+    const averageMoodWithoutHabit = averageLevel(withoutHabit, "moodLevel");
+    const averageEnergyWithoutHabit = averageLevel(withoutHabit, "energyLevel");
+    const averageHealthWithoutHabit = averageLevel(withoutHabit, "healthLevel");
 
     return {
       key,
       label,
       count,
       percentOfEntries: totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0,
-      averageMood: averageLevel(withHabit, "moodLevel"),
-      averageEnergy: averageLevel(withHabit, "energyLevel"),
-      averageHealth: averageLevel(withHabit, "healthLevel"),
+      averageMood,
+      averageEnergy,
+      averageHealth,
+      averageMoodWithoutHabit,
+      averageEnergyWithoutHabit,
+      averageHealthWithoutHabit,
+      moodDelta: maybeDelta(averageMood, averageMoodWithoutHabit),
+      energyDelta: maybeDelta(averageEnergy, averageEnergyWithoutHabit),
+      healthDelta: maybeDelta(averageHealth, averageHealthWithoutHabit),
     };
   })
     .filter((habit) => habit.count > 0)
