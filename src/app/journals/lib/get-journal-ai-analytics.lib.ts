@@ -7,6 +7,7 @@ type HabitImpact = {
   key: string;
   label: string;
   count: number;
+  withoutCount: number;
   percentOfEntries: number;
   averageMood: number | undefined;
   averageEnergy: number | undefined;
@@ -17,6 +18,17 @@ type HabitImpact = {
   moodDelta: number | undefined;
   energyDelta: number | undefined;
   healthDelta: number | undefined;
+};
+
+type HelpfulHabit = {
+  key: string;
+  label: string;
+  count: number;
+  percentOfEntries: number;
+  score: number;
+  moodDelta: number;
+  energyDelta: number;
+  healthDelta: number;
 };
 
 export type JournalAiAnalytics = {
@@ -36,6 +48,8 @@ export type JournalAiAnalytics = {
     percentOfEntries: number;
   }>;
   habitImpact: HabitImpact[];
+  minSampleSizeForRanking: number;
+  helpfulHabits: HelpfulHabit[];
 };
 
 const round = (value: number, precision = 2): number => {
@@ -88,6 +102,17 @@ const maybeDelta = (
   }
 
   return round(withHabit - withoutHabit);
+};
+
+const safePositive = (value: number | undefined): number =>
+  typeof value === "number" && value > 0 ? value : 0;
+
+const getMinSampleSizeForRanking = (totalEntries: number): number => {
+  if (totalEntries <= 0) {
+    return 0;
+  }
+
+  return Math.max(5, Math.ceil(totalEntries * 0.08));
 };
 
 export const getJournalAiAnalytics = (
@@ -169,6 +194,7 @@ export const getJournalAiAnalytics = (
       key,
       label,
       count,
+      withoutCount: withoutHabit.length,
       percentOfEntries: totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0,
       averageMood,
       averageEnergy,
@@ -184,6 +210,39 @@ export const getJournalAiAnalytics = (
     .filter((habit) => habit.count > 0)
     .sort((a, b) => b.count - a.count);
 
+  const minSampleSizeForRanking = getMinSampleSizeForRanking(totalEntries);
+
+  const helpfulHabits = habitImpact
+    .filter(
+      (habit) =>
+        habit.count >= minSampleSizeForRanking &&
+        habit.withoutCount >= minSampleSizeForRanking,
+    )
+    .map((habit) => {
+      const deltaStrength =
+        safePositive(habit.moodDelta) +
+        safePositive(habit.energyDelta) +
+        safePositive(habit.healthDelta);
+
+      const frequencyWeight =
+        totalEntries > 0 ? Math.sqrt(habit.count / totalEntries) : 0;
+      const score = round(deltaStrength * frequencyWeight, 3);
+
+      return {
+        key: habit.key,
+        label: habit.label,
+        count: habit.count,
+        percentOfEntries: habit.percentOfEntries,
+        score,
+        moodDelta: habit.moodDelta ?? 0,
+        energyDelta: habit.energyDelta ?? 0,
+        healthDelta: habit.healthDelta ?? 0,
+      };
+    })
+    .filter((habit) => habit.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
   return {
     totalEntries,
     analyzedCount,
@@ -193,5 +252,7 @@ export const getJournalAiAnalytics = (
     sentimentTimeline,
     topHabits,
     habitImpact,
+    minSampleSizeForRanking,
+    helpfulHabits,
   };
 };
