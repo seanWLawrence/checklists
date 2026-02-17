@@ -7,7 +7,10 @@ import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analyt
 import { LevelChartsTabs } from "./level-charts-tabs";
 import { SinceFilterForm } from "../../components/since-filter-form";
 import { Fieldset } from "@/components/fieldset";
-import { SENTIMENT_VALENCE_BUCKET_LABELS } from "../../lib/get-sentiment-valence-info.lib";
+import {
+  getSentimentValenceInfo,
+  SENTIMENT_VALENCE_BUCKET_LABELS,
+} from "../../lib/get-sentiment-valence-info.lib";
 import { SentimentLineChart } from "./sentiment-line-chart";
 
 /**
@@ -26,6 +29,17 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
     const { radar, pie, line, ai } = await fromPromise(
       getJournalLevelsAnalytics({ from, to }).run(),
     );
+    const averageValenceInfo =
+      typeof ai.averageSentimentValence === "number"
+        ? getSentimentValenceInfo(ai.averageSentimentValence)
+        : undefined;
+    const valenceBucketClassNames = {
+      veryPositive: getSentimentValenceInfo(0.8).className,
+      positive: getSentimentValenceInfo(0.4).className,
+      mixed: getSentimentValenceInfo(0).className,
+      negative: getSentimentValenceInfo(-0.4).className,
+      veryNegative: getSentimentValenceInfo(-0.8).className,
+    };
 
     return (
       <section className="space-y-2 text-center items-center flex flex-col">
@@ -64,41 +78,37 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 </p>
 
                 <p>
-                  Average sentiment valence:{" "}
-                  <strong>
-                    {typeof ai.averageSentimentValence === "number"
-                      ? ai.averageSentimentValence.toFixed(2)
-                      : "n/a"}
+                  Average sentiment:{" "}
+                  <strong
+                    className={averageValenceInfo?.className}
+                    title={averageValenceInfo?.title}
+                  >
+                    {averageValenceInfo?.label ?? "n/a"}
                   </strong>
                 </p>
 
                 <div className="space-y-1">
-                  <p className="font-medium">Model sentiment labels</p>
+                  <p className="font-medium">Sentiment</p>
                   <ul className="list-disc ml-4">
-                    <li>Positive: {ai.sentimentLabelCounts.positive}</li>
-                    <li>Neutral: {ai.sentimentLabelCounts.neutral}</li>
-                    <li>Mixed: {ai.sentimentLabelCounts.mixed}</li>
-                    <li>Negative: {ai.sentimentLabelCounts.negative}</li>
-                  </ul>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="font-medium">Valence buckets (higher-level)</p>
-                  <ul className="list-disc ml-4">
-                    <li>
-                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryPositive}: {ai.sentimentValenceBucketCounts.veryPositive}
+                    <li className={valenceBucketClassNames.veryPositive}>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryPositive}:{" "}
+                      {ai.sentimentValenceBucketCounts.veryPositive}
                     </li>
-                    <li>
-                      {SENTIMENT_VALENCE_BUCKET_LABELS.positive}: {ai.sentimentValenceBucketCounts.positive}
+                    <li className={valenceBucketClassNames.positive}>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.positive}:{" "}
+                      {ai.sentimentValenceBucketCounts.positive}
                     </li>
-                    <li>
-                      {SENTIMENT_VALENCE_BUCKET_LABELS.mixed}: {ai.sentimentValenceBucketCounts.mixed}
+                    <li className={valenceBucketClassNames.mixed}>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.mixed}:{" "}
+                      {ai.sentimentValenceBucketCounts.mixed}
                     </li>
-                    <li>
-                      {SENTIMENT_VALENCE_BUCKET_LABELS.negative}: {ai.sentimentValenceBucketCounts.negative}
+                    <li className={valenceBucketClassNames.negative}>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.negative}:{" "}
+                      {ai.sentimentValenceBucketCounts.negative}
                     </li>
-                    <li>
-                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryNegative}: {ai.sentimentValenceBucketCounts.veryNegative}
+                    <li className={valenceBucketClassNames.veryNegative}>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryNegative}:{" "}
+                      {ai.sentimentValenceBucketCounts.veryNegative}
                     </li>
                   </ul>
                 </div>
@@ -114,7 +124,8 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                     <ul className="space-y-1">
                       {ai.topHabits.map((habit) => (
                         <li key={habit.key}>
-                          {habit.label}: <strong>{habit.count}</strong> days ({habit.percentOfEntries}%)
+                          {habit.label}: <strong>{habit.count}</strong> days (
+                          {habit.percentOfEntries}%)
                         </li>
                       ))}
                     </ul>
@@ -133,9 +144,13 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
               )}
             </Fieldset>
 
-            <Fieldset legend="Most helpful habits (experimental)" className="text-left">
+            <Fieldset
+              legend="Most helpful habits (experimental)"
+              className="text-left"
+            >
               <p className="text-xs text-zinc-600 dark:text-zinc-300">
-                Ranked by positive deltas and frequency. Minimum sample size: {ai.minSampleSizeForRanking} days with and without the habit.
+                Ranked by positive deltas and frequency. Minimum sample size:{" "}
+                {ai.minSampleSizeForRanking} days with and without the habit.
               </p>
 
               {ai.helpfulHabits.length === 0 ? (
@@ -146,11 +161,15 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 <ul className="mt-2 space-y-1 text-sm">
                   {ai.helpfulHabits.map((habit, index) => (
                     <li key={habit.key}>
-                      {index + 1}. <strong>{habit.label}</strong> — score {habit.score.toFixed(3)} ·
-                      mood Δ {habit.moodDelta > 0 ? "+" : ""}{habit.moodDelta.toFixed(2)} ·
-                      energy Δ {habit.energyDelta > 0 ? "+" : ""}{habit.energyDelta.toFixed(2)} ·
-                      health Δ {habit.healthDelta > 0 ? "+" : ""}{habit.healthDelta.toFixed(2)}
-                      {" "}({habit.count} days, {habit.percentOfEntries}%)
+                      {index + 1}. <strong>{habit.label}</strong> — score{" "}
+                      {habit.score.toFixed(3)} · mood Δ{" "}
+                      {habit.moodDelta > 0 ? "+" : ""}
+                      {habit.moodDelta.toFixed(2)} · energy Δ{" "}
+                      {habit.energyDelta > 0 ? "+" : ""}
+                      {habit.energyDelta.toFixed(2)} · health Δ{" "}
+                      {habit.healthDelta > 0 ? "+" : ""}
+                      {habit.healthDelta.toFixed(2)} ({habit.count} days,{" "}
+                      {habit.percentOfEntries}%)
                     </li>
                   ))}
                 </ul>
@@ -165,7 +184,8 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-zinc-600 dark:text-zinc-300">
-                    Δ compares average level on days with the habit vs days without it.
+                    Δ compares average level on days with the habit vs days
+                    without it.
                   </p>
 
                   <div className="overflow-x-auto">

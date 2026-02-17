@@ -120,19 +120,20 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                   const valenceInfo = getSentimentValenceInfo(
                     journal.sentiment.valence,
                   );
+                  const confidenceText =
+                    typeof journal.sentiment.confidence === "number"
+                      ? ` / Confidence ${Math.round(journal.sentiment.confidence * 100)}%`
+                      : "";
+                  const tooltip = `Valence ${journal.sentiment.valence.toFixed(2)}${confidenceText}`;
 
                   return (
                     <p>
                       <span
                         className={`font-medium ${valenceInfo.className}`}
-                        title={valenceInfo.title}
+                        title={tooltip}
                       >
                         {valenceInfo.label}
-                      </span>{" "}
-                      ({journal.sentiment.valence.toFixed(2)})
-                      {typeof journal.sentiment.confidence === "number"
-                        ? ` • confidence ${Math.round(journal.sentiment.confidence * 100)}%`
-                        : ""}
+                      </span>
                     </p>
                   );
                 })()}
