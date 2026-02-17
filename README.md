@@ -89,8 +89,8 @@ deployments to fully work with AWS + embeddings too).
 
 - `AUTH_SECRET`
   - Password/JWT signing secret used by auth flows.
-- `APP_ENV`
-  - Use `prod` in production deployments.
+- `NODE_ENV`
+  - Use `production` in production deployments.
 - `VERCEL_PROJECT_PRODUCTION_URL`
   - Your production host name (for example `app.example.com`, no protocol).
 - `OPENAI_API_KEY`

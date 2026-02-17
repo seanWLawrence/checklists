@@ -58,7 +58,7 @@ jobs:
       - name: Set environment values for CDK
         run: |
           echo "AWS_REGION=${{ vars.AWS_REGION_PROD }}" >> "$GITHUB_ENV"
-          echo "APP_ENV=prod" >> "$GITHUB_ENV"
+          echo "NODE_ENV=production" >> "$GITHUB_ENV"
           echo "AWS_JOURNAL_VECTOR_DIMENSION=${{ vars.AWS_JOURNAL_VECTOR_DIMENSION }}" >> "$GITHUB_ENV"
           echo "VERCEL_PROJECT_PRODUCTION_URL=${{ secrets.VERCEL_PROJECT_PRODUCTION_URL }}" >> "$GITHUB_ENV"
 

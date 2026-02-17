@@ -5,6 +5,3 @@ export const getAppEnvironment = (): AppEnvironment => {
 };
 
 export const isProduction = () => getAppEnvironment() === "prod";
-
-// Back-compat alias; prefer isProduction.
-export const isAppProduction = isProduction;

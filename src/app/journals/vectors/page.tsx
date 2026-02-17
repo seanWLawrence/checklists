@@ -13,7 +13,7 @@ import {
 } from "@/lib/secrets";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { listVectors } from "@/lib/aws/s3vectors/list-vectors";
-import { getAppEnvironment, isAppProduction } from "@/lib/environment";
+import { getAppEnvironment, isProduction } from "@/lib/environment";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
 import { backfillJournalEmbeddingsAction } from "../actions/backfill-journal-embeddings.action";
 import { backfillJournalAnalysisAction } from "../actions/backfill-journal-analysis.action";
@@ -87,7 +87,7 @@ const VectorsDebugPage: React.FC<{
     const vectorBucketName = await liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME);
     const indexName = await liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME);
 
-    const listed = isAppProduction()
+    const listed = isProduction()
       ? { vectors: [], nextToken: undefined as string | undefined }
       : await fromPromise(
           listVectors({
@@ -179,13 +179,13 @@ const VectorsDebugPage: React.FC<{
           </p>
         )}
 
-        {isAppProduction() && (
+        {isProduction() && (
           <p className="text-sm text-zinc-600">
             Debug vector listing is hidden in production.
           </p>
         )}
 
-        {!isAppProduction() && (
+        {!isProduction() && (
           <form action="/journals/vectors" method="get" className="flex gap-2">
             <Label label="Page size">
               <Input
@@ -200,7 +200,7 @@ const VectorsDebugPage: React.FC<{
           </form>
         )}
 
-        {!isAppProduction() && (
+        {!isProduction() && (
           <div className="text-sm text-zinc-600 space-y-1">
             <p>Bucket: {vectorBucketName}</p>
             <p>Index: {indexName}</p>
@@ -210,7 +210,7 @@ const VectorsDebugPage: React.FC<{
           </div>
         )}
 
-        {!isAppProduction() &&
+        {!isProduction() &&
           (visibleVectors.length === 0 ? (
             <p className="text-sm text-zinc-600">
               No vectors visible on this page.
@@ -231,7 +231,7 @@ const VectorsDebugPage: React.FC<{
             </ul>
           ))}
 
-        {!isAppProduction() && listed.nextToken && (
+        {!isProduction() && listed.nextToken && (
           <form action="/journals/vectors" method="get">
             <input type="hidden" name="nextToken" value={listed.nextToken} />
             <input type="hidden" name="limit" value={String(limit)} />

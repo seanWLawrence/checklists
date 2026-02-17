@@ -11,8 +11,8 @@ This folder deploys:
 
 CDK reads these from `infra/.env` (or shell env vars).
 
-- `APP_ENV`
-  - `dev` or `prod`
+- `NODE_ENV`
+  - `development` or `production`
   - Controls stack name: `infra-dev` or `infra-prod`
 - `AWS_ACCOUNT`
   - Target AWS account ID

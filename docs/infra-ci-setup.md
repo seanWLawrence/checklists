@@ -93,7 +93,7 @@ Local env vars for dev:
 
 - `AWS_ACCOUNT=<DEV_ACCOUNT_ID>`
 - `AWS_REGION=<DEV_REGION>`
-- `APP_ENV=dev`
+- `NODE_ENV=development`
 - `AWS_JOURNAL_VECTOR_DIMENSION=1024` (or your value)
 
 Deploy:
@@ -120,7 +120,7 @@ Manual:
 
 The workflow always sets:
 
-- `APP_ENV=prod`
+- `NODE_ENV=production`
 - `AWS_REGION` from `AWS_REGION_PROD`
 - `AWS_ACCOUNT` from AWS caller identity
 - `AWS_JOURNAL_VECTOR_DIMENSION` from `AWS_JOURNAL_VECTOR_DIMENSION`

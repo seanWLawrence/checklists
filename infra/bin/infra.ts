@@ -7,9 +7,9 @@ import assert from "node:assert";
 
 const account = get("AWS_ACCOUNT");
 const region = get("AWS_REGION");
-const appEnvRaw = get("APP_ENV");
-const appEnv = appEnvRaw === "prod" ? "prod" : "dev";
-const stackId = appEnv === "prod" ? "infra-prod" : "infra-dev";
+const nodeEnv = get("NODE_ENV");
+const isProduction = nodeEnv === "production";
+const stackId = isProduction ? "infra-prod" : "infra-dev";
 
 assert(account, "Missing AWS_ACCOUNT in CDK");
 assert(region, "Missing AWS_REGION in CDK");
