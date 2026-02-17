@@ -1,5 +1,9 @@
 import { Journal, SentimentLabel } from "../journal.types";
 import { JOURNAL_HABIT_FIELDS } from "./journal-habits";
+import {
+  getSentimentValenceInfo,
+  SentimentValenceBucket,
+} from "./get-sentiment-valence-info.lib";
 
 type LevelKey = "moodLevel" | "energyLevel" | "healthLevel";
 
@@ -36,6 +40,7 @@ export type JournalAiAnalytics = {
   analyzedCount: number;
   averageSentimentValence: number | undefined;
   sentimentLabelCounts: Record<SentimentLabel, number>;
+  sentimentValenceBucketCounts: Record<SentimentValenceBucket, number>;
   sentimentTimeline: Array<{
     dateMilli: number;
     valence: number;
@@ -125,6 +130,14 @@ export const getJournalAiAnalytics = (
     positive: 0,
   };
 
+  const sentimentValenceBucketCounts: Record<SentimentValenceBucket, number> = {
+    veryPositive: 0,
+    positive: 0,
+    mixed: 0,
+    negative: 0,
+    veryNegative: 0,
+  };
+
   let analyzedCount = 0;
   let sentimentValenceTotal = 0;
 
@@ -139,6 +152,8 @@ export const getJournalAiAnalytics = (
       analyzedCount += 1;
       sentimentValenceTotal += journal.sentiment.valence;
       sentimentLabelCounts[journal.sentiment.label] += 1;
+      const valenceInfo = getSentimentValenceInfo(journal.sentiment.valence);
+      sentimentValenceBucketCounts[valenceInfo.bucket] += 1;
       sentimentRows.push({
         dateMilli: new Date(journal.createdAtLocal).getTime(),
         valence: journal.sentiment.valence,
@@ -249,6 +264,7 @@ export const getJournalAiAnalytics = (
     averageSentimentValence:
       analyzedCount > 0 ? round(sentimentValenceTotal / analyzedCount) : undefined,
     sentimentLabelCounts,
+    sentimentValenceBucketCounts,
     sentimentTimeline,
     topHabits,
     habitImpact,

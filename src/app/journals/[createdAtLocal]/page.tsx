@@ -18,6 +18,7 @@ import {
 } from "../lib/journal-habits";
 import { SubmitButton } from "@/components/submit-button";
 import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
+import { getSentimentValenceInfo } from "../lib/get-sentiment-valence-info.lib";
 
 const prettifyContent = (content: string): React.ReactNode | undefined => {
   const sections = groupJournalContentSections(content).extract();
@@ -115,12 +116,26 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                 <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   Sentiment
                 </p>
-                <p>
-                  {journal.sentiment.label} ({journal.sentiment.valence.toFixed(2)})
-                  {typeof journal.sentiment.confidence === "number"
-                    ? ` • confidence ${Math.round(journal.sentiment.confidence * 100)}%`
-                    : ""}
-                </p>
+                {(() => {
+                  const valenceInfo = getSentimentValenceInfo(
+                    journal.sentiment.valence,
+                  );
+
+                  return (
+                    <p>
+                      <span
+                        className={`font-medium ${valenceInfo.className}`}
+                        title={valenceInfo.title}
+                      >
+                        {valenceInfo.label}
+                      </span>{" "}
+                      ({journal.sentiment.valence.toFixed(2)})
+                      {typeof journal.sentiment.confidence === "number"
+                        ? ` • confidence ${Math.round(journal.sentiment.confidence * 100)}%`
+                        : ""}
+                    </p>
+                  );
+                })()}
               </div>
             )}
 

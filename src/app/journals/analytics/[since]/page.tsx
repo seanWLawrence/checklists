@@ -8,6 +8,7 @@ import { LevelChartsTabs } from "./level-charts-tabs";
 import { SinceFilterForm } from "../../components/since-filter-form";
 import { Fieldset } from "@/components/fieldset";
 import dynamic from "next/dynamic";
+import { SENTIMENT_VALENCE_BUCKET_LABELS } from "../../lib/get-sentiment-valence-info.lib";
 
 const SentimentLineChart = dynamic(
   () => import("./sentiment-line-chart").then((mod) => mod.SentimentLineChart),
@@ -72,12 +73,33 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 </p>
 
                 <div className="space-y-1">
-                  <p className="font-medium">Sentiment labels</p>
+                  <p className="font-medium">Model sentiment labels</p>
                   <ul className="list-disc ml-4">
                     <li>Positive: {ai.sentimentLabelCounts.positive}</li>
                     <li>Neutral: {ai.sentimentLabelCounts.neutral}</li>
                     <li>Mixed: {ai.sentimentLabelCounts.mixed}</li>
                     <li>Negative: {ai.sentimentLabelCounts.negative}</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-medium">Valence buckets (higher-level)</p>
+                  <ul className="list-disc ml-4">
+                    <li>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryPositive}: {ai.sentimentValenceBucketCounts.veryPositive}
+                    </li>
+                    <li>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.positive}: {ai.sentimentValenceBucketCounts.positive}
+                    </li>
+                    <li>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.mixed}: {ai.sentimentValenceBucketCounts.mixed}
+                    </li>
+                    <li>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.negative}: {ai.sentimentValenceBucketCounts.negative}
+                    </li>
+                    <li>
+                      {SENTIMENT_VALENCE_BUCKET_LABELS.veryNegative}: {ai.sentimentValenceBucketCounts.veryNegative}
+                    </li>
                   </ul>
                 </div>
 
