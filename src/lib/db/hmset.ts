@@ -17,9 +17,26 @@ export const hmset = <T extends object>({
     const client = await liftEither(getClientFn({}));
 
     try {
+      const entries = Object.entries(item as Record<string, unknown>);
+      const fieldsToDelete = entries
+        .filter(([, value]) => value == null)
+        .map(([field]) => field);
+
+      const fieldsToSet = Object.fromEntries(
+        entries.filter(([, value]) => value != null),
+      );
+
+      if (fieldsToDelete.length > 0) {
+        await client.hdel(key, ...fieldsToDelete);
+      }
+
+      if (Object.keys(fieldsToSet).length === 0) {
+        return;
+      }
+
       const result = await client.hmset(
         key,
-        item as { [field: string]: unknown },
+        fieldsToSet as { [field: string]: unknown },
       );
 
       if (!isOk(result)) {

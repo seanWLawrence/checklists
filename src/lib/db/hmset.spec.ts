@@ -62,3 +62,54 @@ test("returns void if succeeds", async ({ expect }) => {
   expect(result.isRight()).toBe(true);
   expect(result.extract()).toBe(void 0);
 });
+
+test("deletes nullish fields before hmset", async ({ expect }) => {
+  const hmsetMock = vi.fn().mockResolvedValue("OK");
+  const hdelMock = vi.fn().mockResolvedValue(2);
+  const getClientFn = vi.fn().mockReturnValue(
+    Right({
+      hmset: hmsetMock,
+      hdel: hdelMock,
+    }),
+  );
+
+  const result = await hmset({
+    item: {
+      username: "username",
+      dailySummary: null,
+      sentiment: undefined,
+    },
+    key,
+    getClientFn,
+  });
+
+  expect(result.isRight()).toBe(true);
+  expect(hdelMock).toHaveBeenCalledWith(key, "dailySummary", "sentiment");
+  expect(hmsetMock).toHaveBeenCalledWith(key, {
+    username: "username",
+  });
+});
+
+test("skips hmset when all fields are nullish", async ({ expect }) => {
+  const hmsetMock = vi.fn().mockResolvedValue("OK");
+  const hdelMock = vi.fn().mockResolvedValue(1);
+  const getClientFn = vi.fn().mockReturnValue(
+    Right({
+      hmset: hmsetMock,
+      hdel: hdelMock,
+    }),
+  );
+
+  const result = await hmset({
+    item: {
+      dailySummary: null,
+      sentiment: undefined,
+    },
+    key,
+    getClientFn,
+  });
+
+  expect(result.isRight()).toBe(true);
+  expect(hdelMock).toHaveBeenCalledWith(key, "dailySummary", "sentiment");
+  expect(hmsetMock).not.toHaveBeenCalled();
+});
