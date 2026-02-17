@@ -31,7 +31,7 @@ export const JournalFormAssetsAndContent: React.FC<{
       return;
     }
 
-    const heading = `## From audio - ${asset.caption || asset.filename}`;
+    const heading = `## Transcribed ${asset.caption || asset.filename}`;
     const formatted =
       `${heading}\n` +
       trimmed
