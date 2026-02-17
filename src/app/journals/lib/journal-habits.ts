@@ -1,6 +1,6 @@
 import { JournalHabits } from "../journal.types";
 
-export type JournalHabitKey = keyof JournalHabits;
+type JournalHabitKey = keyof JournalHabits;
 
 export const JOURNAL_HABIT_FIELDS: Array<{
   key: JournalHabitKey;

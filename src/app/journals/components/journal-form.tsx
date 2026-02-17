@@ -68,6 +68,57 @@ export const JournalForm: React.FC<{
             </Label>
           </Fieldset>
 
+          <Fieldset legend="Habits">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {JOURNAL_HABIT_FIELDS.map(({ key, label }) => (
+                <label
+                  key={key}
+                  className="inline-flex items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name={key}
+                    value="true"
+                    defaultChecked={Boolean(journal?.habits?.[key])}
+                    className="accent-blue-500"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </Fieldset>
+
+          {journal && (
+            <input
+              name="metadata"
+              type="hidden"
+              value={JSON.stringify({
+                id: journal.id,
+                createdAtIso: journal.createdAtIso,
+                updatedAtIso: journal.updatedAtIso,
+                user: journal.user,
+              })}
+              readOnly
+              required
+            />
+          )}
+
+          {journal && (
+            <input
+              name="existingCreatedAtLocal"
+              type="hidden"
+              value={journal.createdAtLocal}
+              readOnly
+              required
+            />
+          )}
+
+          <JournalFormAssetsAndContent
+            initialContent={journal?.content ?? ""}
+            contentPlaceholder={DEFAULT_TEMPLATE}
+            initialAssets={sortedAssets}
+          />
+
           <Fieldset legend={"Levels"}>
             <Label label="Energy level (low to high)">
               <input
@@ -129,57 +180,6 @@ export const JournalForm: React.FC<{
               />
             </Label>
           </Fieldset>
-
-          <Fieldset legend="Habits">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {JOURNAL_HABIT_FIELDS.map(({ key, label }) => (
-                <label
-                  key={key}
-                  className="inline-flex items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    name={key}
-                    value="true"
-                    defaultChecked={Boolean(journal?.habits?.[key])}
-                    className="accent-blue-500"
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          </Fieldset>
-
-          {journal && (
-            <input
-              name="metadata"
-              type="hidden"
-              value={JSON.stringify({
-                id: journal.id,
-                createdAtIso: journal.createdAtIso,
-                updatedAtIso: journal.updatedAtIso,
-                user: journal.user,
-              })}
-              readOnly
-              required
-            />
-          )}
-
-          {journal && (
-            <input
-              name="existingCreatedAtLocal"
-              type="hidden"
-              value={journal.createdAtLocal}
-              readOnly
-              required
-            />
-          )}
-
-          <JournalFormAssetsAndContent
-            initialContent={journal?.content ?? ""}
-            contentPlaceholder={DEFAULT_TEMPLATE}
-            initialAssets={sortedAssets}
-          />
 
           <div className="flex justify-end w-full max-w-prose">
             <SubmitButton type="submit" variant="primary">

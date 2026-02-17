@@ -87,7 +87,7 @@ export const SentimentLabel = Codec.custom<SentimentLabel>({
   encode: (input) => input,
 });
 
-export const SentimentValence = Codec.custom<number>({
+const SentimentValence = Codec.custom<number>({
   decode: (input) => {
     const val = Number(input);
     return Number.isFinite(val) && val >= -1 && val <= 1
@@ -97,7 +97,7 @@ export const SentimentValence = Codec.custom<number>({
   encode: (input) => input,
 });
 
-export const SentimentConfidence = Codec.custom<number>({
+const SentimentConfidence = Codec.custom<number>({
   decode: (input) => {
     const val = Number(input);
     return Number.isFinite(val) && val >= 0 && val <= 1
@@ -107,13 +107,13 @@ export const SentimentConfidence = Codec.custom<number>({
   encode: (input) => input,
 });
 
-export const JournalSentiment = Codec.interface({
+const JournalSentiment = Codec.interface({
   valence: SentimentValence,
   label: SentimentLabel,
   confidence: optional(SentimentConfidence),
 });
 
-export type JournalSentiment = GetType<typeof JournalSentiment>;
+type JournalSentiment = GetType<typeof JournalSentiment>;
 
 export const JournalHabits = Codec.interface({
   strengthTraining: optional(booleanCodec),
@@ -134,7 +134,7 @@ export const JournalHabits = Codec.interface({
 
 export type JournalHabits = GetType<typeof JournalHabits>;
 
-export const AnalysisUpdatedAtIso = Codec.custom<string>({
+const AnalysisUpdatedAtIso = Codec.custom<string>({
   decode: (input) => {
     if (typeof input === "string" && !Number.isNaN(new Date(input).getTime())) {
       return Right(new Date(input).toISOString());
@@ -147,7 +147,7 @@ export const AnalysisUpdatedAtIso = Codec.custom<string>({
   encode: (input) => input,
 });
 
-export const AnalysisVersion = Codec.custom<number>({
+const AnalysisVersion = Codec.custom<number>({
   decode: (input) => {
     const val = Number(input);
     return Number.isInteger(val) && val > 0
