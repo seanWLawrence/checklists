@@ -12,7 +12,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
 }) => {
   const userMaybe = await getUserFn({});
-  const canAccessVectorAdmin = userMaybe
+  const canAccessAdmin = userMaybe
     .map((user) => isAdminUsername(user.username))
     .orDefault(false);
 
@@ -55,15 +55,6 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 <span>/</span>
 
                 <JournalAnalyticsLink />
-
-                {canAccessVectorAdmin && (
-                  <>
-                    <span>/</span>
-                    <LinkButton href="/journals/vectors" variant="ghost">
-                      Vectors
-                    </LinkButton>
-                  </>
-                )}
               </div>
 
               <div className="flex space-x-1 items-center">
@@ -78,9 +69,20 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 </LinkButton>
               </div>
 
-              <LinkButton href="/user-credential-generator" variant="ghost">
-                Generate credentials
-              </LinkButton>
+              <div className="flex space-x-1 items-center">
+                <LinkButton href="/user-credential-generator" variant="ghost">
+                  Generate credentials
+                </LinkButton>
+
+                {canAccessAdmin && (
+                  <>
+                    <span>/</span>
+                    <LinkButton href="/admin/debug" variant="ghost">
+                      Debug
+                    </LinkButton>
+                  </>
+                )}
+              </div>
 
               <form action={logoutAction}>
                 <SubmitButton variant="ghost">Sign out</SubmitButton>

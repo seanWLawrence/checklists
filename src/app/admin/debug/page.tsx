@@ -15,8 +15,6 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { listVectors } from "@/lib/aws/s3vectors/list-vectors";
 import { getAppEnvironment, isProduction } from "@/lib/environment";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
-import { backfillJournalEmbeddingsAction } from "../actions/backfill-journal-embeddings.action";
-import { backfillJournalAnalysisAction } from "../actions/backfill-journal-analysis.action";
 
 export const dynamic = "force-dynamic";
 
@@ -33,50 +31,11 @@ const VectorsDebugPage: React.FC<{
   searchParams?: Promise<{
     nextToken?: string;
     limit?: string;
-    backfillTotal?: string;
-    backfillSuccess?: string;
-    backfillFailed?: string;
-    backfillError?: string;
-    analysisBackfillTotal?: string;
-    analysisBackfillSuccess?: string;
-    analysisBackfillFailed?: string;
-    analysisBackfillError?: string;
   }>;
 }> = async ({ searchParams }) => {
-  const {
-    nextToken,
-    limit: rawLimit,
-    backfillTotal,
-    backfillSuccess,
-    backfillFailed,
-    backfillError,
-    analysisBackfillTotal,
-    analysisBackfillSuccess,
-    analysisBackfillFailed,
-    analysisBackfillError,
-  } = (await searchParams) ?? {};
+  const { nextToken, limit: rawLimit } = (await searchParams) ?? {};
   const limit = parsePageSize(rawLimit);
   const appEnvironment = getAppEnvironment();
-  const backfillTotalNumber =
-    typeof backfillTotal === "string" ? Number(backfillTotal) : undefined;
-  const backfillSuccessNumber =
-    typeof backfillSuccess === "string" ? Number(backfillSuccess) : undefined;
-  const backfillFailedNumber =
-    typeof backfillFailed === "string" ? Number(backfillFailed) : undefined;
-  const hasBackfillError = backfillError === "1";
-  const analysisBackfillTotalNumber =
-    typeof analysisBackfillTotal === "string"
-      ? Number(analysisBackfillTotal)
-      : undefined;
-  const analysisBackfillSuccessNumber =
-    typeof analysisBackfillSuccess === "string"
-      ? Number(analysisBackfillSuccess)
-      : undefined;
-  const analysisBackfillFailedNumber =
-    typeof analysisBackfillFailed === "string"
-      ? Number(analysisBackfillFailed)
-      : undefined;
-  const hasAnalysisBackfillError = analysisBackfillError === "1";
 
   const page = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
@@ -119,66 +78,6 @@ const VectorsDebugPage: React.FC<{
           </LinkButton>
         </div>
 
-        <form action={backfillJournalEmbeddingsAction} className="space-y-2">
-          <input type="hidden" name="redirectTo" value="/journals/vectors" />
-          <input type="hidden" name="limit" value={String(limit)} />
-          <input type="hidden" name="nextToken" value={nextToken ?? ""} />
-          <SubmitButton variant="outline">
-            Backfill Embeddings (one-time)
-          </SubmitButton>
-        </form>
-
-        {(typeof backfillTotalNumber === "number" ||
-          typeof backfillSuccessNumber === "number" ||
-          typeof backfillFailedNumber === "number" ||
-          hasBackfillError) && (
-          <p
-            className={
-              hasBackfillError
-                ? "text-sm text-red-700"
-                : "text-sm text-zinc-600"
-            }
-          >
-            {hasBackfillError
-              ? "Backfill failed. Check server logs for details."
-              : `Backfill complete. Total: ${
-                  backfillTotalNumber ?? 0
-                }, Success: ${backfillSuccessNumber ?? 0}, Failed: ${
-                  backfillFailedNumber ?? 0
-                }.`}
-          </p>
-        )}
-
-        <form action={backfillJournalAnalysisAction} className="space-y-2">
-          <input type="hidden" name="redirectTo" value="/journals/vectors" />
-          <input type="hidden" name="limit" value={String(limit)} />
-          <input type="hidden" name="nextToken" value={nextToken ?? ""} />
-          <SubmitButton variant="outline">
-            Backfill AI Analysis (one-time)
-          </SubmitButton>
-        </form>
-
-        {(typeof analysisBackfillTotalNumber === "number" ||
-          typeof analysisBackfillSuccessNumber === "number" ||
-          typeof analysisBackfillFailedNumber === "number" ||
-          hasAnalysisBackfillError) && (
-          <p
-            className={
-              hasAnalysisBackfillError
-                ? "text-sm text-red-700"
-                : "text-sm text-zinc-600"
-            }
-          >
-            {hasAnalysisBackfillError
-              ? "AI analysis backfill failed. Check server logs for details."
-              : `AI analysis backfill complete. Total: ${
-                  analysisBackfillTotalNumber ?? 0
-                }, Success: ${analysisBackfillSuccessNumber ?? 0}, Failed: ${
-                  analysisBackfillFailedNumber ?? 0
-                }.`}
-          </p>
-        )}
-
         {isProduction() && (
           <p className="text-sm text-zinc-600">
             Debug vector listing is hidden in production.
@@ -186,7 +85,7 @@ const VectorsDebugPage: React.FC<{
         )}
 
         {!isProduction() && (
-          <form action="/journals/vectors" method="get" className="flex gap-2">
+          <form action="/admin/debug" method="get" className="flex gap-2">
             <Label label="Page size">
               <Input
                 name="limit"
@@ -232,7 +131,7 @@ const VectorsDebugPage: React.FC<{
           ))}
 
         {!isProduction() && listed.nextToken && (
-          <form action="/journals/vectors" method="get">
+          <form action="/admin/debug" method="get">
             <input type="hidden" name="nextToken" value={listed.nextToken} />
             <input type="hidden" name="limit" value={String(limit)} />
             <SubmitButton variant="outline">Next page</SubmitButton>
