@@ -5,9 +5,13 @@ import { openai } from "@ai-sdk/openai";
 
 import { JournalAnalysis, JournalHabits, SentimentLabel } from "../journal.types";
 import { logger } from "@/lib/logger";
+import { normalizeJournalContent } from "./get-journal-embedding-input.lib";
 
 const MODEL = process.env.OPENAI_JOURNAL_ANALYSIS_MODEL ?? "gpt-4o-mini";
 const ANALYSIS_VERSION = 1;
+const MIN_JOURNAL_ANALYSIS_CHARS = Number(
+  process.env.MIN_JOURNAL_ANALYSIS_CHARS ?? 40,
+);
 
 const emptyAnalysis = ({
   habits,
@@ -48,8 +52,12 @@ export const getJournalAiAnalysis = async ({
   habits: JournalHabits;
 }): Promise<JournalAnalysis> => {
   const now = new Date().toISOString();
+  const normalizedContent = normalizeJournalContent(content);
+  const minChars = Number.isFinite(MIN_JOURNAL_ANALYSIS_CHARS)
+    ? Math.max(0, Math.floor(MIN_JOURNAL_ANALYSIS_CHARS))
+    : 40;
 
-  if (!content.trim()) {
+  if (!normalizedContent || normalizedContent.length < minChars) {
     return emptyAnalysis({ habits, now });
   }
 
@@ -63,7 +71,7 @@ export const getJournalAiAnalysis = async ({
         "Analyze this journal entry and return this exact JSON shape: " +
         '{ "dailySummary": string, "sentiment": { "valence": number between -1 and 1, "label": "negative"|"mixed"|"neutral"|"positive", "confidence": number between 0 and 1 } }. ' +
         "Rules: dailySummary must be 1-3 concise sentences. Sentiment must be grounded in the text.\n\nJournal entry:\n" +
-        content,
+        normalizedContent,
     });
 
     const parsed = JSON.parse(extractJson(response.text));
