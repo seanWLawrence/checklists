@@ -35,9 +35,14 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
           className="flex max-w-fit items-end space-x-2"
           action={async (formData) => {
             "use server";
-            const since = formData.get("since");
+            const sinceRaw = formData.get("since");
+            const nextSince =
+              typeof sinceRaw === "string" &&
+              parseSinceRange(sinceRaw.trim()).isRight()
+                ? sinceRaw.trim()
+                : since;
 
-            redirect(`/journals/analytics/${since}`);
+            redirect(`/journals/analytics/${nextSince}`);
           }}
           defaultSince={since}
         />

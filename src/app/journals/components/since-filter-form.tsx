@@ -20,7 +20,7 @@ export const SinceFilterForm: React.FC<{
         <Input
           name="since"
           defaultValue={defaultSince}
-          pattern="\d{4,}-\d{2,}-\d{2,}to\d{4,}-\d{2,}-\d{2,}"
+          pattern="\d{4}-\d{2}-\d{2}to\d{4}-\d{2}-\d{2}"
           className="min-w-56"
         />
       </Label>

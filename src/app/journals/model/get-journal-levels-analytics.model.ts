@@ -47,19 +47,8 @@ export const getJournalLevelsAnalytics = ({
     const filteredLevels =
       from || to
         ? levels.filter((x) => {
-            const createdAt = new Date(x.createdAtLocal).getTime();
-
-            const conditions: ((dateNum: number) => boolean)[] = [];
-
-            if (from) {
-              conditions.push(() => new Date(from).getTime() <= createdAt);
-            }
-
-            if (to) {
-              conditions.push(() => new Date(to).getTime() >= createdAt);
-            }
-
-            return conditions.every((fn) => fn(createdAt));
+            const createdAt = x.createdAtLocal;
+            return (!from || from <= createdAt) && (!to || createdAt <= to);
           })
         : levels;
 

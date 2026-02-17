@@ -23,9 +23,30 @@ const dateToCreatedAtLocal = (date: Date): CreatedAtLocal => {
   return `${date.getFullYear()}-${month}-${day}` as CreatedAtLocal;
 };
 
+const CREATED_AT_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const isValidCreatedAtLocalString = (input: string): boolean => {
+  if (!CREATED_AT_LOCAL_PATTERN.test(input)) {
+    return false;
+  }
+
+  const [yearRaw, monthRaw, dayRaw] = input.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+
+  const asUtcDate = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    asUtcDate.getUTCFullYear() === year &&
+    asUtcDate.getUTCMonth() + 1 === month &&
+    asUtcDate.getUTCDate() === day
+  );
+};
+
 export const CreatedAtLocal = Codec.custom<CreatedAtLocal>({
   decode: (input) =>
-    typeof input === "string" && input.match(/^\d{4,}-\d{2,}-\d{2,}$/)?.[0]
+    typeof input === "string" && isValidCreatedAtLocalString(input)
       ? Right(input as CreatedAtLocal)
       : input instanceof Date && !Number.isNaN(input.getTime())
         ? Right(dateToCreatedAtLocal(input))
@@ -39,11 +60,22 @@ export const CreatedAtLocal = Codec.custom<CreatedAtLocal>({
 export type Since = `${CreatedAtLocal}to${CreatedAtLocal}`;
 
 export const Since = Codec.custom<Since>({
-  decode: (input) =>
-    typeof input === "string" &&
-    input.match(/^\d{4,}-\d{2,}-\d{2,}to\d{4,}-\d{2,}-\d{2,}$/)?.[0]
-      ? Right(input as Since)
-      : Left(`Invalid since '${input}'`),
+  decode: (input) => {
+    if (typeof input !== "string") {
+      return Left(`Invalid since '${input}'`);
+    }
+
+    const parts = input.split("to");
+    if (parts.length !== 2) {
+      return Left(`Invalid since '${input}'`);
+    }
+
+    const [fromRaw, toRaw] = parts;
+
+    return CreatedAtLocal.decode(fromRaw).chain(() =>
+      CreatedAtLocal.decode(toRaw).map(() => input as Since),
+    );
+  },
   encode: (input) => input,
 });
 
