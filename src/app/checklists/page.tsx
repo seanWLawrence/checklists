@@ -30,9 +30,11 @@ const getCategorizedChecklists = (
     result[category].push({ ...checklist, name });
   }
 
-  result["Other"] = uncategorized.sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-  );
+  if (uncategorized.length) {
+    result["Other"] = uncategorized.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    );
+  }
 
   return Object.entries(result)
     .map(([category, checklists]) => {
