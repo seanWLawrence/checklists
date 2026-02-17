@@ -7,13 +7,8 @@ import { getJournalLevelsAnalytics } from "../../model/get-journal-levels-analyt
 import { LevelChartsTabs } from "./level-charts-tabs";
 import { SinceFilterForm } from "../../components/since-filter-form";
 import { Fieldset } from "@/components/fieldset";
-import dynamic from "next/dynamic";
 import { SENTIMENT_VALENCE_BUCKET_LABELS } from "../../lib/get-sentiment-valence-info.lib";
-
-const SentimentLineChart = dynamic(
-  () => import("./sentiment-line-chart").then((mod) => mod.SentimentLineChart),
-  { ssr: false, loading: () => <div className="min-h-[200px]" /> },
-);
+import { SentimentLineChart } from "./sentiment-line-chart";
 
 /**
  * Get the date range from the route, default to last week
