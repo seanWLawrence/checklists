@@ -31,15 +31,9 @@ export const JournalFormAssetsAndContent: React.FC<{
       return;
     }
 
-    const timestamp = Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).format(new Date());
-
     const heading = `## From audio - ${asset.caption || asset.filename}`;
     const formatted =
-      `${heading} ${timestamp}\n` +
+      `${heading}\n` +
       trimmed
         .split(".")
         .map((x) => x.trim())

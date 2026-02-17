@@ -48,10 +48,12 @@ const getPreferredMimeType = (): string | undefined => {
 };
 
 const formatTimestamp = (date: Date): string => {
-  const hours = String(date.getHours()).padStart(2, "0");
+  const hours24 = date.getHours();
+  const hours12 = hours24 % 12 || 12;
   const minutes = String(date.getMinutes()).padStart(2, "0");
+  const meridiem = hours24 >= 12 ? "PM" : "AM";
 
-  return `${hours}:${minutes}`;
+  return `${hours12}_${minutes}${meridiem}`;
 };
 
 export const AudioRecorderInput: React.FC<{
