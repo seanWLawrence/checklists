@@ -22,7 +22,7 @@ export const JOURNAL_HABIT_FIELDS: Array<{
   { key: "followSleepSchedule", label: "Follow sleep schedule" },
 ];
 
-export const EMPTY_JOURNAL_HABITS: JournalHabits = {
+const EMPTY_JOURNAL_HABITS: JournalHabits = {
   strengthTraining: undefined,
   martialArts: undefined,
   cardio: undefined,
