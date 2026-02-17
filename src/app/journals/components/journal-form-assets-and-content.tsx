@@ -32,12 +32,7 @@ export const JournalFormAssetsAndContent: React.FC<{
     }
 
     const heading = `## Transcribed ${asset.caption || asset.filename}`;
-    const formatted =
-      `${heading}\n` +
-      trimmed
-        .split(".")
-        .map((x) => x.trim())
-        .join("\n");
+    const formatted = `${heading}\n${trimmed}`;
 
     setContent((current) =>
       current ? `${current}\n\n${formatted}` : formatted,
