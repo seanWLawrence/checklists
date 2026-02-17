@@ -2,6 +2,10 @@
 
 This is a personal application I wrote for things I use frequently.
 
+## User guide
+
+- High-level feature guide: `docs/user-guide.md`
+
 ## Checklists
 
 These are lists that you can use as a TODO of sorts. But they shine when you
