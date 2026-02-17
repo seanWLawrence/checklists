@@ -92,7 +92,7 @@ export const JournalSearchResults: React.FC<{
           >
             <div className="flex justify-between w-full">
               <p className="text-sm text-zinc-700 w-full flex-1">
-                {getPreview(match.journal.content)}
+                {getPreview(match.journal.content ?? "")}
               </p>
 
               <div className="flex items-center justify-between">

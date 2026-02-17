@@ -20,34 +20,31 @@ import { SubmitButton } from "@/components/submit-button";
 import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
 
 const prettifyContent = (content: string): React.ReactNode | undefined => {
-  return groupJournalContentSections(content)
-    .map((sections) => {
-      return (
-        // Not actually an iterator, "map" in this context is different
-        // eslint-disable-next-line react/jsx-key
-        <div className="space-y-3">
-          {sections.map((section, index) => {
-            return (
-              <div key={`${section.heading}-${index}`} className="space-y-1">
-                <Heading level={3}>{section.heading}</Heading>
+  const sections = groupJournalContentSections(content).extract();
 
-                <ul>
-                  {section.children.map((row, index) => (
-                    <li
-                      className="list-disc ml-4 text-sm"
-                      key={`${row}-${index}`}
-                    >
-                      {row}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      );
-    })
-    .extract();
+  if (!sections || sections.length === 0) {
+    return undefined;
+  }
+
+  return (
+    <div className="space-y-3">
+      {sections.map((section, index) => {
+        return (
+          <div key={`${section.heading}-${index}`} className="space-y-1">
+            <Heading level={3}>{section.heading}</Heading>
+
+            <ul>
+              {section.children.map((row, index) => (
+                <li className="list-disc ml-4 text-sm" key={`${row}-${index}`}>
+                  {row}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 type Params = Promise<{ createdAtLocal: string }>;
@@ -62,7 +59,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
 
     const journal = await fromPromise(getJournal(createdAtLocal));
     const assets = journal.assets ?? [];
-    const prettyContent = prettifyContent(journal.content);
+    const prettyContent = prettifyContent(journal.content ?? "");
     const completedHabits = getCompletedHabitLabels(journal.habits);
 
     const assetUrls = await fromPromise(

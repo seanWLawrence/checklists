@@ -56,7 +56,7 @@ export const backfillJournalAnalysisAction = async (
 
     for (const journal of sortedJournals) {
       const analysis = await getJournalAiAnalysis({
-        content: journal.content,
+        content: journal.content ?? "",
         habits: journal.habits ?? EMPTY_JOURNAL_HABITS,
       });
 

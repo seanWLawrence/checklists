@@ -176,7 +176,8 @@ export const JournalForm: React.FC<{
           )}
 
           <JournalFormAssetsAndContent
-            initialContent={journal?.content ?? DEFAULT_TEMPLATE}
+            initialContent={journal?.content ?? ""}
+            contentPlaceholder={DEFAULT_TEMPLATE}
             initialAssets={sortedAssets}
           />
 

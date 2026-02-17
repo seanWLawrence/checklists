@@ -188,7 +188,7 @@ export type JournalAsset = GetType<typeof JournalAsset>;
 export const JournalBase = intersect(
   intersect(
     Codec.interface({
-      content: string,
+      content: optional(string),
       createdAtLocal: CreatedAtLocal,
       assets: optional(array(JournalAsset)),
     }),

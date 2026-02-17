@@ -37,7 +37,7 @@ export const regenerateJournalAnalysisAction = async (
 
     const habits = getJournalHabitsFromFormData({ formData });
     const analysis = await getJournalAiAnalysis({
-      content: existing.content,
+      content: existing.content ?? "",
       habits,
     });
 

@@ -4,7 +4,9 @@ import { JournalBase } from "../journal.types";
 export const groupJournalContentSections = (
   content: JournalBase["content"],
 ) => {
-  return NonEmptyList.fromArray(content.split("\n")).map((list) => {
+  const contentValue = content ?? "";
+
+  return NonEmptyList.fromArray(contentValue.split("\n")).map((list) => {
     const sections: {
       heading: string;
       children: string[];
