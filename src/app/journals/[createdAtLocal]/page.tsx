@@ -94,12 +94,6 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <RelativeTime date={journal.updatedAtIso} />
         </div>
 
-        {!!prettyContent && (
-          <Fieldset legend="Content">
-            <div className="space-y-1">{prettyContent}</div>
-          </Fieldset>
-        )}
-
         <Fieldset legend="AI analysis">
           <div className="space-y-2 text-sm">
             {journal.dailySummary && (
@@ -244,6 +238,12 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                 previewUrl,
               }))}
             />
+          </Fieldset>
+        )}
+
+        {!!prettyContent && (
+          <Fieldset legend="Content">
+            <div className="space-y-1">{prettyContent}</div>
           </Fieldset>
         )}
       </main>
