@@ -4,7 +4,7 @@ export const normalizeJournalContent = (content: string): string => {
   const rows = content
     .split("\n")
     .map((row) => row.trim())
-    .filter((row) => row.length > 0 && !row.startsWith("## "));
+    .filter((row) => row.length > 0);
 
   return rows.join("\n").trim();
 };

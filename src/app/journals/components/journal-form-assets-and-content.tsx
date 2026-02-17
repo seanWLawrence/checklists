@@ -25,17 +25,14 @@ export const JournalFormAssetsAndContent: React.FC<{
 }) => {
   const [content, setContent] = useState(initialContent);
 
-  const onTranscribeChange = (asset: AssetItem, text: string) => {
+  const onTranscribeChange = (_asset: AssetItem, text: string) => {
     const trimmed = text.trim();
     if (!trimmed) {
       return;
     }
 
-    const heading = `## Transcribed ${asset.caption || asset.filename}`;
-    const formatted = `${heading}\n${trimmed}`;
-
     setContent((current) =>
-      current ? `${current}\n\n${formatted}` : formatted,
+      current ? `${current}\n\n${trimmed}` : trimmed,
     );
   };
 

@@ -25,20 +25,30 @@ const extractJson = (text: string): string => {
   throw new Error("Could not extract JSON object from transcription cleanup response");
 };
 
+const ALLOWED_HEADINGS = [
+  "Dreams",
+  "Grateful for",
+  "Goals",
+  "Highlights",
+  "Ideas",
+  "Things learned",
+  "Action Items",
+  "Other",
+] as const;
+
+type AllowedHeading = (typeof ALLOWED_HEADINGS)[number];
+
 type TranscriptionSection = {
-  heading: string;
+  heading: AllowedHeading;
   bullets: string[];
 };
 
 type TranscriptionCleanupResult = {
   sections: TranscriptionSection[];
-  todos: string[];
-  followUps: string[];
-  unclear: string[];
 };
 
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === "string");
+const isAllowedHeading = (heading: string): heading is AllowedHeading =>
+  (ALLOWED_HEADINGS as readonly string[]).includes(heading);
 
 const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null => {
   if (!value || typeof value !== "object") {
@@ -47,9 +57,6 @@ const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null 
 
   const candidate = value as {
     sections?: unknown;
-    todos?: unknown;
-    followUps?: unknown;
-    unclear?: unknown;
   };
 
   const sections = Array.isArray(candidate.sections)
@@ -62,15 +69,17 @@ const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null 
           const typedSection = section as { heading?: unknown; bullets?: unknown };
           if (
             typeof typedSection.heading !== "string" ||
-            !isStringArray(typedSection.bullets)
+            !Array.isArray(typedSection.bullets) ||
+            !typedSection.bullets.every((item) => typeof item === "string")
           ) {
             return null;
           }
 
-          const heading = typedSection.heading.trim();
-          const bullets = typedSection.bullets
-            .map((bullet) => bullet.trim())
-            .filter(Boolean);
+          const normalizedHeading = typedSection.heading.trim();
+          const heading = isAllowedHeading(normalizedHeading)
+            ? normalizedHeading
+            : "Other";
+          const bullets = typedSection.bullets.map((bullet) => bullet.trim()).filter(Boolean);
 
           if (!heading || bullets.length === 0) {
             return null;
@@ -87,52 +96,49 @@ const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null 
 
   return {
     sections,
-    todos: isStringArray(candidate.todos)
-      ? candidate.todos.map((x) => x.trim()).filter(Boolean)
-      : [],
-    followUps: isStringArray(candidate.followUps)
-      ? candidate.followUps.map((x) => x.trim()).filter(Boolean)
-      : [],
-    unclear: isStringArray(candidate.unclear)
-      ? candidate.unclear.map((x) => x.trim()).filter(Boolean)
-      : [],
   };
 };
 
 const formatCleanupResult = (result: TranscriptionCleanupResult): string => {
-  const sectionLines = result.sections.flatMap((section) => [
-    `### ${section.heading}`,
-    ...section.bullets.map((bullet) => `- ${bullet}`),
-    "",
-  ]);
+  const sectionsByHeading = new Map<string, string[]>();
 
-  const todoLines =
-    result.todos.length > 0
-      ? ["### Tasks", ...result.todos.map((todo) => `- ${todo}`), ""]
-      : [];
+  for (const heading of ALLOWED_HEADINGS) {
+    sectionsByHeading.set(heading, []);
+  }
 
-  const followUpLines =
-    result.followUps.length > 0
-      ? ["### Follow-ups", ...result.followUps.map((followUp) => `- ${followUp}`), ""]
-      : [];
+  for (const section of result.sections) {
+    const existing = sectionsByHeading.get(section.heading) ?? [];
+    sectionsByHeading.set(section.heading, [...existing, ...section.bullets]);
+  }
 
-  const unclearLines =
-    result.unclear.length > 0
-      ? ["### Unclear", ...result.unclear.map((item) => `- ${item}`), ""]
-      : [];
+  const lines: string[] = [];
 
-  return [...sectionLines, ...todoLines, ...followUpLines, ...unclearLines]
-    .join("\n")
-    .trim();
+  for (const heading of ALLOWED_HEADINGS) {
+    const sectionLines = (sectionsByHeading.get(heading) ?? []).filter(Boolean);
+    if (sectionLines.length === 0) {
+      continue;
+    }
+
+    lines.push(`## ${heading}`);
+    lines.push(...sectionLines);
+    lines.push("");
+  }
+
+  return lines.join("\n").trim();
 };
 
-const normalizeTranscriptFallback = (transcript: string): string =>
-  transcript
+const normalizeTranscriptFallback = (transcript: string): string => {
+  const lines = transcript
     .split(/[\n\.\?!]+/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `- ${line}`)
-    .join("\n");
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return "";
+  }
+
+  return ["## Other", ...lines].join("\n");
+};
 
 const cleanupTranscriptIntoStructuredContent = async (
   transcript: string,
@@ -144,8 +150,8 @@ const cleanupTranscriptIntoStructuredContent = async (
       "You clean up voice journal transcriptions and return only strict JSON with no markdown and no extra keys.",
     prompt:
       "Transform this transcript into the exact JSON shape: " +
-      '{ "sections": [{ "heading": string, "bullets": string[] }], "todos": string[], "followUps": string[], "unclear": string[] }. ' +
-      "Rules: Group related ideas under concise headings. Keep bullets short and faithful to the transcript. Do not invent facts. Put anything uncertain in unclear. Extract explicit action items into todos and followUps. Return only JSON.\n\nTranscript:\n" +
+      '{ "sections": [{ "heading": "Dreams"|"Grateful for"|"Goals"|"Highlights"|"Ideas"|"Things learned"|"Action Items"|"Other", "bullets": string[] }] }. ' +
+      "Rules: Use only the allowed headings. Group related ideas under those headings. Keep bullets concise and faithful to the transcript. Do not invent facts. If uncertain, place content in Other. Return only JSON.\n\nTranscript:\n" +
       transcript,
   });
 
