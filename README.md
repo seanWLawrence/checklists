@@ -4,6 +4,7 @@ This is a personal application I wrote for things I use frequently.
 
 ## User guide
 
+- Quickstart (non-technical): `docs/quickstart.md`
 - High-level feature guide: `docs/user-guide.md`
 
 ## Checklists
