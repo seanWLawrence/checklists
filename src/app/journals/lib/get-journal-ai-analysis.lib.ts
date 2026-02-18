@@ -3,7 +3,12 @@ import "server-only";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-import { JournalAnalysis, JournalHabits, SentimentLabel } from "../journal.types";
+import {
+  JournalAnalysis,
+  JournalHabits,
+  JournalHobbies,
+  SentimentLabel,
+} from "../journal.types";
 import { logger } from "@/lib/logger";
 import { normalizeJournalContent } from "./get-journal-embedding-input.lib";
 
@@ -15,14 +20,17 @@ const MIN_JOURNAL_ANALYSIS_CHARS = Number(
 
 const emptyAnalysis = ({
   habits,
+  hobbies,
   now,
 }: {
   habits: JournalHabits;
+  hobbies: JournalHobbies;
   now: string;
 }): JournalAnalysis => ({
   dailySummary: undefined,
   sentiment: undefined,
   habits,
+  hobbies,
   analysisUpdatedAt: now,
   analysisVersion: ANALYSIS_VERSION,
 });
@@ -47,9 +55,11 @@ const extractJson = (text: string): string => {
 export const getJournalAiAnalysis = async ({
   content,
   habits,
+  hobbies,
 }: {
   content: string;
   habits: JournalHabits;
+  hobbies: JournalHobbies;
 }): Promise<JournalAnalysis> => {
   const now = new Date().toISOString();
   const normalizedContent = normalizeJournalContent(content);
@@ -58,7 +68,7 @@ export const getJournalAiAnalysis = async ({
     : 40;
 
   if (!normalizedContent || normalizedContent.length < minChars) {
-    return emptyAnalysis({ habits, now });
+    return emptyAnalysis({ habits, hobbies, now });
   }
 
   try {
@@ -90,6 +100,7 @@ export const getJournalAiAnalysis = async ({
             }
           : undefined,
       habits,
+      hobbies,
       analysisUpdatedAt: now,
       analysisVersion: ANALYSIS_VERSION,
     });
@@ -99,9 +110,9 @@ export const getJournalAiAnalysis = async ({
     }
 
     logger.warn("Journal AI analysis failed codec validation", decoded.extract());
-    return emptyAnalysis({ habits, now });
+    return emptyAnalysis({ habits, hobbies, now });
   } catch (error) {
     logger.warn("Failed to generate journal AI analysis", error);
-    return emptyAnalysis({ habits, now });
+    return emptyAnalysis({ habits, hobbies, now });
   }
 };

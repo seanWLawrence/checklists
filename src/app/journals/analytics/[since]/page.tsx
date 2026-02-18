@@ -131,6 +131,25 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                     </ul>
                   )}
                 </div>
+
+                <div className="space-y-1">
+                  <p className="font-medium">Top hobbies</p>
+
+                  {ai.topHobbies.length === 0 ? (
+                    <p className="text-zinc-600 dark:text-zinc-300">
+                      No tracked hobbies yet.
+                    </p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {ai.topHobbies.map((hobby) => (
+                        <li key={hobby.key}>
+                          {hobby.label}: <strong>{hobby.count}</strong> days (
+                          {hobby.percentOfEntries}%)
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </Fieldset>
 

@@ -14,7 +14,10 @@ import { Fieldset } from "@/components/fieldset";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 import {
   getCompletedHabitLabels,
+  getCompletedHobbyLabels,
+  getJournalHobbiesWithLegacyFallback,
   JOURNAL_HABIT_FIELDS,
+  JOURNAL_HOBBY_FIELDS,
 } from "../lib/journal-habits";
 import { SubmitButton } from "@/components/submit-button";
 import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
@@ -62,6 +65,11 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     const assets = journal.assets ?? [];
     const prettyContent = prettifyContent(journal.content ?? "");
     const completedHabits = getCompletedHabitLabels(journal.habits);
+    const resolvedHobbies = getJournalHobbiesWithLegacyFallback({
+      hobbies: journal.hobbies,
+      habits: journal.habits,
+    });
+    const completedHobbies = getCompletedHobbyLabels(resolvedHobbies);
 
     const assetUrls = await fromPromise(
       EitherAsync.all(
@@ -153,6 +161,12 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                 ),
               )}
 
+              {JOURNAL_HOBBY_FIELDS.filter(({ key }) => resolvedHobbies[key]).map(
+                ({ key }) => (
+                  <input key={key} type="hidden" name={key} value="true" />
+                ),
+              )}
+
               <SubmitButton variant="outline">Regenerate analysis</SubmitButton>
             </form>
           </div>
@@ -167,6 +181,21 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                   className="rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs"
                 >
                   {habit}
+                </li>
+              ))}
+            </ul>
+          </Fieldset>
+        )}
+
+        {completedHobbies.length > 0 && (
+          <Fieldset legend="Hobbies">
+            <ul className="flex flex-wrap gap-2">
+              {completedHobbies.map((hobby) => (
+                <li
+                  key={hobby}
+                  className="rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs"
+                >
+                  {hobby}
                 </li>
               ))}
             </ul>

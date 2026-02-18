@@ -11,7 +11,7 @@ import { getSingleItem } from "@/lib/db/get-single-item";
 import { updateItem } from "@/lib/db/update-item";
 import { CreatedAtLocal, Journal } from "../journal.types";
 import { getJournalKey } from "../model/get-journal.model";
-import { getJournalHabitsFromFormData } from "../lib/journal-habits";
+import { getJournalHabitsAndHobbiesFromFormData } from "../lib/journal-habits";
 import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const regenerateJournalAnalysisAction = async (
@@ -35,10 +35,13 @@ export const regenerateJournalAnalysisAction = async (
       }),
     );
 
-    const habits = getJournalHabitsFromFormData({ formData });
+    const { habits, hobbies } = getJournalHabitsAndHobbiesFromFormData({
+      formData,
+    });
     const analysis = await getJournalAiAnalysis({
       content: existing.content ?? "",
       habits,
+      hobbies,
     });
 
     const updated = await liftEither(

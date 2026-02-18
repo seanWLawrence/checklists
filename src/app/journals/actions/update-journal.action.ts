@@ -17,7 +17,7 @@ import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { array } from "purify-ts/Codec";
 import { Metadata } from "@/lib/types";
 import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
-import { getJournalHabitsFromFormData } from "../lib/journal-habits";
+import { getJournalHabitsAndHobbiesFromFormData } from "../lib/journal-habits";
 import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const updateJournalAction = async (
@@ -86,9 +86,11 @@ export const updateJournalAction = async (
       }),
     );
 
-    const habits = getJournalHabitsFromFormData({ formData });
+    const { habits, hobbies } = getJournalHabitsAndHobbiesFromFormData({
+      formData,
+    });
 
-    const analysis = await getJournalAiAnalysis({ content, habits });
+    const analysis = await getJournalAiAnalysis({ content, habits, hobbies });
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 

@@ -166,6 +166,19 @@ export const JournalHabits = Codec.interface({
 
 export type JournalHabits = GetType<typeof JournalHabits>;
 
+export const JournalHobbies = Codec.interface({
+  martialArts: optional(booleanCodec),
+  music: optional(booleanCodec),
+  programming: optional(booleanCodec),
+  woodworking: optional(booleanCodec),
+  writing: optional(booleanCodec),
+  reading: optional(booleanCodec),
+  filming: optional(booleanCodec),
+  learning: optional(booleanCodec),
+});
+
+export type JournalHobbies = GetType<typeof JournalHobbies>;
+
 const AnalysisUpdatedAtIso = Codec.custom<string>({
   decode: (input) => {
     if (typeof input === "string" && !Number.isNaN(new Date(input).getTime())) {
@@ -193,6 +206,7 @@ export const JournalAnalysis = Codec.interface({
   dailySummary: optional(string),
   sentiment: optional(JournalSentiment),
   habits: optional(JournalHabits),
+  hobbies: optional(JournalHobbies),
   analysisUpdatedAt: optional(AnalysisUpdatedAtIso),
   analysisVersion: optional(AnalysisVersion),
 });

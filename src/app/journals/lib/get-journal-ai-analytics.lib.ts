@@ -1,5 +1,9 @@
 import { Journal, SentimentLabel } from "../journal.types";
-import { JOURNAL_HABIT_FIELDS } from "./journal-habits";
+import {
+  JOURNAL_HABIT_FIELDS,
+  JOURNAL_HOBBY_FIELDS,
+  getJournalHobbiesWithLegacyFallback,
+} from "./journal-habits";
 import {
   getSentimentValenceInfo,
   SentimentValenceBucket,
@@ -47,6 +51,12 @@ export type JournalAiAnalytics = {
     valenceAvg7: number | undefined;
   }>;
   topHabits: Array<{
+    key: string;
+    label: string;
+    count: number;
+    percentOfEntries: number;
+  }>;
+  topHobbies: Array<{
     key: string;
     label: string;
     count: number;
@@ -144,6 +154,9 @@ export const getJournalAiAnalytics = (
   const habitCounts = Object.fromEntries(
     JOURNAL_HABIT_FIELDS.map(({ key }) => [key, 0]),
   ) as Record<string, number>;
+  const hobbyCounts = Object.fromEntries(
+    JOURNAL_HOBBY_FIELDS.map(({ key }) => [key, 0]),
+  ) as Record<string, number>;
 
   const sentimentRows: Array<{ dateMilli: number; valence: number }> = [];
 
@@ -165,6 +178,16 @@ export const getJournalAiAnalytics = (
         habitCounts[key] = (habitCounts[key] ?? 0) + 1;
       }
     }
+
+    const hobbies = getJournalHobbiesWithLegacyFallback({
+      hobbies: journal.hobbies,
+      habits: journal.habits,
+    });
+    for (const { key } of JOURNAL_HOBBY_FIELDS) {
+      if (hobbies[key]) {
+        hobbyCounts[key] = (hobbyCounts[key] ?? 0) + 1;
+      }
+    }
   }
 
   const totalEntries = journals.length;
@@ -182,6 +205,22 @@ export const getJournalAiAnalytics = (
     };
   })
     .filter((habit) => habit.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  const topHobbies = JOURNAL_HOBBY_FIELDS.map(({ key, label }) => {
+    const count = hobbyCounts[key] ?? 0;
+    const percentOfEntries =
+      totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0;
+
+    return {
+      key,
+      label,
+      count,
+      percentOfEntries,
+    };
+  })
+    .filter((hobby) => hobby.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
@@ -267,6 +306,7 @@ export const getJournalAiAnalytics = (
     sentimentValenceBucketCounts,
     sentimentTimeline,
     topHabits,
+    topHobbies,
     habitImpact,
     minSampleSizeForRanking,
     helpfulHabits,
