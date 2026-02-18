@@ -10,26 +10,7 @@ invariant(
   "Missing VERCEL_PROJECT_PRODUCTION_URL",
 );
 
-// TODO: if this breaks runtime scripts/styles, adopt nonce-based CSP via middleware/proxy.
-
 const S3_BUCKET_HOSTNAME = `${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
-const S3_BUCKET_ORIGIN = `https://${S3_BUCKET_HOSTNAME}`;
-
-const cspHeader = `
-    default-src 'self';
-    script-src 'self';
-    style-src 'self';
-    img-src 'self' ${S3_BUCKET_ORIGIN};
-    font-src 'self';
-    connect-src 'self' ${S3_BUCKET_ORIGIN};
-    frame-src 'none';
-    object-src 'none';
-    media-src 'self' ${S3_BUCKET_ORIGIN} blob:;
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    upgrade-insecure-requests;
-`;
 
 const remotePatterns: RemotePattern[] = [
   {
@@ -65,13 +46,6 @@ export default {
       headers.push({
         key: "Access-Control-Allow-Origin",
         value: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-      });
-    }
-
-    if (process.env.NODE_ENV !== "development") {
-      headers.push({
-        key: "Content-Security-Policy",
-        value: cspHeader.replace(/\n/g, ""),
       });
     }
 
