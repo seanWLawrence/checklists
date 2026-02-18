@@ -207,7 +207,7 @@ export const ChecklistV2TaskForm: React.FC<{
                   }
                 >
                   <div>
-                    <ul className="space-y-4">
+                    <ul className="space-y-3">
                       {items.map(
                         ({ id, name, completed, note, timeEstimate }) => {
                           // Hidden so they won't appear, but will get submitted
