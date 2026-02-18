@@ -6,7 +6,6 @@ import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { SubmitButton } from "@/components/submit-button";
-import { LinkButton } from "@/components/link-button";
 import {
   AWS_JOURNAL_VECTOR_BUCKET_NAME,
   AWS_JOURNAL_VECTOR_INDEX_NAME,
@@ -71,12 +70,6 @@ const VectorsDebugPage: React.FC<{
     return (
       <section className="space-y-4">
         <Heading level={1}>Journal vectors (debug)</Heading>
-
-        <div className="flex items-center gap-2">
-          <LinkButton href="/journals" variant="outline">
-            Back to journals
-          </LinkButton>
-        </div>
 
         {isProduction() && (
           <p className="text-sm text-zinc-600">

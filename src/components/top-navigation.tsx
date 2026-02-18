@@ -79,23 +79,10 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               </div>
 
               <div className="flex space-x-1 items-center">
-                <LinkButton
-                  href="/user-credential-generator"
-                  variant="ghost"
-                  prefetch={true}
-                >
-                  Generate credentials
-                </LinkButton>
-
                 {canAccessAdmin && (
                   <>
-                    <span>/</span>
-                    <LinkButton
-                      href="/admin/debug"
-                      variant="ghost"
-                      prefetch={true}
-                    >
-                      Debug
+                    <LinkButton href="/admin" variant="ghost" prefetch={true}>
+                      Admin
                     </LinkButton>
                   </>
                 )}
