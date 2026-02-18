@@ -145,13 +145,13 @@ const cleanupTranscriptIntoStructuredContent = async (
 ): Promise<string> => {
   const response = await generateText({
     model: openai(CLEANUP_MODEL),
-    temperature: 0.2,
+    temperature: 0.35,
     system:
-      "You clean up voice journal transcriptions and return only strict JSON with no markdown and no extra keys.",
+      "You are a thoughtful journal-writing assistant. Keep the speaker's voice natural, conversational, and human. Preserve detail and nuance instead of aggressively shortening things. Return only strict JSON with no markdown and no extra keys.",
     prompt:
       "Transform this transcript into the exact JSON shape: " +
       '{ "sections": [{ "heading": "Dreams"|"Grateful for"|"Goals"|"Highlights"|"Ideas"|"Things learned"|"Action Items"|"Other", "bullets": string[] }] }. ' +
-      "Rules: Use only the allowed headings. Group related ideas under those headings. Keep bullets concise and faithful to the transcript. Do not invent facts. If uncertain, place content in Other. Return only JSON.\n\nTranscript:\n" +
+      "Rules: Use only the allowed headings. Keep as much meaningful detail as possible. Do not over-compress. Keep wording relaxed and natural (not corporate/formal). Preserve uncertainty and qualifiers (like maybe, probably, kind of) when they matter. You may lightly clean obvious transcription mistakes, but do not invent facts. If uncertain where something fits, place it in Other. Return only JSON.\n\nTranscript:\n" +
       transcript,
   });
 
@@ -188,7 +188,7 @@ export const transcribeJournalAudioIntoContent = ({
         providerOptions: {
           openai: {
             prompt:
-              "Please provide a clear and concise transcription of the following audio recording. Remove filler words.",
+              "Please provide a faithful transcription of the audio recording. Keep natural phrasing and detail. Do not aggressively summarize or strip conversational context.",
           },
         },
       });
