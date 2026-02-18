@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "CI=true npm test && npm run lint && next build",
+    "build:no-ci": "next build",
     "dev": "next dev",
     "lint": "eslint . && knip",
     "lint:fix": "eslint . --fix && knip --fix",
