@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { JournalAnalyticsLink } from "./journal-analytics-link";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
+import { ThemeToggleButton } from "./theme-toggle-button.client";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
@@ -83,6 +84,8 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                   </>
                 )}
               </div>
+
+              <ThemeToggleButton />
 
               <form action={logoutAction}>
                 <SubmitButton variant="ghost">Sign out</SubmitButton>

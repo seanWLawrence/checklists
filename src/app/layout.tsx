@@ -6,8 +6,8 @@ import TopNavigation from "@/components/top-navigation";
 
 import "./globals.css";
 import "highlight.js/styles/tokyo-night-dark.css";
-import { ThemeSetter } from "@/components/theme-setter.client";
 import { AuthRefreshInterval } from "@/components/auth-refresh-interval.client";
+import { RuntimeErrorMonitor } from "@/components/runtime-error-monitor.client";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -75,7 +75,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SerwistProvider swUrl="/serwist/sw.js">
-          <ThemeSetter />
+          <RuntimeErrorMonitor />
           <AuthRefreshInterval />
           <TopNavigation />
           <div className="p-5">{children}</div>
