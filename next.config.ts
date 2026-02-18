@@ -10,18 +10,15 @@ invariant(
   "Missing VERCEL_PROJECT_PRODUCTION_URL",
 );
 
-// TODO: remove need for unsafe-inline for the PWA to work
-
-const scriptSrcDevOnly =
-  process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "";
+// TODO: if this breaks runtime scripts/styles, adopt nonce-based CSP via middleware/proxy.
 
 const S3_BUCKET_HOSTNAME = `${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
 const S3_BUCKET_ORIGIN = `https://${S3_BUCKET_HOSTNAME}`;
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' ${scriptSrcDevOnly};
-    style-src 'self' 'unsafe-inline';
+    script-src 'self';
+    style-src 'self';
     img-src 'self' ${S3_BUCKET_ORIGIN};
     font-src 'self';
     connect-src 'self' ${S3_BUCKET_ORIGIN};
