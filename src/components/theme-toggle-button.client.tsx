@@ -6,6 +6,7 @@ import { Button } from "./button";
 type Theme = "light" | "dark";
 
 const THEME_STORAGE_KEY = "theme";
+const THEME_COOKIE_KEY = "theme";
 
 const applyTheme = (theme: Theme) => {
   document.documentElement.classList.toggle("dark", theme === "dark");
@@ -16,6 +17,11 @@ const getInitialTheme = (): Theme => {
   const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
   if (override === "light" || override === "dark") {
     return override;
+  }
+
+  const htmlTheme = document.documentElement.dataset.theme;
+  if (htmlTheme === "light" || htmlTheme === "dark") {
+    return htmlTheme;
   }
 
   try {
@@ -47,19 +53,24 @@ export const ThemeToggleButton = () => {
     applyTheme(theme);
   }, [theme]);
 
+  const persistTheme = (nextTheme: Theme) => {
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {
+      // no-op
+    }
+
+    document.cookie = `${THEME_COOKIE_KEY}=${nextTheme}; path=/; max-age=31536000; samesite=lax`;
+  };
+
   const toggleTheme = () => {
     if (isLocked) {
       return;
     }
 
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    applyTheme(nextTheme);
     setTheme(nextTheme);
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    } catch {
-      // no-op
-    }
+    persistTheme(nextTheme);
   };
 
   return (
@@ -70,7 +81,9 @@ export const ThemeToggleButton = () => {
       disabled={isLocked}
       title={isLocked ? `Theme is locked to ${override}` : "Toggle theme"}
     >
-      Theme: {theme === "dark" ? "Dark" : "Light"}
+      <span suppressHydrationWarning>
+        Theme: {theme === "dark" ? "Dark" : "Light"}
+      </span>
     </Button>
   );
 };

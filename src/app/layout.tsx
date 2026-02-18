@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 
 import { SerwistProvider } from "@/app/lib/client";
 import { BASE_URL } from "@/lib/constants";
@@ -13,6 +14,7 @@ const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
 const APP_TITLE_TEMPLATE = "%s - App";
 const APP_DESCRIPTION = "Lifestyle app";
+const THEME_COOKIE_KEY = "theme";
 
 export const metadata: Metadata = {
   metadataBase: BASE_URL,
@@ -66,13 +68,29 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
+  const cookieStore = await cookies();
+  const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value;
+
+  const initialTheme =
+    override === "light" || override === "dark"
+      ? override
+      : cookieTheme === "light" || cookieTheme === "dark"
+        ? cookieTheme
+        : "light";
+
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={initialTheme === "dark" ? "dark" : undefined}
+      data-theme={initialTheme}
+      suppressHydrationWarning
+    >
       <body>
         <SerwistProvider swUrl="/serwist/sw.js">
           <RuntimeErrorMonitor />
