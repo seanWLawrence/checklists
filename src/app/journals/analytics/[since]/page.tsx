@@ -188,18 +188,30 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                     without it.
                   </p>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
+                  <div className="w-full overflow-x-auto overscroll-x-contain max-w-[90vw]">
+                    <table className="min-w-[44rem] text-sm">
                       <thead>
                         <tr className="text-left border-b border-zinc-200 dark:border-zinc-700">
-                          <th className="py-1 pr-3">Habit</th>
-                          <th className="py-1 pr-3">Days</th>
-                          <th className="py-1 pr-3">Mood avg</th>
-                          <th className="py-1 pr-3">Mood Δ</th>
-                          <th className="py-1 pr-3">Energy avg</th>
-                          <th className="py-1 pr-3">Energy Δ</th>
-                          <th className="py-1 pr-3">Health avg</th>
-                          <th className="py-1 pr-3">Health Δ</th>
+                          <th className="py-1 pr-3 whitespace-nowrap">Habit</th>
+                          <th className="py-1 pr-3 whitespace-nowrap">Days</th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Mood avg
+                          </th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Mood Δ
+                          </th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Energy avg
+                          </th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Energy Δ
+                          </th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Health avg
+                          </th>
+                          <th className="py-1 pr-3 whitespace-nowrap">
+                            Health Δ
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -208,36 +220,38 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                             key={habit.key}
                             className="border-b border-zinc-100 dark:border-zinc-800"
                           >
-                            <td className="py-1 pr-3">{habit.label}</td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
+                              {habit.label}
+                            </td>
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {habit.count} ({habit.percentOfEntries}%)
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.averageMood === "number"
                                 ? habit.averageMood.toFixed(2)
                                 : "n/a"}
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.moodDelta === "number"
                                 ? `${habit.moodDelta > 0 ? "+" : ""}${habit.moodDelta.toFixed(2)}`
                                 : "n/a"}
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.averageEnergy === "number"
                                 ? habit.averageEnergy.toFixed(2)
                                 : "n/a"}
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.energyDelta === "number"
                                 ? `${habit.energyDelta > 0 ? "+" : ""}${habit.energyDelta.toFixed(2)}`
                                 : "n/a"}
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.averageHealth === "number"
                                 ? habit.averageHealth.toFixed(2)
                                 : "n/a"}
                             </td>
-                            <td className="py-1 pr-3">
+                            <td className="py-1 pr-3 whitespace-nowrap">
                               {typeof habit.healthDelta === "number"
                                 ? `${habit.healthDelta > 0 ? "+" : ""}${habit.healthDelta.toFixed(2)}`
                                 : "n/a"}

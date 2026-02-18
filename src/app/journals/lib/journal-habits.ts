@@ -48,7 +48,7 @@ export const getJournalHabitsFromFormData = ({
 }: {
   formData: FormData;
 }): JournalHabits => {
-  const habits = {} as JournalHabits;
+  const habits: JournalHabits = { ...EMPTY_JOURNAL_HABITS };
 
   for (const { key } of JOURNAL_HABIT_FIELDS) {
     habits[key] = parseBooleanLike(formData.get(key));

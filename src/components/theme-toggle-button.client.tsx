@@ -33,17 +33,19 @@ const getInitialTheme = (): Theme => {
 };
 
 export const ThemeToggleButton = () => {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    return getInitialTheme();
+  });
   const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
   const isLocked = override === "light" || override === "dark";
 
   useEffect(() => {
-    const initialTheme = getInitialTheme();
-    applyTheme(initialTheme);
-    setTheme(initialTheme);
-    setMounted(true);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     if (isLocked) {
@@ -65,10 +67,10 @@ export const ThemeToggleButton = () => {
       type="button"
       variant="ghost"
       onClick={toggleTheme}
-      disabled={!mounted || isLocked}
+      disabled={isLocked}
       title={isLocked ? `Theme is locked to ${override}` : "Toggle theme"}
     >
-      Theme: {mounted ? (theme === "dark" ? "Dark" : "Light") : "..."}
+      Theme: {theme === "dark" ? "Dark" : "Light"}
     </Button>
   );
 };
