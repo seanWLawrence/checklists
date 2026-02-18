@@ -43,6 +43,7 @@ export const JournalAnalyticsLink: React.FC<{ className?: string }> = ({
       href={`/journals/analytics/${since}`}
       variant="ghost"
       className={className}
+      prefetch={true}
     >
       Analytics
     </LinkButton>

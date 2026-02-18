@@ -11,15 +11,30 @@ const Home: React.FC = async () => {
 
   return (
     <main className="flex flex-wrap mr-1">
-      <LinkButton href="/checklists" variant="outline" className="mr-2 mb-2">
+      <LinkButton
+        href="/checklists"
+        variant="outline"
+        className="mr-2 mb-2"
+        prefetch={true}
+      >
         Checklists
       </LinkButton>
 
-      <LinkButton href="/journals" variant="outline" className="mr-2 mb-2">
+      <LinkButton
+        href="/journals"
+        variant="outline"
+        className="mr-2 mb-2"
+        prefetch={true}
+      >
         Journals
       </LinkButton>
 
-      <LinkButton href="/notes" variant="outline" className="mr-2 mb-2">
+      <LinkButton
+        href="/notes"
+        variant="outline"
+        className="mr-2 mb-2"
+        prefetch={true}
+      >
         Notes
       </LinkButton>
     </main>

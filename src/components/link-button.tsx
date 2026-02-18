@@ -11,10 +11,15 @@ export const LinkButton: React.FC<LinkButtonProps> = ({
   children,
   variant = "outline",
   className,
+  prefetch = false,
   ...rest
 }) => {
   return (
-    <Link {...rest} className={buttonClassName({ variant, className })}>
+    <Link
+      {...rest}
+      prefetch={prefetch}
+      className={buttonClassName({ variant, className })}
+    >
       <span className="text-nowrap whitespace-nowrap">{children}</span>
     </Link>
   );

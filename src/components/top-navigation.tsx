@@ -31,25 +31,33 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               data-testid="top-navigation-links"
             >
               <div className="flex space-x-1 items-center">
-                <LinkButton href="/checklists" variant="ghost">
+                <LinkButton href="/checklists" variant="ghost" prefetch={true}>
                   Checklists
                 </LinkButton>
 
                 <span>/</span>
 
-                <LinkButton href="/checklists/new" variant="ghost">
+                <LinkButton
+                  href="/checklists/new"
+                  variant="ghost"
+                  prefetch={true}
+                >
                   New checklist
                 </LinkButton>
               </div>
 
               <div className="flex space-x-1 items-center">
-                <LinkButton href="/journals" variant="ghost">
+                <LinkButton href="/journals" variant="ghost" prefetch={true}>
                   Journals
                 </LinkButton>
 
                 <span>/</span>
 
-                <LinkButton href="/journals/new" variant="ghost">
+                <LinkButton
+                  href="/journals/new"
+                  variant="ghost"
+                  prefetch={true}
+                >
                   New journal
                 </LinkButton>
 
@@ -59,26 +67,34 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               </div>
 
               <div className="flex space-x-1 items-center">
-                <LinkButton href="/notes" variant="ghost">
+                <LinkButton href="/notes" variant="ghost" prefetch={true}>
                   Notes
                 </LinkButton>
 
                 <span>/</span>
 
-                <LinkButton href="/notes/new" variant="ghost">
+                <LinkButton href="/notes/new" variant="ghost" prefetch={true}>
                   New note
                 </LinkButton>
               </div>
 
               <div className="flex space-x-1 items-center">
-                <LinkButton href="/user-credential-generator" variant="ghost">
+                <LinkButton
+                  href="/user-credential-generator"
+                  variant="ghost"
+                  prefetch={true}
+                >
                   Generate credentials
                 </LinkButton>
 
                 {canAccessAdmin && (
                   <>
                     <span>/</span>
-                    <LinkButton href="/admin/debug" variant="ghost">
+                    <LinkButton
+                      href="/admin/debug"
+                      variant="ghost"
+                      prefetch={true}
+                    >
                       Debug
                     </LinkButton>
                   </>
