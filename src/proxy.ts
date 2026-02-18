@@ -78,6 +78,7 @@ export const config = {
     "/checklists/:path*",
     "/notes/:path*",
     "/journals/:path*",
+    "/admin/:path*",
     "/",
     "/login",
   ],
