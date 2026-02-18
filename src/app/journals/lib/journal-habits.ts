@@ -30,7 +30,7 @@ export const JOURNAL_HOBBY_FIELDS: Array<{
   { key: "learning", label: "Learning" },
 ];
 
-export const EMPTY_JOURNAL_HABITS: JournalHabits = {
+const EMPTY_JOURNAL_HABITS: JournalHabits = {
   strengthTraining: undefined,
   martialArts: undefined,
   cardio: undefined,
@@ -47,7 +47,7 @@ export const EMPTY_JOURNAL_HABITS: JournalHabits = {
   followSleepSchedule: undefined,
 };
 
-export const EMPTY_JOURNAL_HOBBIES: JournalHobbies = {
+const EMPTY_JOURNAL_HOBBIES: JournalHobbies = {
   martialArts: undefined,
   music: undefined,
   programming: undefined,

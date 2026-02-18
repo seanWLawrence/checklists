@@ -20,8 +20,11 @@ import {
   JOURNAL_HOBBY_FIELDS,
 } from "../lib/journal-habits";
 import { SubmitButton } from "@/components/submit-button";
+import { LinkButton } from "@/components/link-button";
 import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
 import { getSentimentValenceInfo } from "../lib/get-sentiment-valence-info.lib";
+import { getAllCreatedAtLocals } from "../model/get-all-created-at-locals.model";
+import { getAdjacentCreatedAtLocals } from "../lib/get-adjacent-created-at-locals.lib";
 
 const prettifyContent = (content: string): React.ReactNode | undefined => {
   const sections = groupJournalContentSections(content).extract();
@@ -62,6 +65,12 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
     );
 
     const journal = await fromPromise(getJournal(createdAtLocal));
+    const allCreatedAtLocals = await fromPromise(getAllCreatedAtLocals());
+    const { previousCreatedAtLocal, nextCreatedAtLocal } =
+      getAdjacentCreatedAtLocals({
+        createdAtLocal: journal.createdAtLocal,
+        createdAtLocals: allCreatedAtLocals,
+      });
     const assets = journal.assets ?? [];
     const prettyContent = prettifyContent(journal.content ?? "");
     const completedHabits = getCompletedHabitLabels(journal.habits);
@@ -274,6 +283,25 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <Fieldset legend="Content">
             <div className="space-y-1">{prettyContent}</div>
           </Fieldset>
+        )}
+
+        {(previousCreatedAtLocal || nextCreatedAtLocal) && (
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {previousCreatedAtLocal ? (
+              <LinkButton href={`/journals/${previousCreatedAtLocal}`}>
+                Previous ({prettyDate(previousCreatedAtLocal, { withYear: false })}
+                )
+              </LinkButton>
+            ) : (
+              <div />
+            )}
+
+            {nextCreatedAtLocal && (
+              <LinkButton href={`/journals/${nextCreatedAtLocal}`}>
+                Next ({prettyDate(nextCreatedAtLocal, { withYear: false })})
+              </LinkButton>
+            )}
+          </div>
         )}
       </main>
     );
