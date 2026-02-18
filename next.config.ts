@@ -30,29 +30,28 @@ export default {
     unoptimized: process.env.NODE_ENV === "development",
   },
   async headers() {
-    const headers = [
+    const securityHeaders = [
       { key: "x-Frame-Options", value: "DENY" },
       { key: "x-Content-Type-Options", value: "nosniff" },
-      { key: "Access-Control-Allow-Methods", value: "GET, POST" },
-      // None
-      { key: "Access-Control-Allow-Headers", value: "" },
-      { key: "Access-Control-Allow-Max-Age", value: "31536000" },
       { key: "Referrer-Policy", value: "no-referrer" },
-      // One year
-      { key: "Strict-Transport-Security", value: "max-age=31536000" },
+      {
+        // Defense-in-depth: explicitly disable browser capabilities this app does not use.
+        // Keep camera/microphone enabled for same-origin use only.
+        key: "Permissions-Policy",
+        value: "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()",
+      },
+      // Enforce HTTPS for this host and any future subdomains under it.
+      // Add `preload` only after confirming the whole registrable domain is ready.
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=31536000; includeSubDomains",
+      },
     ];
-
-    if (process.env.NODE_ENV === "production") {
-      headers.push({
-        key: "Access-Control-Allow-Origin",
-        value: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-      });
-    }
 
     return [
       {
         source: "/(.*)",
-        headers,
+        headers: securityHeaders,
       },
     ];
   },

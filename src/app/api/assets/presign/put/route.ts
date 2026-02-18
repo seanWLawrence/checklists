@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { getAssetFilename } from "@/lib/aws/s3/get-asset-filename";
 import { getPresignedPutObjectUrl } from "@/lib/aws/s3/get-presigned-put-object-url";
 import { JournalAssetVariant } from "@/app/journals/journal.types";
@@ -28,6 +29,8 @@ const getLowercaseExtension = (filename: string): string | null => {
 
 export async function POST(request: NextRequest) {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
+    await liftEither(verifySameOriginRequest(request));
+
     await fromPromise(
       validateUserLoggedIn({ variant: "server-action", request }),
     );

@@ -22,8 +22,24 @@ const buildCspHeader = (nonce: string) =>
     "upgrade-insecure-requests",
   ].join("; ");
 
+const isProtectedRoute = (pathname: string) =>
+  pathname === "/" ||
+  pathname === "/login" ||
+  pathname.startsWith("/checklists") ||
+  pathname.startsWith("/notes") ||
+  pathname.startsWith("/journals") ||
+  pathname.startsWith("/admin");
+
+const withCsp = (response: NextResponse, cspHeader: string) => {
+  if (process.env.NODE_ENV !== "development") {
+    response.headers.set("Content-Security-Policy", cspHeader);
+  }
+
+  return response;
+};
+
 /**
- * Refreshes access tokens for protected routes if the user is not authenticated and has a valid refresh token.
+ * Adds per-request nonce-based CSP for app pages and refreshes access tokens for protected routes if needed.
  */
 export async function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
@@ -33,8 +49,20 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
 
   const url = new URL(request.url);
-  const isLoginPage = url.pathname === "/login";
-  const isSharePage = url.pathname.startsWith("/checklists/share");
+  const pathname = url.pathname;
+  const isLoginPage = pathname === "/login";
+  const isSharePage = pathname.startsWith("/checklists/share");
+
+  const passthrough = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  if (!isProtectedRoute(pathname)) {
+    return withCsp(passthrough, cspHeader);
+  }
+
   const userMaybe = await getUser({ request });
 
   const shouldPreventInifiniteLoginRedirectLoop =
@@ -46,40 +74,20 @@ export async function proxy(request: NextRequest) {
     request.method !== "GET" ||
     shouldPreventInifiniteLoginRedirectLoop
   ) {
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-
-    if (process.env.NODE_ENV !== "development") {
-      response.headers.set("Content-Security-Policy", cspHeader);
-    }
-
-    return response;
+    return withCsp(passthrough, cspHeader);
   }
 
-  const pathname = isLoginPage ? "/checklists" : url.pathname;
-  const nextPath = `${pathname}${url.search}`;
+  const redirectPathname = isLoginPage ? "/checklists" : pathname;
+  const nextPath = `${redirectPathname}${url.search}`;
   const redirectUrl = new URL("/api/auth/refresh", request.url);
   redirectUrl.searchParams.set("redirect", nextPath);
 
-  const response = NextResponse.redirect(redirectUrl);
-
-  if (process.env.NODE_ENV !== "development") {
-    response.headers.set("Content-Security-Policy", cspHeader);
-  }
-
-  return response;
+  return withCsp(NextResponse.redirect(redirectUrl), cspHeader);
 }
 
 export const config = {
   matcher: [
-    "/checklists/:path*",
-    "/notes/:path*",
-    "/journals/:path*",
-    "/admin/:path*",
-    "/",
-    "/login",
+    // Match all HTML/app routes and skip Next internals, static assets, and service worker routes.
+    "/((?!api|_next/static|_next/image|serwist|favicon.ico|manifest.webmanifest|apple-touch-icon.png|icons|.*\\..*).*)",
   ],
 };

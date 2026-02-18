@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { getObject } from "@/lib/aws/s3/get-object";
 import { transcribeJournalAudioIntoContent } from "@/app/journals/lib/transcribe-audio-into-content.lib";
 import { Either, Left, Right } from "purify-ts/Either";
@@ -13,6 +14,8 @@ export async function POST(
   { params }: { params: Promise<{ filename: string }> },
 ) {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
+    await liftEither(verifySameOriginRequest(request));
+
     await fromPromise(
       validateUserLoggedIn({ variant: "server-action", request }),
     );

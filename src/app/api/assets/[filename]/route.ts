@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
+import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { deleteObject } from "@/lib/aws/s3/delete-object";
 import { Either, Left, Right } from "purify-ts/Either";
 
@@ -10,6 +11,8 @@ export async function DELETE(
   { params }: { params: Promise<{ filename: string }> },
 ) {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
+    await liftEither(verifySameOriginRequest(request));
+
     await fromPromise(
       validateUserLoggedIn({ variant: "server-action", request }),
     );
