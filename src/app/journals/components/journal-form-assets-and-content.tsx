@@ -5,6 +5,7 @@ import { Label } from "@/components/label";
 import { AssetManager } from "@/components/asset-manager";
 import { Fieldset } from "@/components/fieldset";
 import { JournalAsset } from "../journal.types";
+import { mergeJournalContentByHeading } from "../lib/merge-journal-content-by-heading.lib";
 
 interface AssetItem extends JournalAsset {
   previewUrl: string;
@@ -32,7 +33,10 @@ export const JournalFormAssetsAndContent: React.FC<{
     }
 
     setContent((current) =>
-      current ? `${current}\n\n${trimmed}` : trimmed,
+      mergeJournalContentByHeading({
+        current,
+        incoming: trimmed,
+      }),
     );
   };
 
