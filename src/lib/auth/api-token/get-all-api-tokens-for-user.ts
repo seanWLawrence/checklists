@@ -11,9 +11,11 @@ export const getAllApiTokensForUser = ({
   user: User;
 }): EitherAsync<unknown, ApiToken[]> => {
   return EitherAsync(async ({ fromPromise }) => {
-    const scanKey: Key = `user#${user.username}#api-token#*`;
+    const scanKey: Key = `user#${user.username}#apiToken#*`;
     const keys = await fromPromise(scan({ key: scanKey }));
-    const apiTokens = await fromPromise(getAllItems({ keys, decoder: ApiToken }));
+    const apiTokens = await fromPromise(
+      getAllItems({ keys, decoder: ApiToken }),
+    );
 
     return apiTokens.sort(
       (a, b) => b.createdAtIso.getTime() - a.createdAtIso.getTime(),

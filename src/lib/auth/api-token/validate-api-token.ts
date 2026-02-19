@@ -1,6 +1,7 @@
 import { EitherAsync } from "purify-ts";
 import { NextRequest } from "next/server";
 
+import { logger } from "@/lib/logger";
 import { getSingleItem } from "@/lib/db/get-single-item";
 import { ApiToken, ApiTokenScope } from "./api-token.types";
 import {
@@ -11,6 +12,7 @@ import { getApiTokenKey } from "./get-api-token-key";
 import { secureHashSha256 } from "../secure-hash-sha256";
 import { constantTimeStringComparison } from "../constant-time-string-comparison";
 import { User } from "@/lib/types";
+import { updateItem } from "@/lib/db/update-item";
 
 interface ApiTokenAuthError {
   status: 401 | 403;
@@ -23,12 +25,14 @@ export const validateApiToken = ({
   now = () => new Date(),
   getSingleItemFn = getSingleItem,
   hashFn = secureHashSha256,
+  updateItemFn = updateItem,
 }: {
   request: Pick<NextRequest, "headers">;
   requiredScope?: ApiTokenScope;
   now?: () => Date;
   getSingleItemFn?: typeof getSingleItem;
   hashFn?: typeof secureHashSha256;
+  updateItemFn?: typeof updateItem;
 }): EitherAsync<ApiTokenAuthError, { user: User; tokenId: string }> => {
   return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
     const bearerToken = await liftEither(
@@ -77,6 +81,36 @@ export const validateApiToken = ({
       });
     }
 
+    const nowDate = now();
+    const revokedAtIsoRaw = (storedToken as { revokedAtIso?: unknown })
+      .revokedAtIso;
+    const revokedAtIso =
+      revokedAtIsoRaw instanceof Date
+        ? revokedAtIsoRaw.toISOString()
+        : typeof revokedAtIsoRaw === "string"
+          ? revokedAtIsoRaw
+          : undefined;
+    const touchedToken = await liftEither(
+      ApiToken.decode({
+        ...storedToken,
+        createdAtIso: storedToken.createdAtIso.toISOString(),
+        expiresAtIso: storedToken.expiresAtIso.toISOString(),
+        lastUsedAtIso: nowDate.toISOString(),
+        revokedAtIso,
+        updatedAtIso: nowDate.toISOString(),
+      }),
+    );
+
+    const touchResult = await updateItemFn({
+      item: touchedToken,
+      getKeyFn: ({ user: tokenUser, id }) =>
+        getApiTokenKey({ username: tokenUser.username, id }),
+    }).run();
+
+    if (touchResult.isLeft()) {
+      logger.warn("Failed to update API token last-used timestamp", touchResult.extract());
+    }
+
     return { user: storedToken.user, tokenId: storedToken.id };
   }).mapLeft((error) => {
     if (
@@ -90,7 +124,7 @@ export const validateApiToken = ({
 
     return {
       status: 401 as const,
-      message: String(error),
+      message: "Invalid API token",
     };
   });
 };

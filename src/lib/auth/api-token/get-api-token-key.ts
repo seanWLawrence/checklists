@@ -7,4 +7,4 @@ export const getApiTokenKey = ({
 }: {
   username: string;
   id: ApiTokenId;
-}): Key => `user#${username}#api-token#${id}`;
+}): Key => `user#${username}#apiToken#${id}`;

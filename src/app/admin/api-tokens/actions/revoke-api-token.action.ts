@@ -9,15 +9,13 @@ import { isAdminUsername } from "@/lib/auth/is-admin-username";
 import { revokeApiToken } from "@/lib/auth/api-token/revoke-api-token";
 import { UUID } from "@/lib/types";
 
-export type RevokeApiTokenActionResult = { ok: true } | { ok: false; error: string };
-
 const RevokeApiTokenFormDataPayload = Codec.interface({
   id: UUID,
 });
 
 export const revokeApiTokenAction = async (
   formData: FormData,
-): Promise<RevokeApiTokenActionResult> => {
+): Promise<void> => {
   const result = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
     const user = await fromPromise(
       validateUserLoggedIn({ variant: "server-action" }),
@@ -37,13 +35,8 @@ export const revokeApiTokenAction = async (
   }).run();
 
   if (result.isLeft()) {
-    return {
-      ok: false,
-      error: String(result.extract()),
-    };
+    throw new Error(String(result.extract()));
   }
 
   revalidatePath("/admin/api-tokens");
-
-  return { ok: true };
 };

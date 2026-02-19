@@ -1,29 +1,28 @@
-import { Codec, GetType, array, date, intersect, optional, string } from "purify-ts";
+import {
+  Codec,
+  GetType,
+  array,
+  date,
+  intersect,
+  optional,
+  string,
+} from "purify-ts";
 import { Left, Right } from "purify-ts/Either";
 
 import { Metadata, UUID } from "@/lib/types";
+import {
+  API_TOKEN_SCOPES,
+  type ApiTokenScope as ApiTokenScopeType,
+} from "./api-token-scopes";
 
-export const API_TOKEN_PREFIX = "slpat_";
+export const API_TOKEN_PREFIX = "pat_";
+export type ApiTokenScope = ApiTokenScopeType;
 
-const apiTokenScopes = [
-  "notes:create",
-  "notes:read",
-  "notes:list",
-  "notes:update",
-  "checklists:create",
-  "checklists:read",
-  "checklists:list",
-  "checklists:update",
-  "checklists:generate-share-link",
-] as const;
-
-export type ApiTokenScope = (typeof apiTokenScopes)[number];
-
-export const ApiTokenScope = Codec.custom<ApiTokenScope>({
+export const ApiTokenScope = Codec.custom<ApiTokenScopeType>({
   decode: (input) =>
     typeof input === "string" &&
-    apiTokenScopes.includes(input as ApiTokenScope)
-      ? Right(input as ApiTokenScope)
+    API_TOKEN_SCOPES.includes(input as ApiTokenScopeType)
+      ? Right(input as ApiTokenScopeType)
       : Left(`Invalid API token scope '${input}'`),
   encode: (input) => input,
 });

@@ -26,12 +26,20 @@ const CreateApiTokenFormDataPayload = Codec.interface({
 });
 
 export const createApiTokenAction = async (
+  _prevState: CreateApiTokenActionResult,
   formData: FormData,
+  {
+    validateUserLoggedInFn = validateUserLoggedIn,
+    createApiTokenFn = createApiToken,
+  }: {
+    validateUserLoggedInFn?: typeof validateUserLoggedIn;
+    createApiTokenFn?: typeof createApiToken;
+  } = {},
 ): Promise<CreateApiTokenActionResult> => {
   const result = await EitherAsync(
     async ({ fromPromise, liftEither, throwE }) => {
       const user = await fromPromise(
-        validateUserLoggedIn({ variant: "server-action" }),
+        validateUserLoggedInFn({ variant: "server-action" }),
       );
 
       if (!isAdminUsername(user.username)) {
@@ -45,6 +53,15 @@ export const createApiTokenAction = async (
           expiresAtIso: formData.get("expiresAtIso") ?? undefined,
         }),
       );
+      const name = payload.name.trim();
+
+      if (name === "") {
+        return throwE("Token name is required");
+      }
+
+      if (payload.scopes.length === 0) {
+        return throwE("Select at least one scope");
+      }
 
       const expiresAtIso =
         payload.expiresAtIso && payload.expiresAtIso.trim() !== ""
@@ -52,9 +69,9 @@ export const createApiTokenAction = async (
           : undefined;
 
       return fromPromise(
-        createApiToken({
+        createApiTokenFn({
           user,
-          name: payload.name,
+          name,
           scopes: payload.scopes,
           expiresAtIso,
         }),
