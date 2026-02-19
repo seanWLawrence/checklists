@@ -16,7 +16,7 @@ test("parseBearerTokenFromAuthorizationHeader parses a bearer token", ({
 
 test("parseApiToken parses a valid token payload", ({ expect }) => {
   const result = parseApiToken(
-    "slpat_alice.123e4567-e89b-12d3-a456-426614174000.secret",
+    "pat_alice.123e4567-e89b-12d3-a456-426614174000.secret",
   );
 
   expect(result.isRight()).toBe(true);

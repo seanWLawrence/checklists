@@ -15,7 +15,7 @@ import { POST } from "./route";
 import { authorizePublicApiRequest } from "../lib/authorize-public-api-request";
 import { createItem } from "@/lib/db/create-item";
 
-test("POST /api/public/notes returns 401 when unauthorized", async ({
+test("POST /api/public/v1/notes returns 401 when unauthorized", async ({
   expect,
 }) => {
   vi.mocked(authorizePublicApiRequest).mockResolvedValue({
@@ -23,7 +23,7 @@ test("POST /api/public/notes returns 401 when unauthorized", async ({
     response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
   });
 
-  const request = new NextRequest("http://localhost:3000/api/public/notes", {
+  const request = new NextRequest("http://localhost:3000/api/public/v1/notes", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "x", content: "y" }),
@@ -35,7 +35,7 @@ test("POST /api/public/notes returns 401 when unauthorized", async ({
   expect(await response.json()).toEqual({ error: "Unauthorized" });
 });
 
-test("POST /api/public/notes creates note with valid token auth", async ({
+test("POST /api/public/v1/notes creates note with valid token auth", async ({
   expect,
 }) => {
   vi.mocked(authorizePublicApiRequest).mockResolvedValue({
@@ -58,7 +58,7 @@ test("POST /api/public/notes creates note with valid token auth", async ({
     ),
   );
 
-  const request = new NextRequest("http://localhost:3000/api/public/notes", {
+  const request = new NextRequest("http://localhost:3000/api/public/v1/notes", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "note", content: "content" }),

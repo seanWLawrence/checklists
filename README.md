@@ -6,6 +6,10 @@ This is a personal application I wrote for things I use frequently.
 
 - Quickstart (non-technical): `docs/quickstart.md`
 - High-level feature guide: `docs/user-guide.md`
+- Public API guide: `docs/public-api.md`
+- Public API OpenAPI spec: `docs/public-api.openapi.yaml`
+- Hosted Public API docs: `/api/public/v1/docs`
+- Hosted Public API OpenAPI spec: `/api/public/v1/openapi.yaml`
 
 ## Checklists
 

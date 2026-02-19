@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 
 import { authorizePublicApiRequest } from "./authorize-public-api-request";
 
-const makeRequest = (url = "http://localhost:3000/api/public/notes") =>
+const makeRequest = (url = "http://localhost:3000/api/public/v1/notes") =>
   new NextRequest(url, { method: "GET" });
 
 test("returns generic unauthorized response", async ({ expect }) => {

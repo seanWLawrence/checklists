@@ -1,0 +1,457 @@
+openapi: 3.0.3
+info:
+  title: Checklists Public API
+  version: 1.0.0
+  description: Token-authenticated API for notes and checklists automation.
+servers:
+  - url: http://localhost:3000
+security:
+  - bearerAuth: []
+paths:
+  /api/public/v1/notes:
+    get:
+      summary: List notes
+      operationId: listNotesV1
+      x-required-scope: notes:list
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NoteListItem"
+                required: [notes]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create note
+      operationId: createNoteV1
+      x-required-scope: notes:create
+      x-idempotency: not-idempotent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteCreateRequest"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/public/v1/notes/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      summary: Get note
+      operationId: getNoteV1
+      x-required-scope: notes:read
+      responses:
+        "200":
+          description: Note found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      summary: Update note fields
+      operationId: updateNoteV1
+      x-required-scope: notes:update
+      x-updates: [updatedAtIso]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotePatchRequest"
+      responses:
+        "200":
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotePatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/public/v1/checklists:
+    get:
+      summary: List checklists
+      operationId: listChecklistsV1
+      x-required-scope: checklists:list
+      responses:
+        "200":
+          description: Checklists list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checklists:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChecklistListItem"
+                required: [checklists]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create checklist
+      operationId: createChecklistV1
+      x-required-scope: checklists:create
+      x-idempotency: not-idempotent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChecklistCreateRequest"
+      responses:
+        "201":
+          description: Checklist created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checklist"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/public/v1/checklists/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      summary: Get checklist
+      operationId: getChecklistV1
+      x-required-scope: checklists:read
+      responses:
+        "200":
+          description: Checklist found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checklist"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      summary: Update checklist fields
+      operationId: updateChecklistV1
+      x-required-scope: checklists:update
+      x-updates: [updatedAtIso]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChecklistPatchRequest"
+      responses:
+        "200":
+          description: Checklist updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecklistPatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/public/v1/checklists/{id}/share-links:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      summary: Create checklist share link
+      operationId: createChecklistShareLinkV1
+      x-required-scope: checklists:generate-share-link
+      x-idempotency: not-idempotent
+      responses:
+        "201":
+          description: Share link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecklistShareLink"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API token
+      description: "Format: pat_<username>.<tokenId>.<secret>"
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    NoteCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      required: [name, content]
+    NotePatchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      additionalProperties: false
+      description: At least one of name or content must be provided.
+    NoteListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, updatedAtIso]
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        content:
+          type: string
+        createdAtIso:
+          type: string
+          format: date-time
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, content, createdAtIso, updatedAtIso]
+    NotePatchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        content:
+          type: string
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, content, updatedAtIso]
+
+    ChecklistCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      required: [name, content]
+    ChecklistPatchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      additionalProperties: false
+      description: At least one of name or content must be provided.
+    ChecklistListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, updatedAtIso]
+    Checklist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        content:
+          type: string
+        createdAtIso:
+          type: string
+          format: date-time
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, content, createdAtIso, updatedAtIso]
+    ChecklistPatchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        content:
+          type: string
+        updatedAtIso:
+          type: string
+          format: date-time
+      required: [id, name, content, updatedAtIso]
+
+    ChecklistShareLink:
+      type: object
+      properties:
+        token:
+          type: string
+        url:
+          type: string
+          format: uri
+        expiresAtIso:
+          type: string
+          format: date-time
+      required: [token, url, expiresAtIso]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooManyRequests:
+      description: Rate limited
+      headers:
+        Retry-After:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

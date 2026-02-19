@@ -15,7 +15,7 @@ import { POST } from "./route";
 import { authorizePublicApiRequest } from "../lib/authorize-public-api-request";
 import { createItem } from "@/lib/db/create-item";
 
-test("POST /api/public/checklists returns 403 when scope is forbidden", async ({
+test("POST /api/public/v1/checklists returns 403 when scope is forbidden", async ({
   expect,
 }) => {
   vi.mocked(authorizePublicApiRequest).mockResolvedValue({
@@ -24,7 +24,7 @@ test("POST /api/public/checklists returns 403 when scope is forbidden", async ({
   });
 
   const request = new NextRequest(
-    "http://localhost:3000/api/public/checklists",
+    "http://localhost:3000/api/public/v1/checklists",
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -38,7 +38,7 @@ test("POST /api/public/checklists returns 403 when scope is forbidden", async ({
   expect(await response.json()).toEqual({ error: "Forbidden" });
 });
 
-test("POST /api/public/checklists creates checklist with valid token auth", async ({
+test("POST /api/public/v1/checklists creates checklist with valid token auth", async ({
   expect,
 }) => {
   vi.mocked(authorizePublicApiRequest).mockResolvedValue({
@@ -62,7 +62,7 @@ test("POST /api/public/checklists creates checklist with valid token auth", asyn
   );
 
   const request = new NextRequest(
-    "http://localhost:3000/api/public/checklists",
+    "http://localhost:3000/api/public/v1/checklists",
     {
       method: "POST",
       headers: { "content-type": "application/json" },
