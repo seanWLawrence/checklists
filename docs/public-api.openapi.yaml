@@ -1,10 +1,12 @@
-openapi: 3.0.3
+openapi: 3.1.1
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
 info:
   title: Checklists Public API
   version: 1.0.0
   description: Token-authenticated API for notes and checklists automation.
 servers:
-  - url: http://localhost:3000
+  - url: /
+    description: Current deployment origin
 security:
   - bearerAuth: []
 paths:
@@ -64,12 +66,17 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /api/public/v1/notes/{id}:
-    parameters:
-      - $ref: "#/components/parameters/Id"
     get:
       summary: Get note
       operationId: getNoteV1
       x-required-scope: notes:read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Note found
@@ -92,6 +99,13 @@ paths:
       operationId: updateNoteV1
       x-required-scope: notes:update
       x-updates: [updatedAtIso]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -174,12 +188,17 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /api/public/v1/checklists/{id}:
-    parameters:
-      - $ref: "#/components/parameters/Id"
     get:
       summary: Get checklist
       operationId: getChecklistV1
       x-required-scope: checklists:read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Checklist found
@@ -202,6 +221,13 @@ paths:
       operationId: updateChecklistV1
       x-required-scope: checklists:update
       x-updates: [updatedAtIso]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -229,13 +255,18 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /api/public/v1/checklists/{id}/share-links:
-    parameters:
-      - $ref: "#/components/parameters/Id"
     post:
       summary: Create checklist share link
       operationId: createChecklistShareLinkV1
       x-required-scope: checklists:generate-share-link
       x-idempotency: not-idempotent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "201":
           description: Share link created
