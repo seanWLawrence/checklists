@@ -10,7 +10,7 @@ const buildCspHeader = (nonce: string) =>
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}'`,
-    `img-src 'self' ${S3_BUCKET_ORIGIN}`,
+    `img-src 'self' ${S3_BUCKET_ORIGIN} blob: data:`,
     "font-src 'self'",
     `connect-src 'self' ${S3_BUCKET_ORIGIN}`,
     "frame-src 'none'",
