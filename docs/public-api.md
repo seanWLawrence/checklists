@@ -6,7 +6,6 @@ This API is for token-authenticated automation (for example agents).
 
 - Current stable version: `/api/public/v1`
 
-
 ## Agent Quickstart
 
 Use these rules exactly:
@@ -70,6 +69,7 @@ Use these rules exactly:
 - `PATCH /api/public/v1/notes/{id}` (`notes:update`)
   - body: `{ "name"?: string, "content"?: string }`
   - at least one field required
+  - body is GitHub-flavored Markdown format
 
 ### Checklists
 
