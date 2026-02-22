@@ -62,6 +62,7 @@ export const AudioRecorderInput: React.FC<{
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const wasAutoPausedRef = useRef(false);
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -85,6 +86,53 @@ export const AudioRecorderInput: React.FC<{
     };
   }, []);
 
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      const recorder = mediaRecorderRef.current;
+
+      if (!recorder) {
+        return;
+      }
+
+      if (document.visibilityState === "hidden") {
+        if (recorder.state === "recording") {
+          // Flush data captured so far before mobile background/screen lock can suspend recording.
+          recorder.requestData();
+
+          try {
+            recorder.pause();
+            wasAutoPausedRef.current = true;
+            setStatus("paused");
+            setErrorMessage(
+              "Recording auto-paused while app is in background. Return to continue.",
+            );
+          } catch {
+            // If pause isn't supported in this state/browser, stop to preserve the recording.
+            recorder.stop();
+            setErrorMessage(
+              "Recording was finalized while app was in background to prevent data loss.",
+            );
+          }
+        }
+
+        return;
+      }
+
+      if (wasAutoPausedRef.current && recorder.state === "paused") {
+        recorder.resume();
+        wasAutoPausedRef.current = false;
+        setStatus("recording");
+        setErrorMessage(null);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
+
   const handleFileChange = (file: File | null) => {
     if (!file) {
       setStatus("idle");
@@ -105,6 +153,7 @@ export const AudioRecorderInput: React.FC<{
     }
 
     setErrorMessage(null);
+    wasAutoPausedRef.current = false;
     chunksRef.current = [];
 
     handleFileChange(null);
@@ -154,7 +203,7 @@ export const AudioRecorderInput: React.FC<{
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start();
+      recorder.start(1000);
       setStatus("recording");
     } catch {
       setStatus("error");
@@ -165,6 +214,7 @@ export const AudioRecorderInput: React.FC<{
   const pauseRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.pause();
+      wasAutoPausedRef.current = false;
       setStatus("paused");
     }
   };
@@ -172,11 +222,15 @@ export const AudioRecorderInput: React.FC<{
   const resumeRecording = () => {
     if (mediaRecorderRef.current?.state === "paused") {
       mediaRecorderRef.current.resume();
+      wasAutoPausedRef.current = false;
+      setErrorMessage(null);
       setStatus("recording");
     }
   };
 
   const finishRecording = () => {
+    wasAutoPausedRef.current = false;
+
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
