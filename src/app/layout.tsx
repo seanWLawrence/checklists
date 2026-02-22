@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SerwistProvider } from "@/app/lib/client";
 import { BASE_URL } from "@/lib/constants";
 import TopNavigation from "@/components/top-navigation";
+import { ServiceWorkerUpdateBanner } from "@/components/service-worker-update-banner.client";
 
 import "./globals.css";
 import "highlight.js/styles/tokyo-night-dark.css";
@@ -93,6 +94,7 @@ export default async function RootLayout({
     >
       <body>
         <SerwistProvider swUrl="/serwist/sw.js">
+          <ServiceWorkerUpdateBanner />
           <RuntimeErrorMonitor />
           <AuthRefreshInterval />
           <TopNavigation />
