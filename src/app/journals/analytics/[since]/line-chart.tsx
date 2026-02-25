@@ -21,7 +21,7 @@ export type AverageKey =
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
-  year: "2-digit",
+  year: "numeric",
 });
 const tooltipDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
