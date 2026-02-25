@@ -59,11 +59,11 @@ const formatTimestamp = (date: Date): string => {
 };
 
 export const AudioRecorderInput: React.FC<{
-  onChange: (
+  onChangeAction: (
     file: File | null,
     options?: { transcriptionMode: RecordingTranscriptionMode },
   ) => void;
-}> = ({ onChange }) => {
+}> = ({ onChangeAction }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -132,7 +132,7 @@ export const AudioRecorderInput: React.FC<{
       setStatus("idle");
     }
 
-    onChange(
+    onChangeAction(
       file,
       file
         ? { transcriptionMode: transcriptionModeRef.current }
@@ -267,7 +267,7 @@ export const AudioRecorderInput: React.FC<{
                 onClick={() => void startRecording("auto")}
                 variant="outline"
               >
-                Record with transcription
+                Record w/ transcription
               </Button>
             </>
           )}

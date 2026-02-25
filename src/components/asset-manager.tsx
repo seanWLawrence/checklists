@@ -464,7 +464,7 @@ export const AssetManager: React.FC<{
       />
 
       <div className="flex justify-end items-center space-x-2">
-        <AudioRecorderInput onChange={onRecordAudioFinished} />
+        <AudioRecorderInput onChangeAction={onRecordAudioFinished} />
 
         <Button type="button" variant="outline" onClick={onAddFilesClick}>
           Add files
