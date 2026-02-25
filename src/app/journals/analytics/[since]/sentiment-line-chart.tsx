@@ -112,18 +112,17 @@ export const SentimentLineChart: React.FC<{ data: SentimentLineData }> = ({
   });
 
   return (
-    <div className="flex space-x-1 flex-wrap space-y-1 overflow-x-scroll">
-      <ComposedChart
-        style={{
-          width: "100%",
-          height: "100%",
-          maxHeight: 360,
-          aspectRatio: 1.618,
-        }}
-        responsive
-        data={chartData}
-        margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-      >
+    <div className="w-full overflow-x-auto">
+      <div className="w-full min-w-[42rem]">
+        <ComposedChart
+          style={{
+            width: "100%",
+            height: 320,
+          }}
+          responsive
+          data={chartData}
+          margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+        >
         <XAxis
           dataKey="dateMilli"
           type="number"
@@ -198,7 +197,8 @@ export const SentimentLineChart: React.FC<{ data: SentimentLineData }> = ({
           name="Sentiment valence"
           isAnimationActive={false}
         />
-      </ComposedChart>
+        </ComposedChart>
+      </div>
     </div>
   );
 };

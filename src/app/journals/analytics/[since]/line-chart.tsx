@@ -93,23 +93,22 @@ export const LineChart: React.FC<{
   });
 
   return (
-    <div className="flex space-x-1 flex-wrap space-y-1 overflow-x-scroll">
-      <ComposedChart
-        style={{
-          width: "100%",
-          height: "100%",
-          maxHeight: 400,
-          aspectRatio: 1.618,
-        }}
-        responsive
-        data={chartData}
-        margin={{
-          top: 5,
-          right: 0,
-          left: 0,
-          bottom: 5,
-        }}
-      >
+    <div className="w-full overflow-x-auto">
+      <div className="w-full min-w-[42rem]">
+        <ComposedChart
+          style={{
+            width: "100%",
+            height: 340,
+          }}
+          responsive
+          data={chartData}
+          margin={{
+            top: 5,
+            right: 0,
+            left: 0,
+            bottom: 5,
+          }}
+        >
         <XAxis
           dataKey="dateMilli"
           name="Date"
@@ -190,7 +189,8 @@ export const LineChart: React.FC<{
           name={name}
           isAnimationActive={false}
         />
-      </ComposedChart>
+        </ComposedChart>
+      </div>
     </div>
   );
 };
