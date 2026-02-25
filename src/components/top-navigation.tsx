@@ -88,11 +88,11 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 )}
               </div>
 
-              <ThemeToggleButton />
-
               <form action={logoutAction}>
                 <SubmitButton variant="ghost">Sign out</SubmitButton>
               </form>
+
+              <ThemeToggleButton />
             </div>
           }
         ></MenuButton>

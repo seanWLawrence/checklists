@@ -5,6 +5,7 @@ import { SerwistProvider } from "@/app/lib/client";
 import { BASE_URL } from "@/lib/constants";
 import TopNavigation from "@/components/top-navigation";
 import { ServiceWorkerUpdateBanner } from "@/components/service-worker-update-banner.client";
+import { ServiceWorkerDevReset } from "@/components/service-worker-dev-reset.client";
 
 import "./globals.css";
 import "highlight.js/styles/tokyo-night-dark.css";
@@ -84,6 +85,7 @@ export default async function RootLayout({
       : cookieTheme === "light" || cookieTheme === "dark"
         ? cookieTheme
         : "light";
+  const isProduction = process.env.NODE_ENV === "production";
 
   return (
     <html
@@ -93,13 +95,23 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <SerwistProvider swUrl="/serwist/sw.js">
-          <ServiceWorkerUpdateBanner />
-          <RuntimeErrorMonitor />
-          <AuthRefreshInterval />
-          <TopNavigation />
-          <div className="p-5">{children}</div>
-        </SerwistProvider>
+        {isProduction ? (
+          <SerwistProvider swUrl="/serwist/sw.js">
+            <ServiceWorkerUpdateBanner />
+            <RuntimeErrorMonitor />
+            <AuthRefreshInterval />
+            <TopNavigation />
+            <div className="p-5">{children}</div>
+          </SerwistProvider>
+        ) : (
+          <>
+            <ServiceWorkerDevReset />
+            <RuntimeErrorMonitor />
+            <AuthRefreshInterval />
+            <TopNavigation />
+            <div className="p-5">{children}</div>
+          </>
+        )}
       </body>
     </html>
   );
