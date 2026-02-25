@@ -267,7 +267,7 @@ export const AudioRecorderInput: React.FC<{
                 onClick={() => void startRecording("auto")}
                 variant="outline"
               >
-                Record w/ transcription
+                Record + transcribe
               </Button>
             </>
           )}
