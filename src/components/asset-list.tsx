@@ -4,6 +4,7 @@ import { Button } from "./button";
 import { JournalAsset } from "@/app/journals/journal.types";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
+import { buttonClassName } from "./button-classes";
 
 interface AssetListItem extends JournalAsset {
   previewUrl: string;
@@ -58,24 +59,41 @@ export const AssetList: React.FC<{
         const transcribeStatus = transcribeStatusByFilename?.[asset.filename];
 
         return (
-          <div key={asset.filename} className="space-y-2">
-            <div className="flex items-end justify-between text-xs text-zinc-900 dark:text-zinc-100 pb-1">
+          <div key={asset.filename} className="space-y-0">
+            <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100 pb-1">
               <p className="truncate -mb-1">{asset.caption}</p>
 
-              <div className="flex space-x-1">
+              <div className="flex items-center gap-1">
+                <div>
+                  <a
+                    href={asset.previewUrl}
+                    download={asset.filename}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={buttonClassName({
+                      variant: "ghost",
+                      className: "text-xs",
+                    })}
+                  >
+                    <span className="text-nowrap whitespace-nowrap">
+                      Download
+                    </span>
+                  </a>
+                </div>
+
                 {onTranscribeClick &&
                   asset.variant === "audio" &&
                   (shouldShowTranscribeButton?.(asset, transcribeStatus) ??
                     true) && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => onTranscribeClick(asset)}
-                    className="text-xs"
-                    type="button"
-                    disabled={transcribeStatus === "loading"}
-                  >
-                    {getTranscribeLabel(transcribeStatus)}
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onTranscribeClick(asset)}
+                      className="text-xs"
+                      type="button"
+                      disabled={transcribeStatus === "loading"}
+                    >
+                      {getTranscribeLabel(transcribeStatus)}
+                    </Button>
                   )}
 
                 {onRemoveClick && (
@@ -91,11 +109,13 @@ export const AssetList: React.FC<{
               </div>
             </div>
 
-            {asset.variant === "image" ? (
-              <Image src={asset.previewUrl} alt={asset.caption} />
-            ) : (
-              <Audio src={asset.previewUrl} />
-            )}
+            <div className="mb-2">
+              {asset.variant === "image" ? (
+                <Image src={asset.previewUrl} alt={asset.caption} />
+              ) : (
+                <Audio src={asset.previewUrl} />
+              )}
+            </div>
 
             {onCaptionChange && (
               <Label label="Caption" className="w-full">

@@ -7,6 +7,7 @@ import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { Image } from "@/components/image";
 import { LinkButton } from "@/components/link-button";
+import { buttonClassName } from "@/components/button-classes";
 import { getAllItems } from "@/lib/db/get-all-items";
 import { scan } from "@/lib/db/scan";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
@@ -70,14 +71,26 @@ const AssetSection: React.FC<{
 
               {asset.variant === "audio" && <Audio src={asset.previewUrl} />}
 
-              <div className="flex w-full justify-end">
+              <div className="flex w-full justify-end gap-2">
                 <LinkButton
                   href={`/journals/${asset.createdAtLocal}`}
-                  variant="outline"
+                  variant="ghost"
                   className="shrink-0 max-w-content"
                 >
                   View ({prettyDate(asset.createdAtLocal)})
                 </LinkButton>
+
+                <a
+                  href={asset.previewUrl}
+                  download={asset.filename}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonClassName({ variant: "outline" })}
+                >
+                  <span className="text-nowrap whitespace-nowrap">
+                    Download
+                  </span>
+                </a>
               </div>
             </article>
           ))}
