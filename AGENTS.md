@@ -18,3 +18,8 @@
 - Put shared functions in `lib`, components in `components`, and domain-specific code in feature folders.
 - Prefer object syntax for parameters.
 - Prefer dependency injection over musing mocks when writing tests
+
+## Session Notes / Pitfalls
+
+- When fixing hydration mismatches in client components, avoid mount effects that synchronously call `setState` (lint: "Calling setState synchronously within an effect can trigger cascading renders"). Prefer a hydration-safe render strategy (for example `useSyncExternalStore` for hydration detection) instead of `setState` in `useEffect` just to flip a mounted flag.
+- For `src/app/.../[param]/...` paths, always quote the path in shell commands (`'src/app/.../[since]/page.tsx'`) to avoid zsh glob expansion errors.
