@@ -19,12 +19,17 @@ export const AssetList: React.FC<{
   onCaptionChange?: (asset: AssetListItem, caption: string) => void;
   onTranscribeClick?: (asset: AssetListItem) => void;
   transcribeStatusByFilename?: Record<string, TranscribeStatus>;
+  shouldShowTranscribeButton?: (
+    asset: AssetListItem,
+    status: TranscribeStatus | undefined,
+  ) => boolean;
 }> = ({
   assets,
   onRemoveClick,
   onCaptionChange,
   onTranscribeClick,
   transcribeStatusByFilename,
+  shouldShowTranscribeButton,
 }) => {
   const sortedAssets = [...assets].sort((a, b) =>
     a.variant.localeCompare(b.variant),
@@ -58,7 +63,10 @@ export const AssetList: React.FC<{
               <p className="truncate -mb-1">{asset.caption}</p>
 
               <div className="flex space-x-1">
-                {onTranscribeClick && asset.variant === "audio" && (
+                {onTranscribeClick &&
+                  asset.variant === "audio" &&
+                  (shouldShowTranscribeButton?.(asset, transcribeStatus) ??
+                    true) && (
                   <Button
                     variant="ghost"
                     onClick={() => onTranscribeClick(asset)}
@@ -68,7 +76,7 @@ export const AssetList: React.FC<{
                   >
                     {getTranscribeLabel(transcribeStatus)}
                   </Button>
-                )}
+                  )}
 
                 {onRemoveClick && (
                   <Button

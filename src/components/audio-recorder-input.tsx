@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
 
 type RecorderStatus = "idle" | "recording" | "paused" | "stopped" | "error";
+type RecordingTranscriptionMode = "auto" | "skip";
 
 const getExtensionForMime = (mimeType: string): string => {
   if (mimeType.includes("audio/webm")) return "webm";
@@ -29,8 +32,7 @@ const getPreferredMimeType = (): string | undefined => {
 
   const ua = navigator.userAgent;
   const isSafari =
-    /Safari/i.test(ua) &&
-    !/Chrome|Chromium|CriOS|Edg|OPR/i.test(ua);
+    /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR/i.test(ua);
 
   const safariCandidates = ["audio/mp4;codecs=mp4a.40.2", "audio/mp4"];
   const defaultCandidates = [
@@ -57,27 +59,19 @@ const formatTimestamp = (date: Date): string => {
 };
 
 export const AudioRecorderInput: React.FC<{
-  onChange: (file: File | null) => void;
+  onChange: (
+    file: File | null,
+    options?: { transcriptionMode: RecordingTranscriptionMode },
+  ) => void;
 }> = ({ onChange }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const wasAutoPausedRef = useRef(false);
+  const transcriptionModeRef = useRef<RecordingTranscriptionMode>("auto");
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Avoids setting state in effect
-  const isMounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-  // Avoids setting state in effect
-  const recorderAvailable = useSyncExternalStore(
-    () => () => {},
-    () => canRecordAudio(),
-    () => false,
-  );
+  const recorderAvailable = canRecordAudio();
 
   // Cleanup only
   useEffect(() => {
@@ -138,10 +132,17 @@ export const AudioRecorderInput: React.FC<{
       setStatus("idle");
     }
 
-    onChange(file);
+    onChange(
+      file,
+      file
+        ? { transcriptionMode: transcriptionModeRef.current }
+        : { transcriptionMode: "auto" },
+    );
   };
 
-  const startRecording = async () => {
+  const startRecording = async (
+    transcriptionMode: RecordingTranscriptionMode = "auto",
+  ) => {
     if (!recorderAvailable) {
       setStatus("error");
       setErrorMessage("Recording isn't available on this device.");
@@ -155,6 +156,7 @@ export const AudioRecorderInput: React.FC<{
     setErrorMessage(null);
     wasAutoPausedRef.current = false;
     chunksRef.current = [];
+    transcriptionModeRef.current = transcriptionMode;
 
     handleFileChange(null);
 
@@ -243,7 +245,7 @@ export const AudioRecorderInput: React.FC<{
 
   return (
     <div className={"flex flex-col space-y-2"}>
-      {isMounted && recorderAvailable ? (
+      {recorderAvailable ? (
         <div
           className={cn("flex items-center space-x-2", {
             "border-zinc-200 rounded-md py-1.5 px-3 border-1":
@@ -251,9 +253,23 @@ export const AudioRecorderInput: React.FC<{
           })}
         >
           {(status === "idle" || status === "error") && (
-            <Button type="button" onClick={startRecording} variant="outline">
-              Record
-            </Button>
+            <>
+              <Button
+                type="button"
+                onClick={() => void startRecording("skip")}
+                variant="outline"
+              >
+                Record
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => void startRecording("auto")}
+                variant="outline"
+              >
+                Record with transcription
+              </Button>
+            </>
           )}
 
           {status === "recording" && (
@@ -282,11 +298,11 @@ export const AudioRecorderInput: React.FC<{
             <span className="text-xs text-zinc-600">Paused</span>
           )}
         </div>
-      ) : isMounted ? (
+      ) : (
         <p className="text-xs text-zinc-600">
           Audio recording isn&apos;t supported on this device.
         </p>
-      ) : null}
+      )}
 
       {errorMessage && <p className="text-xs text-rose-600">{errorMessage}</p>}
     </div>

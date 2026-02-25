@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
 import { AssetList } from "@/components/asset-list";
-import { AudioRecorderInput } from "@/components/audio-recorder-input";
 import {
   JournalAsset,
   JournalAssetVariant,
@@ -18,6 +18,14 @@ import {
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Maybe } from "purify-ts/Maybe";
 
+const AudioRecorderInput = dynamic(
+  () =>
+    import("@/components/audio-recorder-input").then(
+      (module) => module.AudioRecorderInput,
+    ),
+  { ssr: false },
+);
+
 interface UploadedAssetItem extends JournalAsset {
   previewUrl: string;
 }
@@ -31,6 +39,8 @@ interface UploadItem {
   caption: string;
   variant: JournalAssetVariant;
   status: UploadStatus;
+  source: "file" | "recorder";
+  transcriptionMode?: "auto" | "skip";
   error?: string;
 }
 
@@ -65,6 +75,10 @@ export const AssetManager: React.FC<{
   const [transcribeStatusByFilename, setTranscribeStatusByFilename] = useState<
     Record<string, "idle" | "loading" | "done" | "error">
   >({});
+  const [
+    recordingTranscriptionModeByFilename,
+    setRecordingTranscriptionModeByFilename,
+  ] = useState<Record<string, "auto" | "skip">>({});
 
   useEffect(() => {
     uploadedAssetsRef.current = uploadedAssets;
@@ -106,12 +120,18 @@ export const AssetManager: React.FC<{
     inputRef.current?.click();
   };
 
-  const onRecordAudioFinished = async (file: File | null) => {
+  const onRecordAudioFinished = async (
+    file: File | null,
+    options?: { transcriptionMode: "auto" | "skip" },
+  ) => {
     if (!file) {
       return;
     }
 
-    startUpload(file);
+    startUpload(file, {
+      source: "recorder",
+      transcriptionMode: options?.transcriptionMode ?? "auto",
+    });
   };
 
   const uploadFile = (
@@ -176,7 +196,13 @@ export const AssetManager: React.FC<{
     });
   };
 
-  const startUpload = (file: File) => {
+  const startUpload = (
+    file: File,
+    options?: {
+      source?: "file" | "recorder";
+      transcriptionMode?: "auto" | "skip";
+    },
+  ) => {
     const variant = getVariant(file);
 
     if (!variant) {
@@ -194,6 +220,8 @@ export const AssetManager: React.FC<{
       caption: file.name,
       variant,
       status: "uploading",
+      source: options?.source ?? "file",
+      transcriptionMode: options?.transcriptionMode,
     };
 
     setUnsavedUploads((current) => [...current, uploadItem]);
@@ -226,19 +254,37 @@ export const AssetManager: React.FC<{
         );
       },
       Right: ({ filename }) => {
-        setUploadedAssets((current) => [
-          ...current,
-          {
-            filename,
-            variant: upload.variant,
-            caption: upload.caption,
-            previewUrl: upload.previewUrl,
-          },
-        ]);
+        const uploadedAsset: UploadedAssetItem = {
+          filename,
+          variant: upload.variant,
+          caption: upload.caption,
+          previewUrl: upload.previewUrl,
+        };
+
+        setUploadedAssets((current) => [...current, uploadedAsset]);
 
         setUnsavedUploads((current) =>
           current.filter((item) => item.localId !== upload.localId),
         );
+
+        if (
+          upload.source === "recorder" &&
+          upload.variant === "audio" &&
+          upload.transcriptionMode
+        ) {
+          setRecordingTranscriptionModeByFilename((current) => ({
+            ...current,
+            [filename]: upload.transcriptionMode!,
+          }));
+        }
+
+        if (
+          upload.source === "recorder" &&
+          upload.variant === "audio" &&
+          upload.transcriptionMode === "auto"
+        ) {
+          void onTranscribeClick(uploadedAsset);
+        }
       },
     });
   };
@@ -253,7 +299,7 @@ export const AssetManager: React.FC<{
   const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
 
-    files.forEach((file) => startUpload(file));
+    files.forEach((file) => startUpload(file, { source: "file" }));
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -279,6 +325,11 @@ export const AssetManager: React.FC<{
     setUploadedAssets((current) =>
       current.filter((item) => item.filename !== asset.filename),
     );
+    setRecordingTranscriptionModeByFilename((current) => {
+      return Object.fromEntries(
+        Object.entries(current).filter(([filename]) => filename !== asset.filename),
+      );
+    });
   };
 
   const onTranscribeClick = async (asset: UploadedAssetItem) => {
@@ -396,14 +447,28 @@ export const AssetManager: React.FC<{
         onCaptionChange={onCaptionChange}
         onTranscribeClick={onTranscribeClick}
         transcribeStatusByFilename={transcribeStatusByFilename}
+        shouldShowTranscribeButton={(asset, status) => {
+          if (asset.variant !== "audio") {
+            return false;
+          }
+
+          const recordingMode =
+            recordingTranscriptionModeByFilename[asset.filename];
+
+          if (recordingMode === "auto") {
+            return status === "error";
+          }
+
+          return true;
+        }}
       />
 
       <div className="flex justify-end items-center space-x-2">
+        <AudioRecorderInput onChange={onRecordAudioFinished} />
+
         <Button type="button" variant="outline" onClick={onAddFilesClick}>
           Add files
         </Button>
-
-        <AudioRecorderInput onChange={onRecordAudioFinished} />
       </div>
     </div>
   );
