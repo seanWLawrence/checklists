@@ -4,6 +4,7 @@ import { Heading } from "@/components/heading";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllNotes } from "./model/get-all-notes.model";
 import { Note } from "./types";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,16 @@ const Notes: React.FC = async () => {
     return (
       <main>
         <section className="space-y-3">
-          <Heading level={1}>Notes</Heading>
+          <div className="flex space-x-2 items-center">
+            <Heading level={1}>Notes</Heading>
+
+            <Link
+              className="underline underline-offset-2 text-xs"
+              href={"/notes/new"}
+            >
+              Create
+            </Link>
+          </div>
 
           {!categorizedNotes.length && (
             <p className="text-sm text-zinc-700">No items.</p>

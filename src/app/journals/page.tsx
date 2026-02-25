@@ -14,6 +14,7 @@ import { Input } from "@/components/input";
 import { JournalsYearRedirect } from "./components/journals-year-redirect";
 import { JournalSearchResults } from "./components/journal-search-results";
 import { searchJournalsSemantic } from "./lib/search-journals-semantic.lib";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,16 @@ const Journals: React.FC<{
 
     return (
       <main className="space-y-4">
-        <Heading level={1}>Journals</Heading>
+        <div className="flex space-x-2 items-center">
+          <Heading level={1}>Journals</Heading>
+
+          <Link
+            className="underline underline-offset-2 text-xs"
+            href={"/journals/new"}
+          >
+            Create
+          </Link>
+        </div>
 
         <form
           className="space-y-2"
@@ -75,7 +85,9 @@ const Journals: React.FC<{
               params.set("q", trimmedSearchText);
             }
 
-            redirect(`/journals${params.size > 0 ? `?${params.toString()}` : ""}`);
+            redirect(
+              `/journals${params.size > 0 ? `?${params.toString()}` : ""}`,
+            );
           }}
         >
           <Label label="Search text">

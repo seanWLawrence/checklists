@@ -4,6 +4,7 @@ import { Heading } from "@/components/heading";
 import { ChecklistV2 } from "./checklist-v2.types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllChecklistsV2 } from "./model/get-all-checklists-v2.model";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -59,9 +60,18 @@ const ChecklistsV2: React.FC = async () => {
     const categorizedChecklists = getCategorizedChecklists(checklists);
 
     return (
-      <main>
+      <main className="space-y-6">
         <section className="space-y-3">
-          <Heading level={1}>Checklists</Heading>
+          <div className="flex space-x-2 items-center">
+            <Heading level={1}>Checklists</Heading>
+
+            <Link
+              className="underline underline-offset-2 text-xs"
+              href={"/checklists/new"}
+            >
+              Create
+            </Link>
+          </div>
 
           {!categorizedChecklists.length && (
             <p className="text-sm text-zinc-700">No items.</p>
