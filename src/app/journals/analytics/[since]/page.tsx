@@ -63,9 +63,23 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
 
         <div className="space-y-2 text-center flex flex-col items-center">
           <div className="space-y-8">
-            <RadarChart data={radar} />
+            <Fieldset legend="Levels" className="text-left">
+              <div className="space-y-8">
+                <RadarChart data={radar} />
 
-            <LevelChartsTabs pie={pie} line={line} />
+                <LevelChartsTabs pie={pie} line={line} />
+              </div>
+            </Fieldset>
+
+            <Fieldset legend="Sentiment over time" className="text-left">
+              {ai.sentimentTimeline.length === 0 ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  Not enough sentiment data yet.
+                </p>
+              ) : (
+                <SentimentLineChart data={ai.sentimentTimeline} />
+              )}
+            </Fieldset>
 
             <Fieldset legend="AI analytics" className="text-left">
               <div className="space-y-3 text-sm">
@@ -153,48 +167,6 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
               </div>
             </Fieldset>
 
-            <Fieldset legend="Sentiment over time" className="text-left">
-              {ai.sentimentTimeline.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                  Not enough sentiment data yet.
-                </p>
-              ) : (
-                <SentimentLineChart data={ai.sentimentTimeline} />
-              )}
-            </Fieldset>
-
-            <Fieldset
-              legend="Most helpful habits (experimental)"
-              className="text-left"
-            >
-              <p className="text-xs text-zinc-600 dark:text-zinc-300">
-                Ranked by positive deltas and frequency. Minimum sample size:{" "}
-                {ai.minSampleSizeForRanking} days with and without the habit.
-              </p>
-
-              {ai.helpfulHabits.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                  Not enough data for a reliable ranking yet.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-1 text-sm">
-                  {ai.helpfulHabits.map((habit, index) => (
-                    <li key={habit.key}>
-                      {index + 1}. <strong>{habit.label}</strong> — score{" "}
-                      {habit.score.toFixed(3)} · mood Δ{" "}
-                      {habit.moodDelta > 0 ? "+" : ""}
-                      {habit.moodDelta.toFixed(2)} · energy Δ{" "}
-                      {habit.energyDelta > 0 ? "+" : ""}
-                      {habit.energyDelta.toFixed(2)} · health Δ{" "}
-                      {habit.healthDelta > 0 ? "+" : ""}
-                      {habit.healthDelta.toFixed(2)} ({habit.count} days,{" "}
-                      {habit.percentOfEntries}%)
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Fieldset>
-
             <Fieldset legend="Habit impact" className="text-left">
               {ai.habitImpact.length === 0 ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-300">
@@ -202,7 +174,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 </p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 mb-4">
                     Δ compares average level on days with the habit vs days
                     without it.
                   </p>
@@ -281,6 +253,38 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                     </table>
                   </div>
                 </div>
+              )}
+            </Fieldset>
+
+            <Fieldset
+              legend="Most helpful habits (experimental)"
+              className="text-left"
+            >
+              <p className="text-xs text-zinc-600 dark:text-zinc-300 mb-4">
+                Ranked by positive deltas and frequency. Minimum sample size:{" "}
+                {ai.minSampleSizeForRanking} days with and without the habit.
+              </p>
+
+              {ai.helpfulHabits.length === 0 ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  Not enough data for a reliable ranking yet.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1 text-sm">
+                  {ai.helpfulHabits.map((habit, index) => (
+                    <li key={habit.key}>
+                      {index + 1}. <strong>{habit.label}</strong> — score{" "}
+                      {habit.score.toFixed(3)} · mood Δ{" "}
+                      {habit.moodDelta > 0 ? "+" : ""}
+                      {habit.moodDelta.toFixed(2)} · energy Δ{" "}
+                      {habit.energyDelta > 0 ? "+" : ""}
+                      {habit.energyDelta.toFixed(2)} · health Δ{" "}
+                      {habit.healthDelta > 0 ? "+" : ""}
+                      {habit.healthDelta.toFixed(2)} ({habit.count} days,{" "}
+                      {habit.percentOfEntries}%)
+                    </li>
+                  ))}
+                </ul>
               )}
             </Fieldset>
           </div>
