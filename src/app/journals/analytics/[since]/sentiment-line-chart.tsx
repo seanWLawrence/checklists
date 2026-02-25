@@ -5,6 +5,7 @@ import {
   ComposedChart,
   Line,
   ReferenceLine,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -113,16 +114,12 @@ export const SentimentLineChart: React.FC<{ data: SentimentLineData }> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="w-full min-w-[42rem]">
-        <ComposedChart
-          style={{
-            width: "100%",
-            height: 260,
-          }}
-          responsive
-          data={chartData}
-          margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-        >
+      <div className="w-full min-w-full sm:min-w-[42rem]">
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+          >
         <XAxis
           dataKey="dateMilli"
           type="number"
@@ -197,7 +194,8 @@ export const SentimentLineChart: React.FC<{ data: SentimentLineData }> = ({
           name="Sentiment valence"
           isAnimationActive={false}
         />
-        </ComposedChart>
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
