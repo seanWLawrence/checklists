@@ -80,9 +80,9 @@ export default async function RootLayout({
   const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value;
 
   const initialTheme =
-    override === "light" || override === "dark"
+    override === "light" || override === "dark" || override === "system"
       ? override
-      : cookieTheme === "light" || cookieTheme === "dark"
+      : cookieTheme === "light" || cookieTheme === "dark" || cookieTheme === "system"
         ? cookieTheme
         : "light";
   const isProduction = process.env.NODE_ENV === "production";
