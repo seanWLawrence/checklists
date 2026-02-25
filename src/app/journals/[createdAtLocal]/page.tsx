@@ -16,12 +16,8 @@ import {
   getCompletedHabitLabels,
   getCompletedHobbyLabels,
   getJournalHobbiesWithLegacyFallback,
-  JOURNAL_HABIT_FIELDS,
-  JOURNAL_HOBBY_FIELDS,
 } from "../lib/journal-habits";
-import { SubmitButton } from "@/components/submit-button";
 import { LinkButton } from "@/components/link-button";
-import { regenerateJournalAnalysisAction } from "../actions/regenerate-journal-analysis.action";
 import { getSentimentValenceInfo } from "../lib/get-sentiment-valence-info.lib";
 import { getAllCreatedAtLocals } from "../model/get-all-created-at-locals.model";
 import { getAdjacentCreatedAtLocals } from "../lib/get-adjacent-created-at-locals.lib";
@@ -156,28 +152,6 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
                 No AI analysis yet.
               </p>
             )}
-
-            <form action={regenerateJournalAnalysisAction} className="pt-1">
-              <input
-                type="hidden"
-                name="createdAtLocal"
-                value={journal.createdAtLocal}
-              />
-
-              {JOURNAL_HABIT_FIELDS.filter(({ key }) => journal.habits?.[key]).map(
-                ({ key }) => (
-                  <input key={key} type="hidden" name={key} value="true" />
-                ),
-              )}
-
-              {JOURNAL_HOBBY_FIELDS.filter(({ key }) => resolvedHobbies[key]).map(
-                ({ key }) => (
-                  <input key={key} type="hidden" name={key} value="true" />
-                ),
-              )}
-
-              <SubmitButton variant="outline">Regenerate analysis</SubmitButton>
-            </form>
           </div>
         </Fieldset>
 
