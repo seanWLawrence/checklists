@@ -6,6 +6,7 @@ import { SubmitButton } from "./submit-button";
 import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { JournalAnalyticsLink } from "./journal-analytics-link";
+import { JournalAssetsLink } from "./journal-assets-link";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
 import { ThemeToggleButton } from "./theme-toggle-button.client";
 import { CreatedAtLocal } from "@/app/journals/journal.types";
@@ -76,6 +77,10 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                 <span>/</span>
 
                 <JournalAnalyticsLink />
+
+                <span>/</span>
+
+                <JournalAssetsLink />
               </div>
 
               <div className="flex space-x-1 items-center">
