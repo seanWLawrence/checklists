@@ -117,7 +117,7 @@ export const SentimentLineChart: React.FC<{ data: SentimentLineData }> = ({
         <ComposedChart
           style={{
             width: "100%",
-            height: 320,
+            height: 260,
           }}
           responsive
           data={chartData}
