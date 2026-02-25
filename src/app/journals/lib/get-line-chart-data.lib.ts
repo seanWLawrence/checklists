@@ -1,6 +1,5 @@
 import { List } from "purify-ts/List";
-import { Journal, TotalLevelsByTypeAndValue } from "../journal.types";
-import { getTotalLevelsByTypeAndValue } from "./journal-analytics-chart-math.lib";
+import { Journal } from "../journal.types";
 
 export type LineChartData = (Pick<
   Journal,
@@ -50,26 +49,25 @@ const rollingAverage = ({
 };
 
 export const getLineChartData = (journals: Journal[]): LineChartData => {
-  const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
-    getTotalLevelsByTypeAndValue(journals);
-
-  const result: LineChartData = [];
-
-  totalLevelsByTypeAndValue.creativityLevel.levels.forEach(
-    ({ level, updatedAtIso }, index) => {
-      result.push({
-        dateMilli: updatedAtIso.getTime(),
-        creativityLevel: level,
-        energyLevel: totalLevelsByTypeAndValue.energyLevel.levels[index].level,
-        healthLevel: totalLevelsByTypeAndValue.healthLevel.levels[index].level,
-        relationshipsLevel:
-          totalLevelsByTypeAndValue.relationshipsLevel.levels[index].level,
-        moodLevel: totalLevelsByTypeAndValue.moodLevel.levels[index].level,
-      });
-    },
-  );
-
-  const data = [...result].sort((a, b) => a.dateMilli - b.dateMilli);
+  const data = journals
+    .map((journal) => ({
+      dateMilli: journal.updatedAtIso.getTime(),
+      creativityLevel: journal.creativityLevel,
+      energyLevel: journal.energyLevel,
+      healthLevel: journal.healthLevel,
+      relationshipsLevel: journal.relationshipsLevel,
+      moodLevel: journal.moodLevel,
+    }))
+    .filter((row) => {
+      return (
+        row.creativityLevel !== undefined ||
+        row.energyLevel !== undefined ||
+        row.healthLevel !== undefined ||
+        row.relationshipsLevel !== undefined ||
+        row.moodLevel !== undefined
+      );
+    })
+    .sort((a, b) => a.dateMilli - b.dateMilli);
 
   return data.map((dataPoint, index) => {
     return {

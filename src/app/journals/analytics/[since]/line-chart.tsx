@@ -23,6 +23,17 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   year: "2-digit",
 });
+const tooltipDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+const formatTooltipDate = (value: unknown): string => {
+  const dateMilli = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(dateMilli)
+    ? tooltipDateFormatter.format(dateMilli)
+    : String(value);
+};
 
 const getDotColor = (value?: number): string => {
   if (value === undefined) {
@@ -130,7 +141,7 @@ export const LineChart: React.FC<{
         />
 
         <Tooltip
-          labelFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
+          labelFormatter={formatTooltipDate}
           contentStyle={{
             backgroundColor: "var(--chart-tooltip-bg)",
             borderColor: "var(--chart-tooltip-border)",

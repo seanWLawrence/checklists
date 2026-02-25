@@ -7,10 +7,6 @@ import { PieChart } from "./pie-chart";
 import { AverageKey } from "./line-chart";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { PieChartData } from "../../lib/get-pie-chart-data.lib";
-import { stubLineChartData } from "../../lib/line-chart-data.stub";
-import { isProduction } from "@/lib/environment";
-
-const USE_STUB_LINE_CHART_DATA = !isProduction();
 
 type LevelKey =
   | "energyLevel"
@@ -96,7 +92,7 @@ export const LevelChartsTabs: React.FC<{
         {pieData && <PieChart data={pieData} />}
 
         <LineChart
-          data={USE_STUB_LINE_CHART_DATA ? stubLineChartData : line}
+          data={line}
           dataKey={selectedTab.key}
           averageKey={selectedTab.averageKey}
           name={selectedTab.name}
