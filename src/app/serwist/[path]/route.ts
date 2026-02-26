@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createSerwistRoute } from "@serwist/turbopack";
+import { VERCEL_GIT_COMMIT_SHA } from "@/lib/env.server";
 
 // Using `git rev-parse HEAD` might not the most efficient
 // way of determining a revision. You may prefer to use
@@ -9,7 +10,7 @@ const gitRevision = spawnSync("git", ["rev-parse", "HEAD"], {
 }).stdout?.trim();
 
 const revision =
-  process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
+  VERCEL_GIT_COMMIT_SHA ||
   (gitRevision && gitRevision.length > 0 ? gitRevision : undefined) ||
   crypto.randomUUID();
 

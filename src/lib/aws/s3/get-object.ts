@@ -6,7 +6,7 @@ import { Readable } from "node:stream";
 
 import { getS3Client } from "./get-s3-client";
 import { logger } from "../../logger";
-import { AWS_BUCKET_NAME } from "@/lib/secrets";
+import { AWS_BUCKET_NAME } from "@/lib/env.server";
 
 const toUint8Array = async (body: unknown): Promise<Uint8Array> => {
   if (body instanceof Uint8Array) {
@@ -43,13 +43,13 @@ export const getObject = ({
 }: {
   filename: string;
 }): EitherAsync<unknown, { body: Uint8Array; contentType?: string }> => {
-  return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
+  return EitherAsync(async ({ fromPromise, throwE }) => {
     try {
       const client = await fromPromise(getS3Client());
 
       const response = await client.send(
         new GetObjectCommand({
-          Bucket: await liftEither(AWS_BUCKET_NAME),
+          Bucket: AWS_BUCKET_NAME,
           Key: filename,
         }),
       );

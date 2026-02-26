@@ -1,6 +1,6 @@
 import "server-only";
 import { getCookie } from "./get-cookie";
-import { ACCESS_JWT_COOKIE_NAME } from "./auth.constants";
+import { ACCESS_JWT_COOKIE_NAME } from "@/lib/env.server";
 
 import type { NextRequest } from "next/server";
 import type { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";

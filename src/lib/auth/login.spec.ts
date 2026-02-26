@@ -27,6 +27,7 @@ test("fails if cant get username or password", async ({ expect }) => {
 
   await login({
     formData: new FormData(),
+    authSecret: "some secret",
     getStringFromFormDataFn,
     redirectFn: redirectFn as unknown as typeof redirect,
   });
@@ -35,6 +36,7 @@ test("fails if cant get username or password", async ({ expect }) => {
 
   await login({
     formData: new FormData(),
+    authSecret: "some secret",
     getStringFromFormDataFn,
     // @ts-expect-error just for testing
     redirectFn,
@@ -43,7 +45,7 @@ test("fails if cant get username or password", async ({ expect }) => {
   expect(succeededAndCalledRedirectToHome({ redirectFn })).toBe(false);
 });
 
-test("fails if cant get auth secret", async ({ expect }) => {
+test("fails if injected auth secret is empty", async ({ expect }) => {
   const getStringFromFormDataFn = vi.fn().mockReturnValue(Right("some value"));
 
   const redirectFn = vi.fn();
@@ -51,7 +53,7 @@ test("fails if cant get auth secret", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Left("not found"),
+    authSecret: "",
     redirectFn: redirectFn as unknown as typeof redirect,
   });
 
@@ -71,7 +73,7 @@ test("fails if user credentials arent found", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Right("some secret"),
+    authSecret: "some secret",
     getSingleItemFn,
     redirectFn: redirectFn as unknown as typeof redirect,
   });
@@ -99,7 +101,7 @@ test("fails if password hash fails", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Right("some secret"),
+    authSecret: "some secret",
     getSingleItemFn,
     secureHashWithSaltFn,
     redirectFn: redirectFn as unknown as typeof redirect,
@@ -134,7 +136,7 @@ test("fails if passwordHash doesnt match user credentials password hash", async 
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Right("some secret"),
+    authSecret: "some secret",
     getSingleItemFn,
     secureHashWithSaltFn,
     redirectFn: redirectFn as unknown as typeof redirect,
@@ -166,7 +168,7 @@ test("fails if setAuthTokensAndCookies fails", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Right("some value"),
+    authSecret: "some value",
     getSingleItemFn,
     secureHashWithSaltFn,
     setAuthTokensAndCookiesFn,
@@ -199,7 +201,7 @@ test("redirects to home on success", async ({ expect }) => {
   await login({
     formData: new FormData(),
     getStringFromFormDataFn,
-    authSecret: Right("some value"),
+    authSecret: "some value",
     getSingleItemFn,
     secureHashWithSaltFn,
     setAuthTokensAndCookiesFn: vi.fn().mockResolvedValue(Right(void 0)),

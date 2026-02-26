@@ -4,9 +4,9 @@ import { experimental_transcribe as transcribe, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { EitherAsync } from "purify-ts";
 import { logger } from "@/lib/logger";
+import { OPENAI_JOURNAL_TRANSCRIPTION_MODEL } from "@/lib/env.server";
 
 const MAX_TRANSCRIPTION_BYTES = 25 * 1024 * 1024;
-const CLEANUP_MODEL = process.env.OPENAI_JOURNAL_TRANSCRIPTION_MODEL ?? "gpt-4o-mini";
 
 const extractJson = (text: string): string => {
   const trimmed = text.trim();
@@ -22,7 +22,9 @@ const extractJson = (text: string): string => {
     return trimmed.slice(firstBrace, lastBrace + 1);
   }
 
-  throw new Error("Could not extract JSON object from transcription cleanup response");
+  throw new Error(
+    "Could not extract JSON object from transcription cleanup response",
+  );
 };
 
 const ALLOWED_HEADINGS = [
@@ -50,7 +52,9 @@ type TranscriptionCleanupResult = {
 const isAllowedHeading = (heading: string): heading is AllowedHeading =>
   (ALLOWED_HEADINGS as readonly string[]).includes(heading);
 
-const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null => {
+const decodeCleanupResult = (
+  value: unknown,
+): TranscriptionCleanupResult | null => {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -66,7 +70,10 @@ const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null 
             return null;
           }
 
-          const typedSection = section as { heading?: unknown; bullets?: unknown };
+          const typedSection = section as {
+            heading?: unknown;
+            bullets?: unknown;
+          };
           if (
             typeof typedSection.heading !== "string" ||
             !Array.isArray(typedSection.bullets) ||
@@ -79,7 +86,9 @@ const decodeCleanupResult = (value: unknown): TranscriptionCleanupResult | null 
           const heading = isAllowedHeading(normalizedHeading)
             ? normalizedHeading
             : "Other";
-          const bullets = typedSection.bullets.map((bullet) => bullet.trim()).filter(Boolean);
+          const bullets = typedSection.bullets
+            .map((bullet) => bullet.trim())
+            .filter(Boolean);
 
           if (!heading || bullets.length === 0) {
             return null;
@@ -144,7 +153,7 @@ const cleanupTranscriptIntoStructuredContent = async (
   transcript: string,
 ): Promise<string> => {
   const response = await generateText({
-    model: openai(CLEANUP_MODEL),
+    model: openai(OPENAI_JOURNAL_TRANSCRIPTION_MODEL),
     temperature: 0.35,
     system:
       "You are a thoughtful journal-writing assistant. Keep the speaker's voice natural, conversational, and human. Preserve detail and nuance instead of aggressively shortening things. Return only strict JSON with no markdown and no extra keys.",
@@ -199,7 +208,8 @@ export const transcribeJournalAudioIntoContent = ({
       }
 
       try {
-        const structured = await cleanupTranscriptIntoStructuredContent(transcript);
+        const structured =
+          await cleanupTranscriptIntoStructuredContent(transcript);
         if (structured) {
           return structured;
         }

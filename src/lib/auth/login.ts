@@ -3,7 +3,6 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { redirect } from "next/navigation";
 import { Either } from "purify-ts/Either";
 
-import { AUTH_SECRET } from "@/lib/secrets";
 import { getStringFromFormData } from "../form-data/get-string-from-form-data";
 import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
@@ -12,13 +11,14 @@ import { revalidatePath } from "next/cache";
 import { getSingleItem } from "../db/get-single-item";
 import { Key, UserCredentials } from "../types";
 import { secureHashWithSalt } from "./secure-hash-with-salt";
+import { AUTH_SECRET } from "@/lib/env.server";
 
 const getUserCredentialsKey = ({ username }: { username: string }): Key =>
   `user#${username}#credentials`;
 
 export const login = async ({
   formData,
-  authSecret: authSecretEither = AUTH_SECRET,
+  authSecret = AUTH_SECRET,
   getStringFromFormDataFn = getStringFromFormData,
   getSingleItemFn = getSingleItem,
   secureHashWithSaltFn = secureHashWithSalt,
@@ -27,7 +27,7 @@ export const login = async ({
   revalidatePathFn = revalidatePath,
 }: {
   formData: FormData;
-  authSecret?: Either<unknown, string>;
+  authSecret?: string;
   getStringFromFormDataFn?: typeof getStringFromFormData;
   getSingleItemFn?: typeof getSingleItem;
   secureHashWithSaltFn?: typeof secureHashWithSalt;
@@ -85,7 +85,7 @@ export const login = async ({
       const user = { username };
 
       await fromPromise(
-        setAuthTokensAndCookiesFn({ authSecret: authSecretEither, user }),
+        setAuthTokensAndCookiesFn({ authSecret, user }),
       );
     },
   ).ifLeft((e) => logger.error(e));

@@ -7,48 +7,19 @@ import { openai } from "@ai-sdk/openai";
 import { CreatedAtLocal, Journal } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import {
+  AWS_JOURNAL_VECTOR_DIMENSION,
   AWS_JOURNAL_VECTOR_BUCKET_NAME,
   AWS_JOURNAL_VECTOR_INDEX_NAME,
-} from "@/lib/secrets";
+  JOURNAL_VECTOR_MAX_DISTANCE,
+  JOURNAL_VECTOR_TOP_K,
+} from "@/lib/env.server";
 import { queryVectors, QueriedVector } from "@/lib/aws/s3vectors/query-vectors";
-import { getAppEnvironment } from "@/lib/environment";
+import { getAppEnvironment } from "@/lib/env.server";
 import { getJournalKey } from "../model/get-journal.model";
 import { getSingleItem } from "@/lib/db/get-single-item";
 import { logger } from "@/lib/logger";
 import { Key } from "@/lib/types";
 import type { DocumentType } from "@smithy/types";
-
-const DEFAULT_MAX_VECTOR_DISTANCE = 0.9;
-const DEFAULT_TOP_K = 40;
-
-const parseMaxVectorDistance = (): number => {
-  const value = Number(process.env.JOURNAL_VECTOR_MAX_DISTANCE);
-  if (!Number.isFinite(value)) {
-    return DEFAULT_MAX_VECTOR_DISTANCE;
-  }
-
-  return Math.max(0, Math.min(2, value));
-};
-
-const parseTopK = (): number => {
-  const value = Number(process.env.JOURNAL_VECTOR_TOP_K);
-  if (!Number.isFinite(value)) {
-    return DEFAULT_TOP_K;
-  }
-
-  return Math.max(1, Math.min(100, Math.floor(value)));
-};
-
-const parseDimensions = (): EitherAsync<unknown, number> =>
-  EitherAsync(async ({ throwE }) => {
-    const dimensionsRaw = process.env.AWS_JOURNAL_VECTOR_DIMENSION;
-    const dimensions = dimensionsRaw ? Number(dimensionsRaw) : NaN;
-    if (!Number.isFinite(dimensions)) {
-      return throwE("AWS_JOURNAL_VECTOR_DIMENSION must be a valid number");
-    }
-
-    return dimensions;
-  });
 
 const parseCreatedAtLocalFromVectorKey = (
   key: string,
@@ -94,11 +65,6 @@ const buildVectorFilter = ({
 type SearchDeps = {
   getUserFn: typeof validateUserLoggedIn;
   getAppEnvironmentFn: typeof getAppEnvironment;
-  getVectorBucketNameFn: () => EitherAsync<unknown, string>;
-  getIndexNameFn: () => EitherAsync<unknown, string>;
-  getDimensionsFn: () => EitherAsync<unknown, number>;
-  getTopKFn: () => number;
-  getMaxVectorDistanceFn: () => number;
   embedQueryFn: (query: string, dimensions: number) => Promise<number[]>;
   queryVectorsFn: (params: {
     vectorBucketName: string;
@@ -113,12 +79,6 @@ type SearchDeps = {
 const defaultDeps: SearchDeps = {
   getUserFn: validateUserLoggedIn,
   getAppEnvironmentFn: getAppEnvironment,
-  getVectorBucketNameFn: () =>
-    EitherAsync.liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME),
-  getIndexNameFn: () => EitherAsync.liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME),
-  getDimensionsFn: parseDimensions,
-  getTopKFn: parseTopK,
-  getMaxVectorDistanceFn: parseMaxVectorDistance,
   embedQueryFn: async (query, dimensions) => {
     const embedded = await embedMany({
       model: openai.embedding("text-embedding-3-small"),
@@ -150,21 +110,21 @@ export const searchJournalsSemantic = ({
   return EitherAsync(async ({ fromPromise }) => {
     const user = await fromPromise(resolvedDeps.getUserFn({}));
     const appEnvironment = resolvedDeps.getAppEnvironmentFn();
-    const vectorBucketName = await fromPromise(resolvedDeps.getVectorBucketNameFn());
-    const indexName = await fromPromise(resolvedDeps.getIndexNameFn());
-    const dimensions = await fromPromise(resolvedDeps.getDimensionsFn());
 
-    const queryEmbedding = await resolvedDeps.embedQueryFn(query, dimensions);
+    const queryEmbedding = await resolvedDeps.embedQueryFn(
+      query,
+      AWS_JOURNAL_VECTOR_DIMENSION,
+    );
     if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
       throw new Error("Could not create an embedding for the search query");
     }
 
     const vectorMatches = await fromPromise(
       resolvedDeps.queryVectorsFn({
-        vectorBucketName,
-        indexName,
+        vectorBucketName: AWS_JOURNAL_VECTOR_BUCKET_NAME,
+        indexName: AWS_JOURNAL_VECTOR_INDEX_NAME,
         queryEmbedding,
-        topK: resolvedDeps.getTopKFn(),
+        topK: JOURNAL_VECTOR_TOP_K,
         filter: buildVectorFilter({
           username: user.username,
           environment: appEnvironment,
@@ -172,11 +132,10 @@ export const searchJournalsSemantic = ({
       }),
     );
 
-    const maxVectorDistance = resolvedDeps.getMaxVectorDistanceFn();
     const filteredVectorMatches = vectorMatches.filter((vectorMatch) => {
       return (
         typeof vectorMatch.distance === "number" &&
-        vectorMatch.distance <= maxVectorDistance
+        vectorMatch.distance <= JOURNAL_VECTOR_MAX_DISTANCE
       );
     });
 
@@ -231,8 +190,8 @@ export const searchJournalsSemantic = ({
       }),
     );
 
-    return entries.filter(
-      (entry): entry is JournalSemanticMatch => Boolean(entry),
+    return entries.filter((entry): entry is JournalSemanticMatch =>
+      Boolean(entry),
     );
   });
 };

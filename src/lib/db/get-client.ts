@@ -1,7 +1,7 @@
 import { kv } from "@vercel/kv";
 import { Redis } from "@upstash/redis";
 import { Either } from "purify-ts/Either";
-import { isProduction } from "../environment";
+import { isProduction } from "../env.server";
 
 type Client = Redis | typeof kv;
 

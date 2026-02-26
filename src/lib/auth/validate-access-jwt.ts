@@ -2,7 +2,7 @@ import "server-only";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { JWTPayload } from "jose";
 
-import { AUD, FIFTEEN_MINUTES_IN_MILLISECONDS, ISS } from "./auth.constants";
+import { AUD, FIFTEEN_MINUTES_IN_MILLISECONDS, ISS } from "@/lib/env.server";
 import { validateAud } from "./validate-aud";
 import { validateIss } from "./validate-iss";
 import { ValidateJwtParams, validateJwt } from "./validate-jwt";

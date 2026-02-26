@@ -10,10 +10,11 @@ import {
   getJournalEmbeddingKey,
 } from "./get-journal-embedding-input.lib";
 import {
+  AWS_JOURNAL_VECTOR_DIMENSION,
   AWS_JOURNAL_VECTOR_BUCKET_NAME,
   AWS_JOURNAL_VECTOR_INDEX_NAME,
-} from "@/lib/secrets";
-import { getAppEnvironment } from "@/lib/environment";
+} from "@/lib/env.server";
+import { getAppEnvironment } from "@/lib/env.server";
 import { putVectors } from "@/lib/aws/s3vectors/put-vectors";
 import { deleteVectors } from "@/lib/aws/s3vectors/delete-vectors";
 import { logger } from "@/lib/logger";
@@ -23,9 +24,7 @@ export const upsertJournalEmbedding = async ({
 }: {
   journal: Journal;
 }): Promise<boolean> => {
-  const result = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
-    const vectorBucketName = await liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME);
-    const indexName = await liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME);
+  const result = await EitherAsync(async ({ fromPromise, throwE }) => {
     const text = getJournalEmbeddingInput(journal);
     const key = getJournalEmbeddingKey(journal);
     const appEnvironment = getAppEnvironment();
@@ -33,24 +32,18 @@ export const upsertJournalEmbedding = async ({
     if (text.length === 0) {
       await fromPromise(
         deleteVectors({
-          vectorBucketName,
-          indexName,
+          vectorBucketName: AWS_JOURNAL_VECTOR_BUCKET_NAME,
+          indexName: AWS_JOURNAL_VECTOR_INDEX_NAME,
           keys: [key],
         }),
       );
       return;
     }
 
-    const dimensionsRaw = process.env.AWS_JOURNAL_VECTOR_DIMENSION;
-    const dimensions = dimensionsRaw ? Number(dimensionsRaw) : NaN;
-    if (!Number.isFinite(dimensions)) {
-      return throwE("AWS_JOURNAL_VECTOR_DIMENSION must be a valid number");
-    }
-
     const embedded = await embedMany({
       model: openai.embedding("text-embedding-3-small"),
       values: [text],
-      providerOptions: { openai: { dimensions } },
+      providerOptions: { openai: { dimensions: AWS_JOURNAL_VECTOR_DIMENSION } },
     });
 
     const embedding = embedded.embeddings[0];
@@ -60,8 +53,8 @@ export const upsertJournalEmbedding = async ({
 
     await fromPromise(
       putVectors({
-        vectorBucketName,
-        indexName,
+        vectorBucketName: AWS_JOURNAL_VECTOR_BUCKET_NAME,
+        indexName: AWS_JOURNAL_VECTOR_INDEX_NAME,
         vectors: [
           {
             key,
@@ -77,7 +70,7 @@ export const upsertJournalEmbedding = async ({
             },
           },
         ],
-        expectedDimensions: dimensions,
+        expectedDimensions: AWS_JOURNAL_VECTOR_DIMENSION,
       }),
     );
   }).run();

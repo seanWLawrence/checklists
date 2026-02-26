@@ -1,8 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
-import { isProduction } from "../environment";
-import { DOMAIN } from "../constants";
+import { DOMAIN, isProduction } from "../env.server";
 
 export const deleteCookie = async ({
   name,

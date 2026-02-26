@@ -3,7 +3,7 @@ import { jwtVerify } from "jose/jwt/verify";
 import { JWTPayload } from "jose";
 import { EitherAsync } from "purify-ts";
 
-import { JWT_ALGORITHM } from "./auth.constants";
+import { JWT_ALGORITHM } from "@/lib/env.server";
 import { logger } from "../logger";
 
 export interface ValidateJwtParams {

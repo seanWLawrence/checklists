@@ -4,7 +4,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getSingleItem } from "../db/get-single-item";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { RefreshToken } from "./auth.types";
-import { THIRTY_DAYS_IN_MILLISECONDS } from "./auth.constants";
+import { THIRTY_DAYS_IN_MILLISECONDS } from "@/lib/env.server";
 import { secureHashWithSalt } from "./secure-hash-with-salt";
 import { Either } from "purify-ts/Either";
 import { logger } from "../logger";

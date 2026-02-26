@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { Maybe } from "purify-ts";
 
 import { User } from "../types";
-import { AUD, ISS, JWT_ALGORITHM } from "./auth.constants";
+import { AUD, ISS, JWT_ALGORITHM } from "@/lib/env.server";
 
 export interface GenerateJwtParams {
   user: Pick<User, "username">;

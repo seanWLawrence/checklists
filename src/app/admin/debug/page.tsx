@@ -9,10 +9,10 @@ import { SubmitButton } from "@/components/submit-button";
 import {
   AWS_JOURNAL_VECTOR_BUCKET_NAME,
   AWS_JOURNAL_VECTOR_INDEX_NAME,
-} from "@/lib/secrets";
+} from "@/lib/env.server";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { listVectors } from "@/lib/aws/s3vectors/list-vectors";
-import { getAppEnvironment, isProduction } from "@/lib/environment";
+import { getAppEnvironment, isProduction } from "@/lib/env.server";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
 
 export const dynamic = "force-dynamic";
@@ -36,21 +36,18 @@ const VectorsDebugPage: React.FC<{
   const limit = parsePageSize(rawLimit);
   const appEnvironment = getAppEnvironment();
 
-  const page = await EitherAsync(async ({ fromPromise, liftEither, throwE }) => {
+  const page = await EitherAsync(async ({ fromPromise, throwE }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
     if (!isAdminUsername(user.username)) {
       return throwE("Not authorized to access vector admin tools");
     }
 
-    const vectorBucketName = await liftEither(AWS_JOURNAL_VECTOR_BUCKET_NAME);
-    const indexName = await liftEither(AWS_JOURNAL_VECTOR_INDEX_NAME);
-
     const listed = isProduction()
       ? { vectors: [], nextToken: undefined as string | undefined }
       : await fromPromise(
           listVectors({
-            vectorBucketName,
-            indexName,
+            vectorBucketName: AWS_JOURNAL_VECTOR_BUCKET_NAME,
+            indexName: AWS_JOURNAL_VECTOR_INDEX_NAME,
             maxResults: limit,
             nextToken,
           }),
@@ -94,11 +91,13 @@ const VectorsDebugPage: React.FC<{
 
         {!isProduction() && (
           <div className="text-sm text-zinc-600 space-y-1">
-            <p>Bucket: {vectorBucketName}</p>
-            <p>Index: {indexName}</p>
+            <p>Bucket: {AWS_JOURNAL_VECTOR_BUCKET_NAME}</p>
+            <p>Index: {AWS_JOURNAL_VECTOR_INDEX_NAME}</p>
             <p>Environment: {appEnvironment}</p>
             <p>Current page vectors: {listed.vectors.length}</p>
-            <p>Visible for user {user.username}: {visibleVectors.length}</p>
+            <p>
+              Visible for user {user.username}: {visibleVectors.length}
+            </p>
           </div>
         )}
 
@@ -114,7 +113,9 @@ const VectorsDebugPage: React.FC<{
                   key={vector.key}
                   className="rounded-xl border-2 border-zinc-300 p-3 space-y-1"
                 >
-                  <p className="text-xs text-zinc-500 break-all">{vector.key}</p>
+                  <p className="text-xs text-zinc-500 break-all">
+                    {vector.key}
+                  </p>
                   <pre className="text-xs text-zinc-700 overflow-x-auto">
                     {JSON.stringify(vector.metadata ?? {}, null, 2)}
                   </pre>

@@ -5,8 +5,8 @@ import { Maybe } from "purify-ts/Maybe";
 import { getUser } from "./get-user";
 import { User } from "../types";
 
-test("returns null if auth secret isnt set", async ({ expect }) => {
-  const result = await getUser({ authSecret: Left("some error") });
+test("returns null if injected auth secret is empty", async ({ expect }) => {
+  const result = await getUser({ authSecret: "" });
 
   expect(result.isNothing()).toBe(true);
   expect(result.extractNullable()).toBe(null);
@@ -16,7 +16,7 @@ test("returns null if no access jwt is found", async ({ expect }) => {
   const getAccessCookieFn = vi.fn().mockReturnValue(Maybe.empty());
 
   const result = await getUser({
-    authSecret: Right("secret"),
+    authSecret: "secret",
     getAccessCookieFn,
   });
 
@@ -30,7 +30,7 @@ test("returns null if access jwt isnt valid", async ({ expect }) => {
   const validateAccessJwtFn = vi.fn().mockResolvedValue(Left("some error"));
 
   const result = await getUser({
-    authSecret: Right("secret"),
+    authSecret: "secret",
     validateAccessJwtFn,
     getAccessCookieFn,
   });
@@ -47,7 +47,7 @@ test("returns null if access jwt doesnt contain a sub", async ({ expect }) => {
     .mockResolvedValue(Right({ sub: undefined }));
 
   const result = await getUser({
-    authSecret: Right("secret"),
+    authSecret: "secret",
     validateAccessJwtFn,
     getAccessCookieFn,
   });
@@ -66,7 +66,7 @@ test("returns user if has valid access jwt and sub", async ({ expect }) => {
     .mockResolvedValue(Right({ sub: username }));
 
   const result = await getUser({
-    authSecret: Right("secret"),
+    authSecret: "secret",
     validateAccessJwtFn,
     getAccessCookieFn,
   });

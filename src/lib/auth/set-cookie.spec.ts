@@ -1,6 +1,6 @@
 import { test, vi } from "vitest";
 import { setCookie } from "./set-cookie";
-import { FIFTEEN_MINUTES_IN_MILLISECONDS } from "./auth.constants";
+import { FIFTEEN_MINUTES_IN_MILLISECONDS } from "@/lib/env.server";
 
 const cookieName = "cookie name";
 const value = "some value";

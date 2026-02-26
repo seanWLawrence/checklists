@@ -10,7 +10,7 @@ import {
   AWS_ROLE_DURATION_SECONDS,
   AWS_ROLE_SESSION_NAME,
   AWS_SECRET_ACCESS_KEY,
-} from "@/lib/secrets";
+} from "@/lib/env.server";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 export const getClientConfiguration = ({
@@ -18,14 +18,10 @@ export const getClientConfiguration = ({
 }: {
   endpoint?: string;
 } = {}): EitherAsync<unknown, S3ClientConfig> => {
-  return EitherAsync(async ({ liftEither }) => {
-    const region = await liftEither(AWS_REGION);
-    const accessKeyId = await liftEither(AWS_ACCESS_KEY_ID);
-    const secretAccessKey = await liftEither(AWS_SECRET_ACCESS_KEY);
-
+  return EitherAsync(async () => {
     if (endpoint) {
       return {
-        region,
+        region: AWS_REGION,
         endpoint,
         forcePathStyle: true,
         credentials: { accessKeyId: "minio", secretAccessKey: "minio123" },
@@ -34,17 +30,20 @@ export const getClientConfiguration = ({
 
     const credentials = fromTemporaryCredentials({
       params: {
-        RoleArn: await liftEither(AWS_ROLE_ARN),
+        RoleArn: AWS_ROLE_ARN,
         RoleSessionName: AWS_ROLE_SESSION_NAME,
         DurationSeconds: AWS_ROLE_DURATION_SECONDS,
       },
-      clientConfig: { region },
-      masterCredentials: { accessKeyId, secretAccessKey },
+      clientConfig: { region: AWS_REGION },
+      masterCredentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+      },
     });
 
     return {
       credentials,
-      region,
+      region: AWS_REGION,
     };
   });
 };

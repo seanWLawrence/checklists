@@ -9,14 +9,14 @@ import {
   JournalHobbies,
   SentimentLabel,
 } from "../journal.types";
+import {
+  MIN_JOURNAL_ANALYSIS_CHARS,
+  OPENAI_JOURNAL_ANALYSIS_MODEL,
+} from "@/lib/env.server";
 import { logger } from "@/lib/logger";
 import { normalizeJournalContent } from "./get-journal-embedding-input.lib";
 
-const MODEL = process.env.OPENAI_JOURNAL_ANALYSIS_MODEL ?? "gpt-4o-mini";
 const ANALYSIS_VERSION = 1;
-const MIN_JOURNAL_ANALYSIS_CHARS = Number(
-  process.env.MIN_JOURNAL_ANALYSIS_CHARS ?? 40,
-);
 
 const emptyAnalysis = ({
   habits,
@@ -63,17 +63,17 @@ export const getJournalAiAnalysis = async ({
 }): Promise<JournalAnalysis> => {
   const now = new Date().toISOString();
   const normalizedContent = normalizeJournalContent(content);
-  const minChars = Number.isFinite(MIN_JOURNAL_ANALYSIS_CHARS)
-    ? Math.max(0, Math.floor(MIN_JOURNAL_ANALYSIS_CHARS))
-    : 40;
 
-  if (!normalizedContent || normalizedContent.length < minChars) {
+  if (
+    !normalizedContent ||
+    normalizedContent.length < MIN_JOURNAL_ANALYSIS_CHARS
+  ) {
     return emptyAnalysis({ habits, hobbies, now });
   }
 
   try {
     const response = await generateText({
-      model: openai(MODEL),
+      model: openai(OPENAI_JOURNAL_ANALYSIS_MODEL),
       temperature: 0.2,
       system:
         "You analyze personal journal entries. Return only strict JSON with no markdown and no extra keys.",
@@ -109,7 +109,10 @@ export const getJournalAiAnalysis = async ({
       return decoded.extract();
     }
 
-    logger.warn("Journal AI analysis failed codec validation", decoded.extract());
+    logger.warn(
+      "Journal AI analysis failed codec validation",
+      decoded.extract(),
+    );
     return emptyAnalysis({ habits, hobbies, now });
   } catch (error) {
     logger.warn("Failed to generate journal AI analysis", error);

@@ -9,23 +9,21 @@ import { getAccessCookie } from "./get-access-cookie";
 import { validateAccessJwt } from "./validate-access-jwt";
 import { User } from "../types";
 import { logger } from "../logger";
-import { AUTH_SECRET } from "../secrets";
+import { AUTH_SECRET } from "@/lib/env.server";
 
 export const getUser = ({
   request,
-  authSecret: authSecretEither = AUTH_SECRET,
+  authSecret = AUTH_SECRET,
   getAccessCookieFn = getAccessCookie,
   validateAccessJwtFn = validateAccessJwt,
 }: {
   request?: Pick<NextRequest, "url"> & { cookies: NextRequest["cookies"] };
-  authSecret?: Either<unknown, string>;
+  authSecret?: string;
   getAccessCookieFn?: typeof getAccessCookie;
   validateAccessJwtFn?: typeof validateAccessJwt;
 }): MaybeAsync<User> => {
   return EitherAsync<unknown, User>(async ({ liftEither, fromPromise }) => {
     logger.debug("Getting user");
-
-    const authSecret = await liftEither(authSecretEither);
 
     const accessJwtCookie = await getAccessCookieFn({ request });
 

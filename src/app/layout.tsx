@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 
 import { SerwistProvider } from "@/app/lib/client";
-import { BASE_URL } from "@/lib/constants";
+import { BASE_URL } from "@/lib/env.server";
 import TopNavigation from "@/components/top-navigation";
 import { ServiceWorkerUpdateBanner } from "@/components/service-worker-update-banner.client";
 import { ServiceWorkerDevReset } from "@/components/service-worker-dev-reset.client";
@@ -11,6 +11,8 @@ import "./globals.css";
 import "highlight.js/styles/tokyo-night-dark.css";
 import { AuthRefreshInterval } from "@/components/auth-refresh-interval.client";
 import { RuntimeErrorMonitor } from "@/components/runtime-error-monitor.client";
+import { NEXT_PUBLIC_THEME_OVERRIDE } from "@/lib/env.client";
+import { IS_PRODUCTION } from "@/lib/env.server";
 
 const APP_NAME = "SL";
 const APP_DEFAULT_TITLE = "SL";
@@ -75,17 +77,18 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
+  const override = NEXT_PUBLIC_THEME_OVERRIDE;
   const cookieStore = await cookies();
   const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value;
 
   const initialTheme =
     override === "light" || override === "dark" || override === "system"
       ? override
-      : cookieTheme === "light" || cookieTheme === "dark" || cookieTheme === "system"
+      : cookieTheme === "light" ||
+          cookieTheme === "dark" ||
+          cookieTheme === "system"
         ? cookieTheme
         : "light";
-  const isProduction = process.env.NODE_ENV === "production";
 
   return (
     <html
@@ -95,7 +98,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        {isProduction ? (
+        {IS_PRODUCTION ? (
           <SerwistProvider swUrl="/serwist/sw.js">
             <ServiceWorkerUpdateBanner />
             <RuntimeErrorMonitor />

@@ -1,14 +1,6 @@
 import "server-only";
-
-const parseAdminUsernames = (): string[] => {
-  const raw = process.env.ADMIN_USERNAMES ?? "";
-
-  return raw
-    .split(",")
-    .map((value) => value.trim())
-    .filter((value) => value.length > 0);
-};
+import { ADMIN_USERNAMES } from "@/lib/env.server";
 
 export const isAdminUsername = (username: string): boolean => {
-  return parseAdminUsernames().includes(username);
+  return ADMIN_USERNAMES.includes(username);
 };

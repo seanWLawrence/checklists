@@ -6,7 +6,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getS3Client } from "./get-s3-client";
 import { logger } from "../../logger";
-import { AWS_BUCKET_NAME } from "@/lib/secrets";
+import { AWS_BUCKET_NAME } from "@/lib/env.server";
 
 export const getPresignedPutObjectUrl = ({
   filename: path,
@@ -17,14 +17,14 @@ export const getPresignedPutObjectUrl = ({
   contentType?: string;
   expiresInSeconds?: number;
 }): EitherAsync<unknown, string> => {
-  return EitherAsync(async ({ throwE, fromPromise, liftEither }) => {
+  return EitherAsync(async ({ throwE, fromPromise }) => {
     try {
       const client = await fromPromise(getS3Client());
 
       const url = await getSignedUrl(
         client,
         new PutObjectCommand({
-          Bucket: await liftEither(AWS_BUCKET_NAME),
+          Bucket: AWS_BUCKET_NAME,
           Key: path,
           ContentType: contentType,
         }),

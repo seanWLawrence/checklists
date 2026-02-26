@@ -1,8 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getUser } from "@/lib/auth/get-user";
+import {
+  AWS_BUCKET_NAME,
+  AWS_REGION,
+  NODE_ENV,
+} from "@/lib/env.server";
 
-const S3_BUCKET_HOSTNAME = `${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+const S3_BUCKET_HOSTNAME = `${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com`;
 const S3_BUCKET_ORIGIN = `https://${S3_BUCKET_HOSTNAME}`;
 
 const buildCspHeader = (nonce: string) =>
@@ -31,7 +36,7 @@ const isProtectedRoute = (pathname: string) =>
   pathname.startsWith("/admin");
 
 const withCsp = (response: NextResponse, cspHeader: string) => {
-  if (process.env.NODE_ENV !== "development") {
+  if (NODE_ENV !== "development") {
     response.headers.set("Content-Security-Policy", cspHeader);
   }
 

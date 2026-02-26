@@ -3,7 +3,7 @@ import { logger } from "../logger";
 import {
   ACCESS_JWT_COOKIE_NAME,
   FIFTEEN_MINUTES_IN_MILLISECONDS,
-} from "./auth.constants";
+} from "@/lib/env.server";
 import { setCookie } from "./set-cookie";
 
 export const setAccessJwtCookie = ({

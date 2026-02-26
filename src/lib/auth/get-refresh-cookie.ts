@@ -1,6 +1,6 @@
 import "server-only";
 import { getCookie } from "./get-cookie";
-import { REFRESH_TOKEN_COOKIE_NAME } from "./auth.constants";
+import { REFRESH_TOKEN_COOKIE_NAME } from "@/lib/env.server";
 
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import type { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";

@@ -9,7 +9,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
   THIRTY_DAYS_IN_MILLISECONDS,
   THIRTY_DAYS_IN_SECONDS,
-} from "./auth.constants";
+} from "@/lib/env.server";
 import { logger } from "../logger";
 import { randomChars } from "./random-chars";
 import { getRefreshTokenKey } from "./get-refresh-token-key";

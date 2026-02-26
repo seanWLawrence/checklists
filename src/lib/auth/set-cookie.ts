@@ -2,7 +2,7 @@ import "server-only";
 import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
-import { isProduction } from "../environment";
+import { isProduction } from "../env.server";
 
 const defaultSetCookie = async ({
   cookieName,

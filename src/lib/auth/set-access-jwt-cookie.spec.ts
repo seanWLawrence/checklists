@@ -1,7 +1,7 @@
 import { test, vi } from "vitest";
 
 import { setAccessJwtCookie } from "./set-access-jwt-cookie";
-import { ACCESS_JWT_COOKIE_NAME } from "./auth.constants";
+import { ACCESS_JWT_COOKIE_NAME } from "@/lib/env.server";
 
 const value = "jwt";
 

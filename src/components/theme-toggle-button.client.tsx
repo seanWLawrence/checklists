@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { NEXT_PUBLIC_THEME_OVERRIDE } from "@/lib/env.client";
 
 type Theme = "light" | "dark" | "system";
 
@@ -19,7 +20,7 @@ const applyTheme = (theme: Theme) => {
 };
 
 const getInitialTheme = (): Theme => {
-  const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
+  const override = NEXT_PUBLIC_THEME_OVERRIDE;
   if (override === "light" || override === "dark" || override === "system") {
     return override;
   }
@@ -54,7 +55,7 @@ export const ThemeToggleButton = () => {
     () => true,
     () => false,
   );
-  const override = process.env.NEXT_PUBLIC_THEME_OVERRIDE;
+  const override = NEXT_PUBLIC_THEME_OVERRIDE;
   const isLocked =
     override === "light" || override === "dark" || override === "system";
 

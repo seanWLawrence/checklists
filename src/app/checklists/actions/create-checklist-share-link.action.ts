@@ -8,7 +8,7 @@ import { UUID } from "@/lib/types";
 import { randomChars } from "@/lib/auth/random-chars";
 import { createItem } from "@/lib/db/create-item";
 import { expire } from "@/lib/db/expire";
-import { BASE_URL } from "@/lib/constants";
+import { BASE_URL } from "@/lib/env.server";
 import { ChecklistShareAccess } from "../checklist-share.types";
 import { getChecklistShareKey } from "../model/get-checklist-share-key";
 import { getChecklistV2 } from "../model/get-checklist-v2.model";

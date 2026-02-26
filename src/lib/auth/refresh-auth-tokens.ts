@@ -4,7 +4,6 @@ import { logger } from "../logger";
 import { validateRefreshToken } from "./validate-refresh-token";
 import { revokeRefreshToken } from "./revoke-refresh-token";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
-import { AUTH_SECRET } from "@/lib/secrets";
 import { cookies } from "next/headers";
 import { User } from "../types";
 import { NextRequest } from "next/server";
@@ -58,10 +57,7 @@ export const refreshAuthTokens = ({
       );
 
       await fromPromise(
-        setAuthTokensAndCookies({
-          authSecret: AUTH_SECRET,
-          user: refreshToken.user,
-        }),
+        setAuthTokensAndCookies({ user: refreshToken.user }),
       );
 
       logger.debug("New access and refresh tokens and cookies set");
@@ -75,7 +71,6 @@ export const refreshAuthTokens = ({
 
     await fromPromise(
       setAuthTokensAndCookies({
-        authSecret: AUTH_SECRET,
         user: refreshToken.user,
         // Skipping refresh token creation since it's not expiring soon
         setRefreshTokenFn: () => EitherAsync(async () => void 0),
