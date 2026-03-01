@@ -53,9 +53,11 @@ const formatTimestamp = (date: Date): string => {
   const hours24 = date.getHours();
   const hours12 = hours24 % 12 || 12;
   const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
   const meridiem = hours24 >= 12 ? "PM" : "AM";
 
-  return `${hours12}_${minutes}${meridiem}`;
+  return `${hours12}_${minutes}_${seconds}_${milliseconds}${meridiem}`;
 };
 
 export const AudioRecorderInput: React.FC<{
