@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import type { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { MaybeAsync } from "purify-ts/MaybeAsync";
 import { cookies } from "next/headers";

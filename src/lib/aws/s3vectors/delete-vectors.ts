@@ -1,9 +1,9 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { DeleteVectorsCommand } from "@aws-sdk/client-s3vectors";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getS3VectorsClient } from "./get-s3vectors-client";
+import { s3VectorsClient } from "./s3vectors-client";
 import { logger } from "@/lib/logger";
 
 export const deleteVectors = ({
@@ -15,14 +15,13 @@ export const deleteVectors = ({
   indexName: string;
   keys: string[];
 }): EitherAsync<unknown, void> => {
-  return EitherAsync(async ({ fromPromise, throwE }) => {
+  return EitherAsync(async ({ throwE }) => {
     if (keys.length === 0) {
       return;
     }
 
     try {
-      const client = await fromPromise(getS3VectorsClient());
-      await client.send(
+      await s3VectorsClient.send(
         new DeleteVectorsCommand({
           vectorBucketName,
           indexName,

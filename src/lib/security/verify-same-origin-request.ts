@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { Either, Left, Right } from "purify-ts/Either";
 import { NextRequest } from "next/server";

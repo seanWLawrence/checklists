@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { logger } from "../logger";
 import {
   ACCESS_JWT_COOKIE_NAME,

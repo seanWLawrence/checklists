@@ -1,6 +1,6 @@
 import logger, { LogLevelDesc } from "loglevel";
 import prefixer from "loglevel-plugin-prefix";
-import { LOG_LEVEL } from "@/lib/env.server";
+import { LOG_LEVEL } from "@/lib/env.shared";
 
 const DEFAULT_LOG_LEVEL = "info";
 

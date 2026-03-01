@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { redirect } from "next/navigation";
 import { EitherAsync } from "purify-ts/EitherAsync";
 

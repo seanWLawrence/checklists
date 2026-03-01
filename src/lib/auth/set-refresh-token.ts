@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { EitherAsync } from "purify-ts";
 import { secureHashWithSalt } from "./secure-hash-with-salt";

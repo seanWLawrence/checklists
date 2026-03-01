@@ -1,9 +1,9 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { PutVectorsCommand } from "@aws-sdk/client-s3vectors";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getS3VectorsClient } from "./get-s3vectors-client";
+import { s3VectorsClient } from "./s3vectors-client";
 import { logger } from "@/lib/logger";
 
 type VectorInput = {
@@ -34,7 +34,7 @@ export const putVectors = ({
   batchSize?: number;
   expectedDimensions?: number;
 }): EitherAsync<unknown, { uploaded: number }> => {
-  return EitherAsync(async ({ fromPromise, throwE }) => {
+  return EitherAsync(async ({ throwE }) => {
     if (vectors.length === 0) {
       return { uploaded: 0 };
     }
@@ -51,11 +51,10 @@ export const putVectors = ({
         }
       }
 
-      const client = await fromPromise(getS3VectorsClient());
       const chunks = toChunks(vectors, batchSize);
 
       for (const chunk of chunks) {
-        await client.send(
+        await s3VectorsClient.send(
           new PutVectorsCommand({
             vectorBucketName,
             indexName,

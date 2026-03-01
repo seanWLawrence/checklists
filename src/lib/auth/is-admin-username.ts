@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { ADMIN_USERNAMES } from "@/lib/env.server";
 
 export const isAdminUsername = (username: string): boolean => {

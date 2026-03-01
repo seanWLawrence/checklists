@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { Codec, GetType, intersect, string } from "purify-ts/Codec";
 import { Metadata, User } from "../types";
 

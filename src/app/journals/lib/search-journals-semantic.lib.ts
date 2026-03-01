@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { embedMany } from "ai";

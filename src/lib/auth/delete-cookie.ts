@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { cookies } from "next/headers";
 import { getSecureCookieParams } from "./get-secure-cookie-params";
 import { DOMAIN, isProduction } from "../env.server";

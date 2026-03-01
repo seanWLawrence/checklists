@@ -1,0 +1,120 @@
+import {
+  Codec,
+  GetType,
+  date,
+  enumeration,
+  exactly,
+  intersect,
+  number,
+  oneOf,
+  string,
+} from "purify-ts/Codec";
+import { EitherAsync } from "purify-ts/EitherAsync";
+
+export const JobStatus = enumeration({
+  queued: "queued",
+  running: "running",
+  succeeded: "succeeded",
+  failed: "failed",
+});
+export type JobStatus = GetType<typeof JobStatus>;
+
+const JobType = enumeration({ transcription: "transcription" });
+export type JobType = GetType<typeof JobType>;
+
+export const JobQueueMessage = Codec.interface({
+  username: string,
+  jobId: string,
+  jobType: JobType,
+});
+export type JobQueueMessage = GetType<typeof JobQueueMessage>;
+
+export const TranscriptionJobInput = Codec.interface({
+  filename: string,
+});
+export type TranscriptionJobInput = GetType<typeof TranscriptionJobInput>;
+
+export const TranscriptionJobOutput = Codec.interface({
+  transcription: string,
+  metadata: Codec.interface({
+    transcriptionModel: string,
+    transcriptionPromptVersion: number,
+  }),
+});
+export type TranscriptionJobOutput = GetType<typeof TranscriptionJobOutput>;
+
+export const JobInput = oneOf([TranscriptionJobInput]);
+export type JobInput = GetType<typeof JobInput>;
+
+export const JobOutput = oneOf([TranscriptionJobOutput]);
+export type JobOutput = GetType<typeof JobOutput>;
+
+export const BaseJob = Codec.interface({
+  status: JobStatus,
+  jobType: JobType,
+  input: JobInput,
+});
+
+export const QueuedJob = intersect(
+  BaseJob,
+  Codec.interface({
+    status: exactly("queued"),
+    ttlEpochSeconds: number,
+  }),
+);
+export type QueuedJob = GetType<typeof QueuedJob>;
+
+export const RunningJob = intersect(
+  BaseJob,
+  Codec.interface({
+    status: exactly("running"),
+    startedAtIso: date,
+  }),
+);
+export type RunningJob = GetType<typeof RunningJob>;
+
+export const FailedJob = intersect(
+  BaseJob,
+  Codec.interface({
+    status: exactly("failed"),
+    error: string,
+    completedAtIso: date,
+  }),
+);
+export type FailedJob = GetType<typeof FailedJob>;
+
+export const SucceededJob = intersect(
+  BaseJob,
+  Codec.interface({
+    status: exactly("succeeded"),
+    completedAtIso: date,
+    output: JobOutput,
+  }),
+);
+export type SucceededJob = GetType<typeof SucceededJob>;
+
+export const Job = oneOf([QueuedJob, RunningJob, FailedJob, SucceededJob]);
+export type Job = GetType<typeof Job>;
+
+export const isActiveJobStatus = (status: JobStatus): boolean => {
+  return status === "queued" || status === "running";
+};
+
+export const isRunningJob = (job: Job): job is RunningJob =>
+  job.status === "running";
+
+export const isSucceededJob = (job: Job): job is SucceededJob =>
+  job.status === "succeeded";
+
+export const isFailedJob = (job: Job): job is FailedJob =>
+  job.status === "failed";
+
+export type JobHandler<TJobInput extends JobInput> = (params: {
+  message: JobQueueMessage;
+  jobInput: TJobInput;
+}) => EitherAsync<unknown, void>;
+
+export const WorkerSecret = Codec.interface({
+  OPENAI_API_KEY: string,
+});
+export type WorkerSecret = GetType<typeof WorkerSecret>;

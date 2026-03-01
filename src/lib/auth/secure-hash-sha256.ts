@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { Either } from "purify-ts";
 import { createHash } from "crypto";
 

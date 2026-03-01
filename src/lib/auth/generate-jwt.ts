@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { SignJWT } from "jose/jwt/sign";
 import { nanoid } from "nanoid";
 import { Maybe } from "purify-ts";

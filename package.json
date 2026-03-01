@@ -14,10 +14,15 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.33",
+    "@aws-sdk/client-dynamodb": "^3.998.0",
     "@aws-sdk/client-s3": "^3.997.0",
     "@aws-sdk/client-s3vectors": "^3.997.0",
+    "@aws-sdk/client-secrets-manager": "^3.1000.0",
+    "@aws-sdk/client-sqs": "^3.998.0",
     "@aws-sdk/credential-providers": "^3.997.0",
+    "@aws-sdk/lib-dynamodb": "^3.998.0",
     "@aws-sdk/s3-request-presigner": "^3.997.0",
+    "@nobush/server-only": "0.0.1",
     "@tailwindcss/typography": "^0.5.19",
     "@vercel/kv": "^3.0.0",
     "ai": "^6.0.99",
@@ -37,7 +42,6 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.7.0",
-    "server-only": "^0.0.1",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0"
   },

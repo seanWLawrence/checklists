@@ -1,9 +1,9 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { ListVectorsCommand } from "@aws-sdk/client-s3vectors";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getS3VectorsClient } from "./get-s3vectors-client";
+import { s3VectorsClient } from "./s3vectors-client";
 import { logger } from "@/lib/logger";
 
 type ListedVector = {
@@ -22,10 +22,9 @@ export const listVectors = ({
   maxResults?: number;
   nextToken?: string;
 }): EitherAsync<unknown, { vectors: ListedVector[]; nextToken?: string }> => {
-  return EitherAsync(async ({ fromPromise, throwE }) => {
+  return EitherAsync(async ({ throwE }) => {
     try {
-      const client = await fromPromise(getS3VectorsClient());
-      const response = await client.send(
+      const response = await s3VectorsClient.send(
         new ListVectorsCommand({
           vectorBucketName,
           indexName,

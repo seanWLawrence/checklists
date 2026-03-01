@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 import { deleteCookie } from "./delete-cookie";
 import { ACCESS_JWT_COOKIE_NAME } from "@/lib/env.server";
 import { logger } from "../logger";

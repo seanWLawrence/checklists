@@ -1,4 +1,4 @@
-import "server-only";
+import "@nobush/server-only";
 
 import { embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
