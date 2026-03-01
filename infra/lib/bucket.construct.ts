@@ -1,8 +1,8 @@
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
-import assert from "node:assert";
-import { get } from "@dotenvx/dotenvx";
+import { BASE_URL } from "./env";
 
 interface BucketConstructProps {
   readonly role: iam.Role;
@@ -14,20 +14,18 @@ export class BucketConstruct extends Construct {
   constructor(scope: Construct, id: string, props: BucketConstructProps) {
     super(scope, id);
 
-    const productionHost = get("VERCEL_PROJECT_PRODUCTION_URL");
-    assert(
-      productionHost,
-      "VERCEL_PROJECT_PRODUCTION_URL env var is required for S3 CORS.",
+    const normalizedHost = BASE_URL.replace(/^https?:\/\//, "").replace(
+      /\/+$/,
+      "",
     );
 
-    const normalizedHost = productionHost
-      .replace(/^https?:\/\//, "")
-      .replace(/\/+$/, "");
-
-    const appOrigin = `https://${normalizedHost}`;
+    const appOrigin = normalizedHost.startsWith("localhost")
+      ? `http://${BASE_URL}`
+      : `https://${normalizedHost}`;
 
     this.bucket = new s3.Bucket(this, "bucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
     this.bucket.addCorsRule({
@@ -45,5 +43,9 @@ export class BucketConstruct extends Construct {
     });
 
     this.bucket.grantReadWrite(props.role);
+
+    new cdk.CfnOutput(this, "bucket-name", {
+      value: this.bucket.bucketName,
+    });
   }
 }

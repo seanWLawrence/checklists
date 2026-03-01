@@ -2,8 +2,8 @@ import { Construct } from "constructs";
 import * as s3Vector from "aws-cdk-lib/aws-s3vectors";
 import * as iam from "aws-cdk-lib/aws-iam";
 import assert from "node:assert/strict";
-import { get } from "@dotenvx/dotenvx";
 import * as cdk from "aws-cdk-lib";
+import { AWS_JOURNAL_VECTOR_DIMENSION } from "./env";
 
 interface VectorConstructProps {
   readonly role: iam.Role;
@@ -39,10 +39,7 @@ export class VectorConstruct extends Construct {
       vectorBucketName,
     });
 
-    const dimensionRaw = get("AWS_JOURNAL_VECTOR_DIMENSION");
-    assert(dimensionRaw, "AWS_JOURNAL_VECTOR_DIMENSION must be set");
-
-    const dimension = Number(dimensionRaw);
+    const dimension = Number(AWS_JOURNAL_VECTOR_DIMENSION);
     assert(
       Number.isFinite(dimension),
       "AWS_JOURNAL_VECTOR_DIMENSION must be a number",

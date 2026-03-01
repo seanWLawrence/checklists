@@ -4,6 +4,9 @@ This folder deploys:
 
 - S3 assets bucket + CORS policy
 - S3 Vectors bucket + index
+- Shared DynamoDB table (currently used for jobs)
+- SQS queue + DLQ + Lambda worker
+- CloudWatch alarms + shared SNS alarm topic (email)
 - IAM user/role/policy for app AWS access
 - AWS Secrets Manager secret containing app runtime AWS values
 
@@ -11,18 +14,21 @@ This folder deploys:
 
 CDK reads these from `infra/.env` (or shell env vars).
 
-- `NODE_ENV`
-  - `development` or `production`
-  - Controls stack name: `infra-dev` or `infra-prod`
 - `AWS_ACCOUNT`
   - Target AWS account ID
 - `AWS_REGION`
   - Target region (must support S3 Vectors)
+- `AWS_ALARM_EMAIL`
+  - Email address subscribed to the shared SNS alarm topic
+  - You must confirm the SNS subscription email after deploy
 - `AWS_JOURNAL_VECTOR_DIMENSION`
   - Vector dimension for the index (for current embeddings: `1024`)
-- `VERCEL_PROJECT_PRODUCTION_URL`
+- `BASE_URL`
   - Host used in S3 CORS allowlist
   - Use host only (example: `app.example.com`, no `https://`)
+- `OPENAI_API_KEY`
+  - Stored into the generated app secret
+  - Used by the worker (via runtime Secrets Manager fetch)
 
 Use `infra/.env.example` as the template.
 
@@ -39,8 +45,8 @@ Use `infra/.env.example` as the template.
 Run from `infra/`:
 
 ```bash
-npm run cdk -- bootstrap
-npm run cdk -- deploy --all
+npx cdk bootstrap
+npm run deploy
 ```
 
 ## External setup (outside this repo)
@@ -68,9 +74,12 @@ This stack creates an AWS Secrets Manager secret with app runtime values such as
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_ROLE_ARN`
 - `AWS_BUCKET_NAME`
+- `OPENAI_API_KEY`
 - `AWS_JOURNAL_VECTOR_BUCKET_NAME`
 - `AWS_JOURNAL_VECTOR_INDEX_NAME`
 - `AWS_JOURNAL_VECTOR_DIMENSION`
+- `AWS_TABLE_NAME`
+- `AWS_JOBS_QUEUE_URL` (written by a custom resource after queue creation)
 
 Those values are consumed by the app runtime (local `.env.local` and Vercel env vars).
 
@@ -78,3 +87,4 @@ Those values are consumed by the app runtime (local `.env.local` and Vercel env 
 
 - Re-deploying updates resources and may rotate values stored in the generated secret.
 - Keep `AWS_JOURNAL_VECTOR_DIMENSION` aligned between infra and app runtime.
+- Confirm the SNS email subscription before expecting alarm notifications.

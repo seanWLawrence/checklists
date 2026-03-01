@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - "infra/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/infra-cdk.yml"
   workflow_dispatch:
     inputs:
@@ -59,6 +62,11 @@ jobs:
         run: |
           echo "AWS_REGION=${{ vars.AWS_REGION_PROD }}" >> "$GITHUB_ENV"
           echo "NODE_ENV=production" >> "$GITHUB_ENV"
+          echo "BASE_URL=${{ secrets.VERCEL_PROJECT_PRODUCTION_URL }}" >> "$GITHUB_ENV"
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> "$GITHUB_ENV"
+          echo "OPENAI_AUDIO_TRANSCRIPTION_MODEL=${{ vars.OPENAI_AUDIO_TRANSCRIPTION_MODEL }}" >> "$GITHUB_ENV"
+          echo "OPENAI_JOURNAL_STRUCTURING_MODEL=${{ vars.OPENAI_JOURNAL_STRUCTURING_MODEL }}" >> "$GITHUB_ENV"
+          echo "AWS_ALARM_EMAIL=${{ vars.AWS_ALARM_EMAIL }}" >> "$GITHUB_ENV"
           echo "AWS_JOURNAL_VECTOR_DIMENSION=${{ vars.AWS_JOURNAL_VECTOR_DIMENSION }}" >> "$GITHUB_ENV"
           echo "VERCEL_PROJECT_PRODUCTION_URL=${{ secrets.VERCEL_PROJECT_PRODUCTION_URL }}" >> "$GITHUB_ENV"
 
