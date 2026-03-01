@@ -43,6 +43,12 @@ export const createJournalAction = async (
     const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
     );
+    const writtenContent = await liftEither(
+      getStringFromFormData({ name: "writtenContent", formData }),
+    );
+    const transcriptionRaw = await liftEither(
+      getStringFromFormData({ name: "transcriptionRaw", formData }),
+    );
 
     const energyLevel = await liftEither(
       getStringFromFormData({ name: "energyLevel", formData })
@@ -92,6 +98,8 @@ export const createJournalAction = async (
       intersect(JournalBase, Metadata).decode({
         ...metadata(user),
         content,
+        writtenContent,
+        transcriptionRaw,
         createdAtLocal,
         moodLevel,
         energyLevel,

@@ -14,13 +14,17 @@ export const ServiceWorkerDevReset = () => {
       }
 
       const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.unregister()));
+      await Promise.all(
+        registrations.map((registration) => registration.unregister()),
+      );
 
       if ("caches" in window) {
         const cacheKeys = await caches.keys();
         await Promise.all(
           cacheKeys
-            .filter((key) => key.includes("serwist") || key.includes("precache"))
+            .filter(
+              (key) => key.includes("serwist") || key.includes("precache"),
+            )
             .map((key) => caches.delete(key)),
         );
       }

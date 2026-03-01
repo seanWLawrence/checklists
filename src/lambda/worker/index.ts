@@ -72,6 +72,7 @@ const processMessage = <
         message,
         attemptCount,
       });
+      return;
     }
 
     const now = new Date();

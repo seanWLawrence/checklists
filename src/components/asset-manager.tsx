@@ -17,6 +17,20 @@ import {
 } from "@/app/api/assets/presign/put/types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Maybe } from "purify-ts/Maybe";
+import {
+  TranscriptionJobStatusResponse,
+  JobStartResponse,
+} from "@/lambda/worker/job.types";
+
+export const TRANSCRIPTION_POLL_MAX_ATTEMPTS = 150;
+
+export const getTranscriptionPollDelayMs = ({
+  attemptNumber,
+}: {
+  attemptNumber: number;
+}) => {
+  return attemptNumber <= 30 ? 2000 : 5000;
+};
 
 const AudioRecorderInput = dynamic(
   () =>
@@ -61,10 +75,14 @@ export const AssetManager: React.FC<{
   initialUploadedAssets: UploadedAssetItem[];
   onTranscribeChangeAction?: (
     uploadedAsset: UploadedAssetItem,
-    text: string,
+    transcription: {
+      transcriptionStructured: string;
+      transcriptionRaw: string;
+    },
   ) => void;
 }> = ({ name, initialUploadedAssets, onTranscribeChangeAction }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
   const uploadedAssetsRef = useRef<UploadedAssetItem[]>(initialUploadedAssets);
   const unsavedUploadsRef = useRef<UploadItem[]>([]);
   const [uploadedAssets, setUploadedAssets] = useState<UploadedAssetItem[]>(
@@ -96,6 +114,8 @@ export const AssetManager: React.FC<{
 
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
+
       uploadedAssetsRef.current.forEach((asset) => {
         revokePreviewUrl(asset.previewUrl);
       });
@@ -105,6 +125,23 @@ export const AssetManager: React.FC<{
       });
     };
   }, []);
+
+  const setTranscribeStatus = ({
+    filename,
+    status,
+  }: {
+    filename: string;
+    status: "idle" | "loading" | "done" | "error";
+  }) => {
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    setTranscribeStatusByFilename((current) => ({
+      ...current,
+      [filename]: status,
+    }));
+  };
 
   const serializedAssets = useMemo(() => {
     return JSON.stringify(
@@ -327,16 +364,15 @@ export const AssetManager: React.FC<{
     );
     setRecordingTranscriptionModeByFilename((current) => {
       return Object.fromEntries(
-        Object.entries(current).filter(([filename]) => filename !== asset.filename),
+        Object.entries(current).filter(
+          ([filename]) => filename !== asset.filename,
+        ),
       );
     });
   };
 
   const onTranscribeClick = async (asset: UploadedAssetItem) => {
-    setTranscribeStatusByFilename((current) => ({
-      ...current,
-      [asset.filename]: "loading",
-    }));
+    setTranscribeStatus({ filename: asset.filename, status: "loading" });
 
     const response = await fetch(
       `/api/assets/${encodeURIComponent(asset.filename)}/transcriptions`,
@@ -345,27 +381,99 @@ export const AssetManager: React.FC<{
 
     if (!response.ok) {
       logger.error("Failed to transcribe asset", response);
-      setTranscribeStatusByFilename((current) => ({
-        ...current,
-        [asset.filename]: "error",
-      }));
+      setTranscribeStatus({ filename: asset.filename, status: "error" });
       return;
     }
 
-    const json = await response.json();
-    if (typeof json?.text === "string") {
-      onTranscribeChangeAction?.(asset, json.text);
-      setTranscribeStatusByFilename((current) => ({
-        ...current,
-        [asset.filename]: "done",
-      }));
+    const startResponseDecode = JobStartResponse.decode(await response.json());
+
+    if (startResponseDecode.isLeft()) {
+      logger.error(
+        "Invalid transcription start response",
+        startResponseDecode.extract(),
+      );
+      setTranscribeStatus({ filename: asset.filename, status: "error" });
       return;
     }
 
-    setTranscribeStatusByFilename((current) => ({
-      ...current,
-      [asset.filename]: "error",
-    }));
+    const json = startResponseDecode.caseOf({
+      Left: () => null,
+      Right: (value) => value,
+    });
+
+    if (!json) {
+      setTranscribeStatus({ filename: asset.filename, status: "error" });
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = TRANSCRIPTION_POLL_MAX_ATTEMPTS; // ~11 minutes with backoff (2s for first minute, then 5s)
+
+    while (attempts < maxAttempts) {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      attempts += 1;
+      const pollDelayMs = getTranscriptionPollDelayMs({
+        attemptNumber: attempts,
+      });
+      await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      const statusResponse = await fetch(
+        `/api/transcription-jobs/${encodeURIComponent(json.jobId)}`,
+        { method: "GET" },
+      );
+
+      if (!statusResponse.ok) {
+        logger.error("Failed to load transcription job status", statusResponse);
+        break;
+      }
+
+      const statusDecode = TranscriptionJobStatusResponse.decode(
+        await statusResponse.json(),
+      );
+
+      if (statusDecode.isLeft()) {
+        logger.error(
+          "Invalid transcription status response",
+          statusDecode.extract(),
+        );
+        break;
+      }
+
+      const statusJson = statusDecode.caseOf({
+        Left: () => null,
+        Right: (value) => value,
+      });
+
+      if (!statusJson) {
+        break;
+      }
+
+      if (
+        statusJson.status === "succeeded" &&
+        typeof statusJson.transcriptionStructured === "string"
+      ) {
+        onTranscribeChangeAction?.(asset, {
+          transcriptionStructured: statusJson.transcriptionStructured,
+          transcriptionRaw: statusJson.transcriptionRaw ?? "",
+        });
+        setTranscribeStatus({ filename: asset.filename, status: "done" });
+        return;
+      }
+
+      if (statusJson.status === "failed") {
+        logger.error("Transcription job failed", statusJson.error);
+        break;
+      }
+    }
+
+    setTranscribeStatus({ filename: asset.filename, status: "error" });
   };
 
   const onCaptionChange = (asset: UploadedAssetItem, caption: string) => {

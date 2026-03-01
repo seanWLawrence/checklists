@@ -78,8 +78,6 @@ to see how well I do over time, we'll see!
     - Pulls `dev` secret values into `.env.local`
     - Prints `prod` secret values as `KEY=VALUE` lines for Vercel paste
   - Configure either shell env vars or `.env.local` values:
-    - `AWS_SECRET_NAME_DEV` (or legacy fallback `AWS_SECRET_NAME`)
-    - `AWS_SECRET_NAME_PROD`
     - Optional profiles: `AWS_PROFILE_DEV`, `AWS_PROFILE_PROD`
   - Run:
     - `./scripts/pull-aws-secrets.sh`
@@ -89,16 +87,14 @@ to see how well I do over time, we'll see!
 Set these in your Vercel project for Production (and Preview if you want those
 deployments to fully work with AWS + embeddings too).
 
+### Centralized in `src/lib/env.*`
+
 ### Required
 
 - `AUTH_SECRET`
   - Password/JWT signing secret used by auth flows.
-- `NODE_ENV`
-  - Use `production` in production deployments.
 - `VERCEL_PROJECT_PRODUCTION_URL`
   - Your production host name (for example `app.example.com`, no protocol).
-- `OPENAI_API_KEY`
-  - Required for journal embeddings and audio transcription.
 - `AWS_REGION`
   - AWS region for S3/S3 Vectors clients (example: `us-east-1`).
 - `AWS_ACCESS_KEY_ID`
@@ -109,15 +105,66 @@ deployments to fully work with AWS + embeddings too).
   - Role ARN the app assumes for AWS operations.
 - `AWS_BUCKET_NAME`
   - S3 bucket name used for journal/checklist asset uploads.
+- `AWS_TABLE_NAME`
+  - Shared DynamoDB table name used by app workflows (including transcription jobs).
+- `AWS_TRANSCRIPTION_JOBS_QUEUE_URL`
+  - SQS queue URL used by the app to enqueue transcription jobs.
 - `AWS_JOURNAL_VECTOR_BUCKET_NAME`
   - S3 Vector bucket name for journal embeddings.
 - `AWS_JOURNAL_VECTOR_INDEX_NAME`
   - S3 Vector index name used for query/upsert/delete.
 - `AWS_JOURNAL_VECTOR_DIMENSION`
   - Embedding dimension (must match your index, example: `1024`).
+
+### Optional (centralized in `src/lib/env.*`)
+
+- `NODE_ENV`
+  - Defaults to `development` locally. Vercel sets this automatically.
 - `ADMIN_USERNAMES`
   - Comma-separated usernames allowed to access `/journals/vectors` and run
     embedding backfill (example: `sean,alice`).
+- `JOURNAL_VECTOR_TOP_K`
+  - Candidate count before post-filtering (default `40`).
+- `JOURNAL_VECTOR_MAX_DISTANCE`
+  - Distance cutoff for semantic matches (default `0.9`).
+- `MIN_JOURNAL_ANALYSIS_CHARS`
+  - Minimum content length before running AI analysis (default `40`).
+- `LOG_LEVEL`
+  - Logger level (default `info`).
+- `OPENAI_JOURNAL_ANALYSIS_MODEL`
+  - Journal AI analysis model (default `gpt-4o-mini`).
+- `VERCEL_GIT_COMMIT_SHA`
+  - Optional build metadata injected by Vercel.
+- `NEXT_PUBLIC_THEME_OVERRIDE`
+  - Optional client theme override (`light`, `dark`, or `system`).
+
+### Additional required runtime secrets / integrations (not in `src/lib/env.*`)
+
+- `OPENAI_API_KEY`
+  - Required for journal embeddings and audio transcription (and lambda transcription worker secret loading).
+
+### Lambda transcription worker runtime env (deployed function)
+
+These are consumed by the transcription worker runtime
+(`src/lambda/transcription-worker/index.ts` and `src/lambda/transcription-worker/env.ts`).
+
+### Required
+
+- `AWS_REGION`
+- `AWS_BUCKET_NAME`
+- `AWS_TABLE_NAME`
+- `AWS_APP_SECRET_NAME`
+  - Secrets Manager secret name containing app secret JSON. The worker currently
+    reads `OPENAI_API_KEY` from this secret.
+- `OPENAI_AUDIO_TRANSCRIPTION_MODEL`
+  - Speech-to-text model used by the worker.
+- `OPENAI_JOURNAL_STRUCTURING_MODEL`
+  - Structuring model used by the worker.
+
+### Optional
+
+- `LOG_LEVEL`
+- `NODE_ENV`
 
 ### Required via Vercel KV integration
 
@@ -127,16 +174,32 @@ deployments to fully work with AWS + embeddings too).
 If you connect Vercel KV through the Vercel integration, these are usually
 added automatically.
 
-### Optional tuning
+## Infra CDK environment variables / secrets
 
-- `JOURNAL_VECTOR_TOP_K`
-  - Candidate count before post-filtering (default `40`).
-- `JOURNAL_VECTOR_MAX_DISTANCE`
-  - Distance cutoff for semantic matches (default `0.9`).
-- `LOG_LEVEL`
-  - Logger level (default `info`).
-- `NEXT_PUBLIC_THEME_OVERRIDE`
-  - Optional client theme override.
+These are used by `infra/lib/env.ts` during CDK synth/deploy (including
+`.github/workflows/infra-cdk.yml`).
+
+### Required
+
+- `BASE_URL`
+  - Production host name (no protocol), used for infra config like bucket CORS.
+- `OPENAI_API_KEY`
+  - Included in the app secret payload provisioned for runtime consumers (for
+    example the transcription worker).
+- `OPENAI_AUDIO_TRANSCRIPTION_MODEL`
+  - Passed through to the transcription worker Lambda environment.
+- `OPENAI_JOURNAL_STRUCTURING_MODEL`
+  - Passed through to the transcription worker Lambda environment.
+- `AWS_ACCOUNT`
+- `AWS_REGION`
+- `AWS_ALARM_EMAIL`
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+
+### GitHub Actions (`.github/workflows/infra-cdk.yml`)
+
+The workflow should provide the above via repo/org `vars` and `secrets`
+(currently using `vars.AWS_REGION_PROD`, `vars.AWS_JOURNAL_VECTOR_DIMENSION`,
+and production secrets for host/API key values).
 
 ## Technology
 

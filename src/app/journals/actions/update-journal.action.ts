@@ -47,6 +47,12 @@ export const updateJournalAction = async (
     const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
     );
+    const writtenContent = await liftEither(
+      getStringFromFormData({ name: "writtenContent", formData }),
+    );
+    const transcriptionRaw = await liftEither(
+      getStringFromFormData({ name: "transcriptionRaw", formData }),
+    );
 
     const energyLevel = await liftEither(
       getStringFromFormData({ name: "energyLevel", formData })
@@ -116,6 +122,8 @@ export const updateJournalAction = async (
           user,
           createdAtLocal,
           content,
+          writtenContent,
+          transcriptionRaw,
           energyLevel,
           moodLevel,
           healthLevel,
@@ -169,6 +177,8 @@ export const updateJournalAction = async (
         user,
         createdAtLocal,
         content,
+        writtenContent,
+        transcriptionRaw,
         energyLevel,
         moodLevel,
         healthLevel,

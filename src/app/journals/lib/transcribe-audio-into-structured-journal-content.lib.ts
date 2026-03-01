@@ -1,12 +1,27 @@
-import "server-only";
-
 import { experimental_transcribe as transcribe, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { EitherAsync } from "purify-ts";
 import { logger } from "@/lib/logger";
-import { OPENAI_JOURNAL_TRANSCRIPTION_MODEL } from "@/lib/env.server";
 
 const MAX_TRANSCRIPTION_BYTES = 25 * 1024 * 1024;
+const STRUCTURING_VERSION = 1;
+
+export type TranscriptionStructuringStrategy =
+  | "structured"
+  | "fallback"
+  | "empty"
+  | "skipped-too-large";
+
+export type TranscriptionAudioContentResult = {
+  transcriptionStructured: string;
+  transcriptionRaw: string;
+  metadata: {
+    transcriptionModel: string;
+    structuringModel: string;
+    structuringVersion: number;
+    structuringStrategy: TranscriptionStructuringStrategy;
+  };
+};
 
 const extractJson = (text: string): string => {
   const trimmed = text.trim();
@@ -23,7 +38,7 @@ const extractJson = (text: string): string => {
   }
 
   throw new Error(
-    "Could not extract JSON object from transcription cleanup response",
+    "Could not extract JSON object from transcription structuring response",
   );
 };
 
@@ -45,16 +60,16 @@ type TranscriptionSection = {
   bullets: string[];
 };
 
-type TranscriptionCleanupResult = {
+type TranscriptionStructuringResult = {
   sections: TranscriptionSection[];
 };
 
 const isAllowedHeading = (heading: string): heading is AllowedHeading =>
   (ALLOWED_HEADINGS as readonly string[]).includes(heading);
 
-const decodeCleanupResult = (
+const decodeStructuringResult = (
   value: unknown,
-): TranscriptionCleanupResult | null => {
+): TranscriptionStructuringResult | null => {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -108,7 +123,9 @@ const decodeCleanupResult = (
   };
 };
 
-const formatCleanupResult = (result: TranscriptionCleanupResult): string => {
+const formatStructuringResult = (
+  result: TranscriptionStructuringResult,
+): string => {
   const sectionsByHeading = new Map<string, string[]>();
 
   for (const heading of ALLOWED_HEADINGS) {
@@ -149,11 +166,12 @@ const normalizeTranscriptFallback = (transcript: string): string => {
   return ["## Other", ...lines].join("\n");
 };
 
-const cleanupTranscriptIntoStructuredContent = async (
+const structureTranscriptContent = async (
   transcript: string,
+  structuringModel: string,
 ): Promise<string> => {
   const response = await generateText({
-    model: openai(OPENAI_JOURNAL_TRANSCRIPTION_MODEL),
+    model: openai(structuringModel),
     temperature: 0.35,
     system:
       "You are a thoughtful journal-writing assistant. Keep the speaker's voice natural, conversational, and human. Preserve detail and nuance instead of aggressively shortening things. Return only strict JSON with no markdown and no extra keys.",
@@ -165,34 +183,47 @@ const cleanupTranscriptIntoStructuredContent = async (
   });
 
   const parsed = JSON.parse(extractJson(response.text));
-  const decoded = decodeCleanupResult(parsed);
+  const decoded = decodeStructuringResult(parsed);
 
   if (!decoded) {
-    throw new Error("Transcription cleanup response failed validation");
+    throw new Error("Transcription structuring response failed validation");
   }
 
-  return formatCleanupResult(decoded);
+  return formatStructuringResult(decoded);
 };
 
-export const transcribeJournalAudioIntoContent = ({
+export const transcribeJournalAudioIntoStructuredJournalContent = ({
   audio,
+  audioTranscriptionModel,
+  journalStructuringModel,
 }: {
   audio: File;
-}): EitherAsync<unknown, string> => {
+  audioTranscriptionModel: string;
+  journalStructuringModel: string;
+}): EitherAsync<unknown, TranscriptionAudioContentResult> => {
   return EitherAsync(async ({ throwE }) => {
     if (audio.size >= MAX_TRANSCRIPTION_BYTES) {
       logger.warn(
         `Audio file too large to transcribe: ${audio.size} bytes. Skipping translation.`,
       );
 
-      return "";
+      return {
+        transcriptionStructured: "",
+        transcriptionRaw: "",
+        metadata: {
+          transcriptionModel: audioTranscriptionModel,
+          structuringModel: journalStructuringModel,
+          structuringVersion: STRUCTURING_VERSION,
+          structuringStrategy: "skipped-too-large",
+        },
+      };
     }
 
     try {
       logger.debug("Transcribing audio file...");
 
       const transcriptResponse = await transcribe({
-        model: openai.transcription("whisper-1"),
+        model: openai.transcription(audioTranscriptionModel),
         audio: new Uint8Array(await audio.arrayBuffer()),
         providerOptions: {
           openai: {
@@ -204,20 +235,49 @@ export const transcribeJournalAudioIntoContent = ({
 
       const transcript = transcriptResponse.text.trim();
       if (!transcript) {
-        return "";
+        return {
+          transcriptionStructured: "",
+          transcriptionRaw: "",
+          metadata: {
+            transcriptionModel: audioTranscriptionModel,
+            structuringModel: journalStructuringModel,
+            structuringVersion: STRUCTURING_VERSION,
+            structuringStrategy: "empty",
+          },
+        };
       }
 
       try {
-        const structured =
-          await cleanupTranscriptIntoStructuredContent(transcript);
+        const structured = await structureTranscriptContent(
+          transcript,
+          journalStructuringModel,
+        );
         if (structured) {
-          return structured;
+          return {
+            transcriptionStructured: structured,
+            transcriptionRaw: transcript,
+            metadata: {
+              transcriptionModel: audioTranscriptionModel,
+              structuringModel: journalStructuringModel,
+              structuringVersion: STRUCTURING_VERSION,
+              structuringStrategy: "structured",
+            },
+          };
         }
       } catch (error) {
         logger.warn("Failed to structure transcript; using fallback", error);
       }
 
-      return normalizeTranscriptFallback(transcript);
+      return {
+        transcriptionStructured: normalizeTranscriptFallback(transcript),
+        transcriptionRaw: transcript,
+        metadata: {
+          transcriptionModel: audioTranscriptionModel,
+          structuringModel: journalStructuringModel,
+          structuringVersion: STRUCTURING_VERSION,
+          structuringStrategy: "fallback",
+        },
+      };
     } catch (error) {
       logger.error("Error during audio transcription:", error);
       return throwE(error);

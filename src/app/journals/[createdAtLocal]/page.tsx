@@ -259,6 +259,20 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           </Fieldset>
         )}
 
+        {journal.transcriptionRaw?.trim() && (
+          <Fieldset legend="Transcription">
+            <details className="text-sm">
+              <summary className="cursor-pointer select-none text-zinc-700 dark:text-zinc-300">
+                View raw transcription
+              </summary>
+
+              <pre className="mt-2 whitespace-pre-wrap break-words rounded border border-zinc-200 dark:border-zinc-700 p-2 text-xs bg-zinc-50 dark:bg-zinc-900/50">
+                {journal.transcriptionRaw}
+              </pre>
+            </details>
+          </Fieldset>
+        )}
+
         {(previousCreatedAtLocal || nextCreatedAtLocal) && (
           <div className="flex items-center justify-between gap-2 pt-2">
             {previousCreatedAtLocal ? (

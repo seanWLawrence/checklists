@@ -34,7 +34,7 @@ export const workerEnv = {
     "OPENAI_AUDIO_TRANSCRIPTION_MODEL",
   ),
   MAX_RECEIVE_ATTEMPTS: getPositiveIntegerProcessEnv({
-    key: "TRANSCRIPTION_MAX_RECEIVE_ATTEMPTS",
+    key: "MAX_RECEIVE_ATTEMPTS",
     fallback: 3,
   }),
   TIMEOUT_IN_MIN: getPositiveIntegerProcessEnv({

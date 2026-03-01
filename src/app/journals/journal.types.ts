@@ -235,6 +235,8 @@ export const JournalBase = intersect(
   intersect(
     Codec.interface({
       content: optional(string),
+      writtenContent: optional(string),
+      transcriptionRaw: optional(string),
       createdAtLocal: CreatedAtLocal,
       assets: optional(array(JournalAsset)),
     }),
