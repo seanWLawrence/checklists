@@ -1,10 +1,15 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { JobHandler, SucceededJob, TranscriptionJobInput } from "../job.types";
+import {
+  JobHandler,
+  SucceededJob,
+  TranscriptionJobInput,
+} from "../../job.types";
 import { getObject } from "@/lib/aws/s3/get-object";
-import { updateJob } from "../updateJob";
+import { updateJob } from "../../updateJob";
 import { transcribeAudio } from "./transcribe-audio";
+import { structureTranscription } from "./structure-transcription";
 
-export const transcriptionJobHandler: JobHandler<TranscriptionJobInput> = ({
+export const handler: JobHandler<TranscriptionJobInput> = ({
   message,
   jobInput,
 }) => {
@@ -21,10 +26,14 @@ export const transcriptionJobHandler: JobHandler<TranscriptionJobInput> = ({
       },
     );
 
-    const output = await fromPromise(
+    const transcribeAudioResult = await fromPromise(
       transcribeAudio({
         audio,
       }),
+    );
+
+    const output = await fromPromise(
+      structureTranscription(transcribeAudioResult),
     );
 
     await fromPromise(

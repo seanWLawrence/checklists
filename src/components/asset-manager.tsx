@@ -420,7 +420,7 @@ export const AssetManager: React.FC<{
       }
 
       const statusResponse = await fetch(
-        `/api/transcription-jobs/${encodeURIComponent(json.jobId)}`,
+        `/api/jobs/${encodeURIComponent(json.jobId)}`,
         { method: "GET" },
       );
 

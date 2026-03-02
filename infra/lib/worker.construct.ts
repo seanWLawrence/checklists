@@ -141,7 +141,8 @@ export class WorkerConstruct extends Construct {
 
         // Transcription job
         OPENAI_AUDIO_TRANSCRIPTION_MODEL,
-        OPENAI_JOURNAL_STRUCTURING_MODEL,
+        OPENAI_TRANSCRIPTION_STRUCTURING_MODEL:
+          OPENAI_JOURNAL_STRUCTURING_MODEL,
       },
     });
 

@@ -33,6 +33,9 @@ export const workerEnv = {
   OPENAI_AUDIO_TRANSCRIPTION_MODEL: getRequiredProcessEnv(
     "OPENAI_AUDIO_TRANSCRIPTION_MODEL",
   ),
+  OPENAI_TRANSCRIPTION_STRUCTURING_MODEL: getRequiredProcessEnv(
+    "OPENAI_TRANSCRIPTION_STRUCTURING_MODEL",
+  ),
   MAX_RECEIVE_ATTEMPTS: getPositiveIntegerProcessEnv({
     key: "MAX_RECEIVE_ATTEMPTS",
     fallback: 3,

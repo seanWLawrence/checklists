@@ -1,14 +1,24 @@
 import { experimental_transcribe as transcribe } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { logger } from "@/lib/logger";
-import { workerEnv } from "../env";
+import { workerEnv } from "../../env";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { TranscriptionJobOutput } from "../job.types";
-import { getWorkerSecret } from "../get-worker-secret";
+import { TranscriptionJobOutput } from "../../job.types";
+import { getWorkerSecret } from "../../get-worker-secret";
 
 const MAX_TRANSCRIPTION_BYTES = 25 * 1024 * 1024;
 const TRANSCRIPTION_PROMPT_VERSION = 1;
 const TIMEOUT_IN_MILLI = workerEnv.TIMEOUT_IN_MIN * 60 * 1000;
+
+export type TranscribeAudioPayload = Pick<
+  TranscriptionJobOutput,
+  "transcriptionRaw"
+> & {
+  metadata: Pick<
+    TranscriptionJobOutput["metadata"],
+    "transcriptionModel" | "transcriptionPromptVersion"
+  >;
+};
 
 let openAiClient: ReturnType<typeof createOpenAI> | null = null;
 
@@ -16,7 +26,7 @@ export const transcribeAudio = ({
   audio,
 }: {
   audio: File;
-}): EitherAsync<unknown, TranscriptionJobOutput> => {
+}): EitherAsync<unknown, TranscribeAudioPayload> => {
   return EitherAsync(async ({ throwE, fromPromise }) => {
     if (audio.size >= MAX_TRANSCRIPTION_BYTES) {
       return throwE(
@@ -46,14 +56,14 @@ export const transcribeAudio = ({
       },
     });
 
-    const transcription = transcriptResponse.text.trim();
+    const transcriptionRaw = transcriptResponse.text.trim();
 
-    if (!transcription) {
+    if (!transcriptionRaw) {
       return throwE("Transcription result is empty");
     }
 
     return {
-      transcription,
+      transcriptionRaw,
       metadata: {
         transcriptionModel: workerEnv.OPENAI_AUDIO_TRANSCRIPTION_MODEL,
         transcriptionPromptVersion: TRANSCRIPTION_PROMPT_VERSION,

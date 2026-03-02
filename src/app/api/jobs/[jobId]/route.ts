@@ -50,7 +50,7 @@ export async function GET(
     );
 
     if (!job) {
-      return liftEither(Left("Transcription job not found"));
+      return liftEither(Left("Job not found"));
     }
 
     if (isSucceededJob(job)) {
@@ -78,7 +78,7 @@ export async function GET(
     const statusCode = getErrorStatusCode(error);
 
     if (statusCode >= 500) {
-      logger.error("Failed to get transcription job status", { error });
+      logger.error("Failed to get job status", { error });
     }
 
     return NextResponse.json({ error }, { status: statusCode });
