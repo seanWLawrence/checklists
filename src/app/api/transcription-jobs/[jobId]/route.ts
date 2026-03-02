@@ -4,6 +4,12 @@ import { Left } from "purify-ts/Either";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getJob } from "@/lambda/worker/get-job";
+import {
+  isEnqueueFailedJob,
+  isFailedJob,
+  isSucceededJob,
+  type TranscriptionJobStatusResponse,
+} from "@/lambda/worker/job.types";
 import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { logger } from "@/lib/logger";
 
@@ -47,12 +53,24 @@ export async function GET(
       return liftEither(Left("Transcription job not found"));
     }
 
+    if (isSucceededJob(job)) {
+      return {
+        status: "succeeded",
+        transcriptionStructured: job.output.transcriptionStructured,
+        transcriptionRaw: job.output.transcriptionRaw,
+      } satisfies TranscriptionJobStatusResponse;
+    }
+
+    if (isFailedJob(job) || isEnqueueFailedJob(job)) {
+      return {
+        status: "failed",
+        error: job.error,
+      } satisfies TranscriptionJobStatusResponse;
+    }
+
     return {
       status: job.status,
-      transcriptionStructured: job.transcriptionStructured,
-      transcriptionRaw: job.transcriptionRaw,
-      error: job.error,
-    };
+    } satisfies TranscriptionJobStatusResponse;
   }).run();
 
   if (response.isLeft()) {

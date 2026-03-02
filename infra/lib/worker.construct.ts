@@ -183,9 +183,43 @@ export class WorkerConstruct extends Construct {
       },
     );
 
+    const jobsQueueOldestMessageAlarm = new cloudwatch.Alarm(
+      this,
+      "jobs-queue-oldest-message-alarm",
+      {
+        metric: this.jobsQueue.metricApproximateAgeOfOldestMessage({
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 300,
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          "Worker queue oldest message is older than 5 minutes (backlog or stuck processing).",
+      },
+    );
+
+    const workerThrottlesAlarm = new cloudwatch.Alarm(
+      this,
+      "worker-throttles-alarm",
+      {
+        metric: this.worker.metricThrottles({
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          "Worker Lambda was throttled one or more times in 5 minutes.",
+      },
+    );
+
     const alarmAction = new cloudwatchActions.SnsAction(props.alarmTopic);
     workerErrorsAlarm.addAlarmAction(alarmAction);
     jobsDlqVisibleAlarm.addAlarmAction(alarmAction);
+    jobsQueueOldestMessageAlarm.addAlarmAction(alarmAction);
+    workerThrottlesAlarm.addAlarmAction(alarmAction);
 
     props.bucket.grantRead(this.worker);
     props.secret.grantRead(this.worker);

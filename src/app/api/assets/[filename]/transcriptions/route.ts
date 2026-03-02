@@ -1,43 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { Either, Left, Right } from "purify-ts/Either";
-import {
-  queueJob,
-  getJob,
-  getJobDedupe,
-  updateJobStatus,
-} from "@/lambda/worker/get-job";
-import { sendMessage } from "@/lib/aws/sqs/send-message";
+import { queueJob } from "@/lambda/worker/queueJob";
 import {
   isActiveJobStatus,
+  isSucceededJob,
   type JobStartResponse,
 } from "@/lambda/worker/job.types";
+import { getJob } from "@/lambda/worker/get-job";
+import { getObject } from "@/lib/aws/s3/get-object";
 import { logger } from "@/lib/logger";
 
 // Reject path separators and ASCII control chars so the route param stays a single safe filename.
 const INVALID_FILENAME_PATTERN = /[\/\\\u0000-\u001f\u007f]/;
-
-const isTranscriptionJobDedupeConflict = (error: unknown): boolean => {
-  const name =
-    error instanceof Error && typeof error.name === "string" ? error.name : "";
-  const message =
-    error instanceof Error && typeof error.message === "string"
-      ? error.message
-      : "";
-
-  if (name === "ConditionalCheckFailedException") {
-    return true;
-  }
-
-  return (
-    name === "TransactionCanceledException" &&
-    message.toLowerCase().includes("conditional")
-  );
-};
 
 const validateFilename = (filename: string) => {
   return Either.of(filename)
@@ -77,6 +56,22 @@ const getErrorStatusCode = (error: string): number => {
   return 500;
 };
 
+const getContentHash = (input: Uint8Array): string => {
+  return createHash("sha256").update(input).digest("hex");
+};
+
+const getDeterministicJobId = ({
+  username,
+  contentHash,
+}: {
+  username: string;
+  contentHash: string;
+}): string => {
+  return createHash("sha256")
+    .update(`${username}:${contentHash}`)
+    .digest("hex");
+};
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> },
@@ -93,101 +88,65 @@ export async function POST(
 
       await liftEither(validateFilename(filename));
 
-      const existingDedupe = await fromPromise(
-        getJobDedupe({
-          username: user.username,
+      const asset = await fromPromise(
+        getObject({
           filename,
         }),
       );
 
-      if (existingDedupe && isActiveJobStatus(existingDedupe.status)) {
-        const existingJob = await fromPromise(
-          getJob({
-            username: user.username,
-            jobId: existingDedupe.jobId,
-          }),
-        );
+      const jobId = getDeterministicJobId({
+        username: user.username,
+        contentHash: getContentHash(asset.body),
+      });
 
-        if (existingJob && isActiveJobStatus(existingJob.status)) {
+      const existingJob = await fromPromise(
+        getJob({
+          username: user.username,
+          jobId,
+        }),
+      );
+
+      if (existingJob) {
+        if (isSucceededJob(existingJob)) {
+          logger.info("Returning existing succeeded transcription job", {
+            username: user.username,
+            jobId,
+            filename,
+          });
+
           return {
-            jobId: existingJob.jobId,
-            status: existingJob.status,
+            jobId,
+            status: "succeeded",
+          } satisfies JobStartResponse;
+        }
+
+        if (isActiveJobStatus(existingJob.status)) {
+          const activeStatus =
+            existingJob.status === "queued" ? "queued" : "running";
+
+          logger.info("Returning existing active transcription job", {
+            username: user.username,
+            jobId,
+            filename,
+            status: activeStatus,
+          });
+
+          return {
+            jobId,
+            status: activeStatus,
           } satisfies JobStartResponse;
         }
       }
 
-      const jobId = randomUUID();
-
       const createJobResult = await queueJob({
         username: user.username,
         jobId,
-        filename,
+        jobType: "journalTranscription",
+        input: { filename },
       }).run();
 
       if (createJobResult.isLeft()) {
-        const createError = createJobResult.extract();
-
-        if (isTranscriptionJobDedupeConflict(createError)) {
-          const dedupeAfterConflict = await fromPromise(
-            getJobDedupe({
-              username: user.username,
-              filename,
-            }),
-          );
-
-          if (dedupeAfterConflict) {
-            const existingJobAfterConflict = await fromPromise(
-              getJob({
-                username: user.username,
-                jobId: dedupeAfterConflict.jobId,
-              }),
-            );
-
-            if (
-              existingJobAfterConflict &&
-              isActiveJobStatus(existingJobAfterConflict.status)
-            ) {
-              return {
-                jobId: existingJobAfterConflict.jobId,
-                status: existingJobAfterConflict.status,
-              } satisfies JobStartResponse;
-            }
-          }
-        }
-
         return throwE("Failed to create transcription job");
-      }
-
-      const enqueueResult = await sendMessage({
-        message: {
-          username: user.username,
-          jobId,
-          filename,
-        },
-      }).run();
-
-      if (enqueueResult.isLeft()) {
-        const updateFailedStatusResult = await updateJobStatus({
-          username: user.username,
-          jobId,
-          filename,
-          status: "failed",
-          error: `Failed to enqueue transcription job: ${String(enqueueResult.extract())}`,
-        }).run();
-
-        if (updateFailedStatusResult.isLeft()) {
-          logger.error(
-            "Failed to mark transcription job as failed after enqueue error",
-            {
-              error: String(updateFailedStatusResult.extract()),
-              filename,
-              jobId,
-              username: user.username,
-            },
-          );
-        }
-
-        return throwE("Failed to enqueue transcription job");
       }
 
       return {

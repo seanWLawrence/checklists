@@ -6,6 +6,20 @@ export const toWorkerErrorMessage = (error: unknown): string => {
   return String(error);
 };
 
+export const isConditionalCheckFailure = (error: unknown): boolean => {
+  const name =
+    error instanceof Error && typeof error.name === "string" ? error.name : "";
+  const message = toWorkerErrorMessage(error).toLowerCase();
+
+  if (name === "ConditionalCheckFailedException") {
+    return true;
+  }
+
+  return (
+    name === "TransactionCanceledException" && message.includes("conditional")
+  );
+};
+
 export const isTransientWorkerError = (error: unknown): boolean => {
   const message = toWorkerErrorMessage(error).toLowerCase();
 

@@ -1,6 +1,10 @@
 import { test } from "vitest";
 
-import { isTransientWorkerError, toWorkerErrorMessage } from "./worker-errors";
+import {
+  isConditionalCheckFailure,
+  isTransientWorkerError,
+  toWorkerErrorMessage,
+} from "./worker-errors";
 
 test("classifies transient network/rate-limit style errors", ({ expect }) => {
   expect(isTransientWorkerError(new Error("429 rate limit exceeded"))).toBe(
@@ -25,4 +29,17 @@ test("normalizes unknown errors into a loggable message", ({ expect }) => {
   expect(toWorkerErrorMessage(new Error("boom"))).toBe("boom");
   expect(toWorkerErrorMessage("boom")).toBe("boom");
   expect(toWorkerErrorMessage(42)).toBe("42");
+});
+
+test("classifies dynamodb conditional write errors", ({ expect }) => {
+  const conditionalError = new Error("The conditional request failed");
+  conditionalError.name = "ConditionalCheckFailedException";
+
+  expect(isConditionalCheckFailure(conditionalError)).toBe(true);
+
+  const transactionError = new Error("Transaction cancelled due to conditional");
+  transactionError.name = "TransactionCanceledException";
+
+  expect(isConditionalCheckFailure(transactionError)).toBe(true);
+  expect(isConditionalCheckFailure(new Error("boom"))).toBe(false);
 });

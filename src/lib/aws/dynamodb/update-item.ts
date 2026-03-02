@@ -9,12 +9,14 @@ export const updateItem = ({
   pk,
   sk,
   updateExpression,
+  conditionExpression,
   attributeNames,
   attributeValues,
 }: {
   pk: string;
   sk: string;
   updateExpression: string;
+  conditionExpression?: string;
   attributeNames: AttributeNames;
   attributeValues: AttributeValues;
 }): EitherAsync<unknown, void> => {
@@ -28,6 +30,7 @@ export const updateItem = ({
             sk,
           },
           UpdateExpression: updateExpression,
+          ConditionExpression: conditionExpression,
           ExpressionAttributeNames: attributeNames,
           ExpressionAttributeValues: attributeValues,
         }),

@@ -2,6 +2,7 @@ import { string } from "purify-ts/Codec";
 
 import { logger } from "@/lib/logger";
 import {
+  isConditionalCheckFailure,
   isTransientWorkerError,
   toWorkerErrorMessage,
 } from "@/lambda/worker/worker-errors";
@@ -11,7 +12,8 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { updateJob } from "./updateJob";
 import {
   FailedJob,
-  isFailedJob,
+  isQueuedJob,
+  isRunningJob,
   isSucceededJob,
   JobHandler,
   JobInput,
@@ -20,7 +22,7 @@ import {
   RunningJob,
 } from "./job.types";
 import { Either } from "purify-ts/Either";
-import { transcriptionJobHandler } from "./transcription";
+import { handler as journalTranscriptionJobHandler } from "./jobs/journal-transcription";
 
 type SqsEvent = {
   Records: Array<{
@@ -67,18 +69,27 @@ const processMessage = <
       return;
     }
 
-    if (isFailedJob(currentJob)) {
-      logger.info("Skipping already-failed job", {
+    const shouldStartJob = isQueuedJob(currentJob);
+    const shouldRetryRunningJob = isRunningJob(currentJob);
+
+    if (!shouldStartJob && !shouldRetryRunningJob) {
+      logger.info("Skipping non-queued job", {
         message,
         attemptCount,
+        status: currentJob.status,
       });
       return;
     }
 
-    const now = new Date();
+    if (shouldRetryRunningJob) {
+      logger.warn("Retrying delivery for job already marked running", {
+        message,
+        attemptCount,
+      });
+    } else {
+      const now = new Date();
 
-    await fromPromise(
-      updateJob({
+      const markRunningResult = await updateJob({
         username: message.username,
         jobId: message.jobId,
         job: RunningJob.encode({
@@ -87,8 +98,22 @@ const processMessage = <
           startedAtIso: now,
           input: currentJob.input,
         }),
-      }),
-    );
+      }).run();
+
+      if (markRunningResult.isLeft()) {
+        const claimError = markRunningResult.extract();
+
+        if (isConditionalCheckFailure(claimError)) {
+          logger.info("Skipping message because another worker already claimed it", {
+            message,
+            attemptCount,
+          });
+          return;
+        }
+
+        return throwE(claimError);
+      }
+    }
 
     try {
       await fromPromise(
@@ -101,6 +126,14 @@ const processMessage = <
         durationMs: Date.now() - startedAtMs,
       });
     } catch (error) {
+      if (isConditionalCheckFailure(error)) {
+        logger.info("Skipping duplicate completion after concurrent worker update", {
+          message,
+          attemptCount,
+        });
+        return;
+      }
+
       const transient = isTransientWorkerError(error);
       const shouldRetry =
         transient && attemptCount < workerEnv.MAX_RECEIVE_ATTEMPTS;
@@ -125,19 +158,31 @@ const processMessage = <
         username: message.username,
       });
 
-      await fromPromise(
-        updateJob({
-          jobId: message.jobId,
-          username: message.username,
-          job: FailedJob.encode({
-            status: "failed",
-            error: toWorkerErrorMessage(error),
-            completedAtIso: new Date(),
-            jobType: message.jobType,
-            input: currentJob.input,
-          }),
+      const markFailedResult = await updateJob({
+        jobId: message.jobId,
+        username: message.username,
+        job: FailedJob.encode({
+          status: "failed",
+          error: toWorkerErrorMessage(error),
+          completedAtIso: new Date(),
+          jobType: message.jobType,
+          input: currentJob.input,
         }),
-      );
+      }).run();
+
+      if (markFailedResult.isLeft()) {
+        const markFailedError = markFailedResult.extract();
+
+        if (isConditionalCheckFailure(markFailedError)) {
+          logger.info("Skipping failed transition because job already reached a final state", {
+            message,
+            attemptCount,
+          });
+          return;
+        }
+
+        return throwE(markFailedError);
+      }
     }
   });
 };
@@ -146,9 +191,9 @@ const getJobHandler = <TJobInput extends JobInput>(
   jobType: JobType,
 ): JobHandler<TJobInput> => {
   switch (jobType) {
-    case "transcription":
+    case "journalTranscription":
     default:
-      return transcriptionJobHandler;
+      return journalTranscriptionJobHandler;
   }
 };
 

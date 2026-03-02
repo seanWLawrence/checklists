@@ -396,18 +396,11 @@ export const AssetManager: React.FC<{
       return;
     }
 
-    const json = startResponseDecode.caseOf({
-      Left: () => null,
-      Right: (value) => value,
-    });
-
-    if (!json) {
-      setTranscribeStatus({ filename: asset.filename, status: "error" });
-      return;
-    }
+    const json = startResponseDecode.unsafeCoerce();
 
     let attempts = 0;
     const maxAttempts = TRANSCRIPTION_POLL_MAX_ATTEMPTS; // ~11 minutes with backoff (2s for first minute, then 5s)
+    const skipInitialDelay = json.status === "succeeded";
 
     while (attempts < maxAttempts) {
       if (!isMountedRef.current) {
@@ -415,10 +408,12 @@ export const AssetManager: React.FC<{
       }
 
       attempts += 1;
-      const pollDelayMs = getTranscriptionPollDelayMs({
-        attemptNumber: attempts,
-      });
-      await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+      if (!(skipInitialDelay && attempts === 1)) {
+        const pollDelayMs = getTranscriptionPollDelayMs({
+          attemptNumber: attempts,
+        });
+        await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+      }
 
       if (!isMountedRef.current) {
         return;
@@ -446,14 +441,7 @@ export const AssetManager: React.FC<{
         break;
       }
 
-      const statusJson = statusDecode.caseOf({
-        Left: () => null,
-        Right: (value) => value,
-      });
-
-      if (!statusJson) {
-        break;
-      }
+      const statusJson = statusDecode.unsafeCoerce();
 
       if (
         statusJson.status === "succeeded" &&

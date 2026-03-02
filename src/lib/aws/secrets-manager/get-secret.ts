@@ -10,7 +10,7 @@ export const getSecret = <TData extends object>({
 }: {
   decoder: Codec<TData>;
   secretName: string;
-}): EitherAsync<unknown, Secret> => {
+}): EitherAsync<unknown, TData> => {
   return EitherAsync(async ({ liftEither }) => {
     const response = await secretsManagerClient.send(
       new GetSecretValueCommand({
