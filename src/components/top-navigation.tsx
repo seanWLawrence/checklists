@@ -7,10 +7,9 @@ import { getUser } from "@/lib/auth/get-user";
 import { logoutAction } from "./actions/logout.action";
 import { JournalAnalyticsLink } from "./journal-analytics-link";
 import { JournalAssetsLink } from "./journal-assets-link";
+import { TodayJournalLink } from "./today-journal-link";
 import { isAdminUsername } from "@/lib/auth/is-admin-username";
 import { ThemeToggleButton } from "./theme-toggle-button.client";
-import { CreatedAtLocal } from "@/app/journals/journal.types";
-import { journalExistsAction } from "@/app/journals/actions/journal-exists.action";
 
 const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   getUserFn = getUser,
@@ -19,16 +18,6 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
   const canAccessAdmin = userMaybe
     .map((user) => isAdminUsername(user.username))
     .orDefault(false);
-
-  const todayLocal = CreatedAtLocal.decode(new Date());
-
-  const newJournalButtonInfo = await journalExistsAction(
-    todayLocal.extract(),
-  ).then((exists) => {
-    return exists
-      ? { exists, href: `/journals/${todayLocal.extract()}/edit` }
-      : { exists, href: "/journals/new" };
-  });
 
   return (
     <nav className="py-2 px-5 flex space-x-1 items-center w-full">
@@ -66,13 +55,7 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
 
                 <span>/</span>
 
-                <LinkButton
-                  href={newJournalButtonInfo.href}
-                  variant="ghost"
-                  prefetch={true}
-                >
-                  {newJournalButtonInfo.exists ? "Today" : "New journal"}
-                </LinkButton>
+                <TodayJournalLink />
 
                 <span>/</span>
 
