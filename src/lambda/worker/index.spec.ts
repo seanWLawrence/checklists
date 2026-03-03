@@ -46,22 +46,22 @@ test("retries a redelivered job that is already marked running", async () => {
   );
   journalTranscriptionHandlerMock.mockReturnValueOnce(right(undefined));
 
-  const result = await handler({
-    Records: [
-      {
-        body: JSON.stringify({
-          username: "sean",
-          jobId: "job-1",
-          jobType: "journalTranscription",
-        }),
-        attributes: {
-          ApproximateReceiveCount: "2",
+  await expect(
+    handler({
+      Records: [
+        {
+          body: JSON.stringify({
+            username: "sean",
+            jobId: "job-1",
+            jobType: "journalTranscription",
+          }),
+          attributes: {
+            ApproximateReceiveCount: "2",
+          },
         },
-      },
-    ],
-  }).run();
-
-  expect(result.isRight()).toBe(true);
+      ],
+    }),
+  ).resolves.toEqual([undefined]);
   expect(journalTranscriptionHandlerMock).toHaveBeenCalledTimes(1);
   expect(journalTranscriptionHandlerMock).toHaveBeenCalledWith({
     message: {

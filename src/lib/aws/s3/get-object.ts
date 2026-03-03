@@ -1,23 +1,29 @@
 import "@nobush/server-only";
 
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { s3Client } from "./s3-client";
 import { logger } from "../../logger";
-import { AWS_BUCKET_NAME } from "@/lib/env.server";
 import { toUint8Array } from "@/lib/data/toUint8Array";
 
 export const getObject = ({
   filename,
+  client,
+  bucketName,
 }: {
   filename: string;
+  client?: S3Client;
+  bucketName?: string;
 }): EitherAsync<unknown, { body: Uint8Array; contentType?: string }> => {
   return EitherAsync(async ({ throwE }) => {
     try {
-      const response = await s3Client.send(
+      const resolvedClient = client ?? (await import("./s3-client")).s3Client;
+      const resolvedBucketName =
+        bucketName ?? (await import("@/lib/env.server")).AWS_BUCKET_NAME;
+
+      const response = await resolvedClient.send(
         new GetObjectCommand({
-          Bucket: AWS_BUCKET_NAME,
+          Bucket: resolvedBucketName,
           Key: filename,
         }),
       );

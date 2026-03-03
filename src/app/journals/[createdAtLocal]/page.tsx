@@ -259,17 +259,36 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           </Fieldset>
         )}
 
-        {journal.transcriptionRaw?.trim() && (
+        {(journal.transcriptionRaw?.trim() ||
+          (journal.assets ?? []).some((asset) => asset.transcriptionMetadata)) && (
           <Fieldset legend="Transcription">
-            <details className="text-sm">
-              <summary className="cursor-pointer select-none text-zinc-700 dark:text-zinc-300">
-                View raw transcription
-              </summary>
+            <div className="space-y-2">
+              {journal.transcriptionRaw?.trim() && (
+                <details className="text-sm">
+                  <summary className="cursor-pointer select-none text-zinc-700 dark:text-zinc-300">
+                    View raw transcription
+                  </summary>
 
-              <pre className="mt-2 whitespace-pre-wrap break-words rounded border border-zinc-200 dark:border-zinc-700 p-2 text-xs bg-zinc-50 dark:bg-zinc-900/50">
-                {journal.transcriptionRaw}
-              </pre>
-            </details>
+                  <pre className="mt-2 whitespace-pre-wrap break-words rounded border border-zinc-200 dark:border-zinc-700 p-2 text-xs bg-zinc-50 dark:bg-zinc-900/50">
+                    {journal.transcriptionRaw}
+                  </pre>
+                </details>
+              )}
+
+              {(journal.assets ?? [])
+                .filter((asset) => asset.transcriptionMetadata)
+                .map((asset) => (
+                  <details className="text-sm" key={asset.filename}>
+                    <summary className="cursor-pointer select-none text-zinc-700 dark:text-zinc-300">
+                      {asset.filename} metadata
+                    </summary>
+
+                    <pre className="mt-2 whitespace-pre-wrap break-words rounded border border-zinc-200 dark:border-zinc-700 p-2 text-xs bg-zinc-50 dark:bg-zinc-900/50">
+                      {JSON.stringify(asset.transcriptionMetadata, null, 2)}
+                    </pre>
+                  </details>
+                ))}
+            </div>
           </Fieldset>
         )}
 

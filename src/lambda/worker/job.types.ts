@@ -11,14 +11,14 @@ import {
 } from "purify-ts/Codec";
 
 import { EitherAsync } from "purify-ts/EitherAsync";
-export const JobStatus = enumeration({
+const JobStatus = enumeration({
   enqueueFailed: "enqueueFailed",
   queued: "queued",
   running: "running",
   succeeded: "succeeded",
   failed: "failed",
 });
-export type JobStatus = GetType<typeof JobStatus>;
+type JobStatus = GetType<typeof JobStatus>;
 
 const JobType = enumeration({ transcription: "journalTranscription" });
 export type JobType = GetType<typeof JobType>;
@@ -45,25 +45,28 @@ export const TranscriptionJobInput = Codec.interface({
 });
 export type TranscriptionJobInput = GetType<typeof TranscriptionJobInput>;
 
+export const TranscriptionMetadata = Codec.interface({
+  transcriptionModel: string,
+  transcriptionPromptVersion: number,
+  transcriptionStructuringModel: string,
+  transcriptionStructuringPromptVersion: number,
+});
+export type TranscriptionMetadata = GetType<typeof TranscriptionMetadata>;
+
 export const TranscriptionJobOutput = Codec.interface({
   transcriptionRaw: string,
   transcriptionStructured: string,
-  metadata: Codec.interface({
-    transcriptionModel: string,
-    transcriptionPromptVersion: number,
-    transcriptionStructuringModel: string,
-    transcriptionStructuringPromptVersion: number,
-  }),
+  metadata: TranscriptionMetadata,
 });
 export type TranscriptionJobOutput = GetType<typeof TranscriptionJobOutput>;
 
 export const JobInput = oneOf([TranscriptionJobInput]);
 export type JobInput = GetType<typeof JobInput>;
 
-export const JobOutput = oneOf([TranscriptionJobOutput]);
-export type JobOutput = GetType<typeof JobOutput>;
+const JobOutput = oneOf([TranscriptionJobOutput]);
+type JobOutput = GetType<typeof JobOutput>;
 
-export const BaseJob = Codec.interface({
+const BaseJob = Codec.interface({
   status: JobStatus,
   jobType: JobType,
   input: JobInput,
@@ -167,6 +170,7 @@ export const TranscriptionJobStatusResponse = oneOf([
     status: exactly("succeeded"),
     transcriptionStructured: string,
     transcriptionRaw: string,
+    metadata: TranscriptionMetadata,
   }),
   Codec.interface({
     status: exactly("failed"),

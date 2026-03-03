@@ -8,6 +8,8 @@ import { getObject } from "@/lib/aws/s3/get-object";
 import { updateJob } from "../../updateJob";
 import { transcribeAudio } from "./transcribe-audio";
 import { structureTranscription } from "./structure-transcription";
+import { workerEnv } from "../../env";
+import { workerDynamoDbClient, workerS3Client } from "../../aws-clients";
 
 export const handler: JobHandler<TranscriptionJobInput> = ({
   message,
@@ -15,7 +17,11 @@ export const handler: JobHandler<TranscriptionJobInput> = ({
 }) => {
   return EitherAsync(async ({ fromPromise }) => {
     const objectResponse = await fromPromise(
-      getObject({ filename: jobInput.filename }),
+      getObject({
+        filename: jobInput.filename,
+        bucketName: workerEnv.AWS_BUCKET_NAME,
+        client: workerS3Client,
+      }),
     );
 
     const audio = new File(
@@ -40,13 +46,15 @@ export const handler: JobHandler<TranscriptionJobInput> = ({
       updateJob({
         username: message.username,
         jobId: message.jobId,
-        job: SucceededJob.encode({
+        client: workerDynamoDbClient,
+        tableName: workerEnv.AWS_TABLE_NAME,
+        job: {
           status: "succeeded",
           completedAtIso: new Date(),
           jobType: message.jobType,
           output,
           input: jobInput,
-        }),
+        } satisfies SucceededJob,
       }),
     );
   });

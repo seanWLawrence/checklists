@@ -1,18 +1,25 @@
-import { GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from "@aws-sdk/client-secrets-manager";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { secretsManagerClient } from "./secrets-manager-client";
 import { Codec, string } from "purify-ts/Codec";
 import { Either } from "purify-ts/Either";
 
 export const getSecret = <TData extends object>({
   decoder,
   secretName,
+  client,
 }: {
   decoder: Codec<TData>;
   secretName: string;
+  client?: SecretsManagerClient;
 }): EitherAsync<unknown, TData> => {
   return EitherAsync(async ({ liftEither }) => {
-    const response = await secretsManagerClient.send(
+    const resolvedClient =
+      client ?? (await import("./secrets-manager-client")).secretsManagerClient;
+
+    const response = await resolvedClient.send(
       new GetSecretValueCommand({
         SecretId: secretName,
       }),

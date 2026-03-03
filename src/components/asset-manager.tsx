@@ -22,9 +22,9 @@ import {
   JobStartResponse,
 } from "@/lambda/worker/job.types";
 
-export const TRANSCRIPTION_POLL_MAX_ATTEMPTS = 150;
+const TRANSCRIPTION_POLL_MAX_ATTEMPTS = 150;
 
-export const getTranscriptionPollDelayMs = ({
+const getTranscriptionPollDelayMs = ({
   attemptNumber,
 }: {
   attemptNumber: number;
@@ -149,9 +149,33 @@ export const AssetManager: React.FC<{
         caption: asset.caption,
         filename: asset.filename,
         variant: asset.variant,
+        transcriptionMetadata: asset.transcriptionMetadata,
       })),
     );
   }, [uploadedAssets]);
+
+  const statusMessage = useMemo(() => {
+    const hasUploadingAssets = unsavedUploads.some(
+      (upload) => upload.status === "uploading",
+    );
+    const hasTranscribingAssets = Object.values(
+      transcribeStatusByFilename,
+    ).includes("loading");
+
+    if (hasUploadingAssets && hasTranscribingAssets) {
+      return "Uploading assets and transcribing audio...";
+    }
+
+    if (hasUploadingAssets) {
+      return "Uploading assets...";
+    }
+
+    if (hasTranscribingAssets) {
+      return "Transcribing audio...";
+    }
+
+    return null;
+  }, [transcribeStatusByFilename, unsavedUploads]);
 
   const onAddFilesClick = () => {
     inputRef.current?.click();
@@ -296,6 +320,7 @@ export const AssetManager: React.FC<{
           variant: upload.variant,
           caption: upload.caption,
           previewUrl: upload.previewUrl,
+          transcriptionMetadata: undefined,
         };
 
         setUploadedAssets((current) => [...current, uploadedAsset]);
@@ -400,7 +425,6 @@ export const AssetManager: React.FC<{
 
     let attempts = 0;
     const maxAttempts = TRANSCRIPTION_POLL_MAX_ATTEMPTS; // ~11 minutes with backoff (2s for first minute, then 5s)
-    const skipInitialDelay = json.status === "succeeded";
 
     while (attempts < maxAttempts) {
       if (!isMountedRef.current) {
@@ -408,9 +432,9 @@ export const AssetManager: React.FC<{
       }
 
       attempts += 1;
-      if (!(skipInitialDelay && attempts === 1)) {
+      if (attempts > 1) {
         const pollDelayMs = getTranscriptionPollDelayMs({
-          attemptNumber: attempts,
+          attemptNumber: attempts - 1,
         });
         await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
       }
@@ -421,7 +445,10 @@ export const AssetManager: React.FC<{
 
       const statusResponse = await fetch(
         `/api/jobs/${encodeURIComponent(json.jobId)}`,
-        { method: "GET" },
+        {
+          method: "GET",
+          cache: "no-store",
+        },
       );
 
       if (!statusResponse.ok) {
@@ -447,6 +474,16 @@ export const AssetManager: React.FC<{
         statusJson.status === "succeeded" &&
         typeof statusJson.transcriptionStructured === "string"
       ) {
+        setUploadedAssets((current) =>
+          current.map((item) =>
+            item.filename === asset.filename
+              ? {
+                  ...item,
+                  transcriptionMetadata: statusJson.metadata,
+                }
+              : item,
+          ),
+        );
         onTranscribeChangeAction?.(asset, {
           transcriptionStructured: statusJson.transcriptionStructured,
           transcriptionRaw: statusJson.transcriptionRaw ?? "",
@@ -559,12 +596,18 @@ export const AssetManager: React.FC<{
         }}
       />
 
-      <div className="flex justify-end items-center space-x-2">
-        <AudioRecorderInput onChangeAction={onRecordAudioFinished} />
+      <div className="flex justify-between items-center gap-2">
+        <div className="min-h-4 text-xs text-zinc-600 dark:text-zinc-400">
+          {statusMessage}
+        </div>
 
-        <Button type="button" variant="outline" onClick={onAddFilesClick}>
-          Add files
-        </Button>
+        <div className="flex items-center space-x-2">
+          <AudioRecorderInput onChangeAction={onRecordAudioFinished} />
+
+          <Button type="button" variant="outline" onClick={onAddFilesClick}>
+            Add files
+          </Button>
+        </div>
       </div>
     </div>
   );

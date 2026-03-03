@@ -58,6 +58,7 @@ export async function GET(
         status: "succeeded",
         transcriptionStructured: job.output.transcriptionStructured,
         transcriptionRaw: job.output.transcriptionRaw,
+        metadata: job.output.metadata,
       } satisfies TranscriptionJobStatusResponse;
     }
 

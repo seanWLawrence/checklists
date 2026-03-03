@@ -1,7 +1,5 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { dynamoDbClient } from "./dynamodb-client";
-import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { AWS_TABLE_NAME } from "@/lib/env.server";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { logger } from "@/lib/logger";
 import { AttributeNames, AttributeValues } from "./dynamodb.types";
 
@@ -12,6 +10,8 @@ export const updateItem = ({
   conditionExpression,
   attributeNames,
   attributeValues,
+  client,
+  tableName,
 }: {
   pk: string;
   sk: string;
@@ -19,12 +19,19 @@ export const updateItem = ({
   conditionExpression?: string;
   attributeNames: AttributeNames;
   attributeValues: AttributeValues;
+  client?: DynamoDBDocumentClient;
+  tableName?: string;
 }): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ throwE }) => {
     try {
-      await dynamoDbClient.send(
+      const resolvedClient =
+        client ?? (await import("./dynamodb-client")).dynamoDbClient;
+      const resolvedTableName =
+        tableName ?? (await import("@/lib/env.server")).AWS_TABLE_NAME;
+
+      await resolvedClient.send(
         new UpdateCommand({
-          TableName: AWS_TABLE_NAME,
+          TableName: resolvedTableName,
           Key: {
             pk,
             sk,

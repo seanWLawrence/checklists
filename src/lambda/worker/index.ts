@@ -23,6 +23,7 @@ import {
 } from "./job.types";
 import { Either } from "purify-ts/Either";
 import { handler as journalTranscriptionJobHandler } from "./jobs/journal-transcription";
+import { workerDynamoDbClient } from "./aws-clients";
 
 type SqsEvent = {
   Records: Array<{
@@ -52,6 +53,8 @@ const processMessage = <
       getJob({
         username: message.username,
         jobId: message.jobId,
+        client: workerDynamoDbClient,
+        tableName: workerEnv.AWS_TABLE_NAME,
       }),
     );
 
@@ -92,22 +95,27 @@ const processMessage = <
       const markRunningResult = await updateJob({
         username: message.username,
         jobId: message.jobId,
-        job: RunningJob.encode({
+        client: workerDynamoDbClient,
+        tableName: workerEnv.AWS_TABLE_NAME,
+        job: {
           status: "running",
           jobType: message.jobType,
           startedAtIso: now,
           input: currentJob.input,
-        }),
+        } satisfies RunningJob,
       }).run();
 
       if (markRunningResult.isLeft()) {
         const claimError = markRunningResult.extract();
 
         if (isConditionalCheckFailure(claimError)) {
-          logger.info("Skipping message because another worker already claimed it", {
-            message,
-            attemptCount,
-          });
+          logger.info(
+            "Skipping message because another worker already claimed it",
+            {
+              message,
+              attemptCount,
+            },
+          );
           return;
         }
 
@@ -127,10 +135,13 @@ const processMessage = <
       });
     } catch (error) {
       if (isConditionalCheckFailure(error)) {
-        logger.info("Skipping duplicate completion after concurrent worker update", {
-          message,
-          attemptCount,
-        });
+        logger.info(
+          "Skipping duplicate completion after concurrent worker update",
+          {
+            message,
+            attemptCount,
+          },
+        );
         return;
       }
 
@@ -161,23 +172,28 @@ const processMessage = <
       const markFailedResult = await updateJob({
         jobId: message.jobId,
         username: message.username,
-        job: FailedJob.encode({
+        client: workerDynamoDbClient,
+        tableName: workerEnv.AWS_TABLE_NAME,
+        job: {
           status: "failed",
           error: toWorkerErrorMessage(error),
           completedAtIso: new Date(),
           jobType: message.jobType,
           input: currentJob.input,
-        }),
+        } satisfies FailedJob,
       }).run();
 
       if (markFailedResult.isLeft()) {
         const markFailedError = markFailedResult.extract();
 
         if (isConditionalCheckFailure(markFailedError)) {
-          logger.info("Skipping failed transition because job already reached a final state", {
-            message,
-            attemptCount,
-          });
+          logger.info(
+            "Skipping failed transition because job already reached a final state",
+            {
+              message,
+              attemptCount,
+            },
+          );
           return;
         }
 
@@ -197,7 +213,7 @@ const getJobHandler = <TJobInput extends JobInput>(
   }
 };
 
-export const handler = (event: SqsEvent): EitherAsync<unknown, void[]> => {
+const handleEvent = (event: SqsEvent): EitherAsync<unknown, void[]> => {
   return EitherAsync.all(
     event.Records.map((record) =>
       EitherAsync(async ({ liftEither, fromPromise }) => {
@@ -224,4 +240,16 @@ export const handler = (event: SqsEvent): EitherAsync<unknown, void[]> => {
       }),
     ),
   );
+};
+
+export const handler = async (event: SqsEvent): Promise<void[]> => {
+  const result = await handleEvent(event).run();
+
+  if (result.isLeft()) {
+    const error = result.extract();
+
+    throw error instanceof Error ? error : new Error(String(error));
+  }
+
+  return result.extract() as void[];
 };

@@ -1,33 +1,19 @@
-import { FlexibleSchema, generateText, JSONSchema7, Output } from "ai";
+import { generateText, Output } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { logger } from "@/lib/logger";
 import { workerEnv } from "../../env";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { TranscriptionJobOutput } from "../../job.types";
 import { getWorkerSecret } from "../../get-worker-secret";
-import { array, Codec, exactly, GetType, oneOf, string } from "purify-ts/Codec";
-import { Either } from "purify-ts/Either";
 import { TranscribeAudioPayload } from "./transcribe-audio";
+import { z } from "zod";
 
 const TRANSCRIPTION_STRUCTURING_PROMPT_VERSION = 1;
 const TIMEOUT_IN_MILLI = workerEnv.TIMEOUT_IN_MIN * 60 * 1000;
 
 let openAiClient: ReturnType<typeof createOpenAI> | null = null;
 
-const AllowedHeading = oneOf([
-  exactly("Dreams"),
-  exactly("Grateful for"),
-  exactly("Goals"),
-  exactly("Highlights"),
-  exactly("Ideas"),
-  exactly("Things learned"),
-  exactly("Action Items"),
-  exactly("Other"),
-]);
-
-type AllowedHeading = GetType<typeof AllowedHeading>;
-
-const ALLOWED_HEADINGS: AllowedHeading[] = [
+const ALLOWED_HEADINGS = [
   "Dreams",
   "Grateful for",
   "Goals",
@@ -36,19 +22,19 @@ const ALLOWED_HEADINGS: AllowedHeading[] = [
   "Things learned",
   "Action Items",
   "Other",
-];
+] as const;
 
-const TranscriptionSection = Codec.interface({
-  heading: AllowedHeading,
-  bullets: array(string),
+const TranscriptionSectionSchema = z.object({
+  heading: z.enum(ALLOWED_HEADINGS),
+  bullets: z.array(z.string()),
 });
 
-const TranscriptionStructuringResult = Codec.interface({
-  sections: array(TranscriptionSection),
+const TranscriptionStructuringResultSchema = z.object({
+  sections: z.array(TranscriptionSectionSchema),
 });
 
-type TranscriptionStructuringResult = GetType<
-  typeof TranscriptionStructuringResult
+type TranscriptionStructuringResult = z.infer<
+  typeof TranscriptionStructuringResultSchema
 >;
 
 const formatStructuringResult = (
@@ -85,7 +71,7 @@ export const structureTranscription = ({
   transcriptionRaw,
   metadata,
 }: TranscribeAudioPayload): EitherAsync<unknown, TranscriptionJobOutput> => {
-  return EitherAsync(async ({ liftEither, fromPromise }) => {
+  return EitherAsync(async ({ fromPromise }) => {
     logger.debug("Structuring transcription...");
 
     if (openAiClient === null) {
@@ -105,30 +91,10 @@ export const structureTranscription = ({
         "Rules: Use only the allowed headings. Keep as much meaningful detail as possible. Do not over-compress. Keep wording relaxed and natural (not corporate/formal). Preserve uncertainty and qualifiers (like maybe, probably, kind of) when they matter. You may lightly clean obvious transcription mistakes, but do not invent facts. If uncertain where something fits, place it in Other. Return only JSON.\n\nTranscript:\n" +
         transcriptionRaw,
       output: Output.object({
-        schema: {
-          jsonSchema: TranscriptionStructuringResult.schema() as JSONSchema7,
-          validate: (value) => {
-            const validation = TranscriptionStructuringResult.decode(value);
-
-            if (validation.isRight()) {
-              return { success: true, value: validation.extract() };
-            }
-
-            if (validation.isLeft()) {
-              return { success: false, error: new Error(validation.extract()) };
-            }
-
-            return { success: false, error: new Error("Should never happen") };
-          },
-        } as FlexibleSchema<TranscriptionStructuringResult>,
+        schema: TranscriptionStructuringResultSchema,
       }),
     });
-
-    const result = await liftEither(
-      Either.encase(() => JSON.parse(response.text)).chain(
-        TranscriptionStructuringResult.decode,
-      ),
-    );
+    const result = response.output;
 
     return {
       transcriptionRaw,

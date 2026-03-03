@@ -9,6 +9,7 @@ import {
 } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
 import { Metadata } from "@/lib/types";
+import { TranscriptionMetadata } from "@/lambda/worker/job.types";
 
 /**
  * YYYY-MM-DD
@@ -227,6 +228,7 @@ export const JournalAsset = Codec.interface({
   caption: string,
   filename: string,
   variant: JournalAssetVariant,
+  transcriptionMetadata: optional(TranscriptionMetadata),
 });
 
 export type JournalAsset = GetType<typeof JournalAsset>;
