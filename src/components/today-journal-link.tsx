@@ -32,7 +32,6 @@ export const TodayJournalLink: React.FC = () => {
     const todayLocal = CreatedAtLocal.decode(new Date());
 
     if (todayLocal.isLeft()) {
-      setLinkState(DEFAULT_STATE);
       return;
     }
 

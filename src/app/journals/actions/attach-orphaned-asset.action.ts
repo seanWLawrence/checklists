@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { Either, Left, Right } from "purify-ts/Either";
+import { Left, Right } from "purify-ts/Either";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";

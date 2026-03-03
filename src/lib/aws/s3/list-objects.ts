@@ -7,7 +7,7 @@ import { AWS_BUCKET_NAME } from "@/lib/env.server";
 import { logger } from "@/lib/logger";
 import { s3Client } from "./s3-client";
 
-export type S3ObjectSummary = {
+type S3ObjectSummary = {
   key: string;
   lastModified: Date | null;
 };
@@ -28,8 +28,9 @@ export const listObjects = (): EitherAsync<unknown, S3ObjectSummary[]> => {
 
         objects.push(
           ...(response.Contents ?? [])
-            .filter((item): item is { Key: string; LastModified?: Date } =>
-              typeof item.Key === "string",
+            .filter(
+              (item): item is { Key: string; LastModified?: Date } =>
+                typeof item.Key === "string",
             )
             .map((item) => ({
               key: item.Key,
