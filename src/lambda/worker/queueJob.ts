@@ -91,22 +91,25 @@ export const queueJob = <T extends JobInput>({
       const markFailedResult = await updateJob({
         username,
         jobId,
-        job: EnqueueFailedJob.encode({
+        job: {
           jobType,
           status: "enqueueFailed",
           ttlEpochSeconds,
           input,
           error: String(enqueueError),
           completedAtIso: new Date(),
-        }),
+        } satisfies EnqueueFailedJob,
       }).run();
 
       if (markFailedResult.isLeft()) {
-        logger.error("Failed to mark job as enqueueFailed after SQS send error", {
-          error: String(markFailedResult.extract()),
-          jobId,
-          username,
-        });
+        logger.error(
+          "Failed to mark job as enqueueFailed after SQS send error",
+          {
+            error: String(markFailedResult.extract()),
+            jobId,
+            username,
+          },
+        );
       }
 
       return throwE(enqueueError);

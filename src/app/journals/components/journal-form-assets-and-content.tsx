@@ -13,29 +13,22 @@ interface AssetItem extends JournalAsset {
 
 export const JournalFormAssetsAndContent: React.FC<{
   initialContent: string;
-  initialWrittenContent?: string;
   initialTranscriptionRaw?: string;
   initialAssets: AssetItem[];
   contentName?: string;
-  writtenContentName?: string;
   transcriptionRawName?: string;
   assetsName?: string;
   contentPlaceholder?: string;
 }> = ({
   initialContent,
-  initialWrittenContent,
   initialTranscriptionRaw = "",
   initialAssets,
   contentName = "content",
-  writtenContentName = "writtenContent",
   transcriptionRawName = "transcriptionRaw",
   assetsName = "assets",
   contentPlaceholder,
 }) => {
   const [content, setContent] = useState(initialContent);
-  const [writtenContent, setWrittenContent] = useState(
-    initialWrittenContent ?? initialContent,
-  );
   const [transcriptionRaw, setTranscriptionRaw] = useState(
     initialTranscriptionRaw,
   );
@@ -68,7 +61,6 @@ export const JournalFormAssetsAndContent: React.FC<{
   };
 
   const contentValue = useMemo(() => content, [content]);
-  const writtenContentValue = useMemo(() => writtenContent, [writtenContent]);
 
   return (
     <>
@@ -77,21 +69,12 @@ export const JournalFormAssetsAndContent: React.FC<{
           <textarea
             name={contentName}
             value={contentValue}
-            onChange={(event) => {
-              setContent(event.target.value);
-              setWrittenContent(event.target.value);
-            }}
+            onChange={(event) => setContent(event.target.value)}
             placeholder={contentPlaceholder}
             className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             rows={20}
           />
         </Label>
-        <input
-          type="hidden"
-          name={writtenContentName}
-          value={writtenContentValue}
-          readOnly
-        />
         <input
           type="hidden"
           name={transcriptionRawName}

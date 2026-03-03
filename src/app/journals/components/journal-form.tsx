@@ -143,7 +143,6 @@ export const JournalForm: React.FC<{
 
           <JournalFormAssetsAndContent
             initialContent={journal?.content ?? ""}
-            initialWrittenContent={journal?.writtenContent ?? journal?.content ?? ""}
             initialTranscriptionRaw={journal?.transcriptionRaw ?? ""}
             contentPlaceholder={DEFAULT_TEMPLATE}
             initialAssets={sortedAssets}

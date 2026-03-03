@@ -43,9 +43,7 @@ export const transcribeAudio = ({
     }
 
     const transcriptResponse = await transcribe({
-      model: openAiClient.transcription(
-        workerEnv.OPENAI_AUDIO_TRANSCRIPTION_MODEL,
-      ),
+      model: openAiClient.transcription(workerEnv.OPENAI_TRANSCRIPTION_MODEL),
       audio: new Uint8Array(await audio.arrayBuffer()),
       abortSignal: AbortSignal.timeout(TIMEOUT_IN_MILLI),
       providerOptions: {
@@ -65,7 +63,7 @@ export const transcribeAudio = ({
     return {
       transcriptionRaw,
       metadata: {
-        transcriptionModel: workerEnv.OPENAI_AUDIO_TRANSCRIPTION_MODEL,
+        transcriptionModel: workerEnv.OPENAI_TRANSCRIPTION_MODEL,
         transcriptionPromptVersion: TRANSCRIPTION_PROMPT_VERSION,
       },
     };

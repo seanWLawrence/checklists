@@ -15,8 +15,8 @@ import * as customResources from "aws-cdk-lib/custom-resources";
 import * as cdk from "aws-cdk-lib";
 import path from "node:path";
 import {
-  OPENAI_AUDIO_TRANSCRIPTION_MODEL,
-  OPENAI_JOURNAL_STRUCTURING_MODEL,
+  OPENAI_TRANSCRIPTION_MODEL,
+  OPENAI_TRANSCRIPTION_STRUCTURING_MODEL,
 } from "./env";
 
 const TIMEOUT_IN_MIN = 10;
@@ -117,6 +117,10 @@ export class WorkerConstruct extends Construct {
       },
     );
 
+    const workerLogGroup = new logs.LogGroup(this, "worker-log-group", {
+      retention: logs.RetentionDays.ONE_WEEK,
+    });
+
     this.worker = new lambdaNodejs.NodejsFunction(this, "worker", {
       runtime: lambda.Runtime.NODEJS_24_X,
       architecture: lambda.Architecture.ARM_64,
@@ -124,7 +128,7 @@ export class WorkerConstruct extends Construct {
       handler: "handler",
       timeout: cdk.Duration.minutes(TIMEOUT_IN_MIN),
       memorySize: 1024,
-      logRetention: logs.RetentionDays.ONE_WEEK,
+      logGroup: workerLogGroup,
       depsLockFilePath: path.join(__dirname, "../../package-lock.json"),
       projectRoot: path.join(__dirname, "../.."),
       bundling: {
@@ -140,9 +144,9 @@ export class WorkerConstruct extends Construct {
         TIMEOUT_IN_MIN: String(TIMEOUT_IN_MIN),
 
         // Transcription job
-        OPENAI_AUDIO_TRANSCRIPTION_MODEL,
+        OPENAI_TRANSCRIPTION_MODEL,
         OPENAI_TRANSCRIPTION_STRUCTURING_MODEL:
-          OPENAI_JOURNAL_STRUCTURING_MODEL,
+          OPENAI_TRANSCRIPTION_STRUCTURING_MODEL,
       },
     });
 

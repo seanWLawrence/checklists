@@ -1,3 +1,4 @@
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { updateItem } from "@/lib/aws/dynamodb/update-item";
 import {
   EnqueueFailedJob,
@@ -19,10 +20,14 @@ export const updateJob = ({
   username,
   jobId,
   job,
+  client,
+  tableName,
 }: {
   username: string;
   jobId: string;
   job: EnqueueFailedJob | QueuedJob | RunningJob | SucceededJob | FailedJob;
+  client?: DynamoDBDocumentClient;
+  tableName?: string;
 }): EitherAsync<unknown, void> => {
   return EitherAsync(async ({ fromPromise, throwE }) => {
     if (isQueuedJob(job)) {
@@ -49,6 +54,8 @@ export const updateJob = ({
             ":failed": "failed",
             ":enqueueFailed": "enqueueFailed",
           },
+          client,
+          tableName,
           updateExpression:
             "SET #status = :status, #jobType = :jobType, #ttlEpochSeconds = :ttlEpochSeconds, #input = :input REMOVE #error, #completedAtIso, #startedAtIso, #output",
         }),
@@ -80,6 +87,8 @@ export const updateJob = ({
             ":completedAtIso": job.completedAtIso.toISOString(),
             ":queued": "queued",
           },
+          client,
+          tableName,
           updateExpression:
             "SET #status = :status, #jobType = :jobType, #ttlEpochSeconds = :ttlEpochSeconds, #input = :input, #completedAtIso = :completedAtIso, #error = :error REMOVE #startedAtIso, #output",
         }),
@@ -101,6 +110,8 @@ export const updateJob = ({
             ":startedAtIso": job.startedAtIso.toISOString(),
             ":queued": "queued",
           },
+          client,
+          tableName,
           updateExpression:
             "SET #status = :status, #startedAtIso = :startedAtIso",
         }),
@@ -124,6 +135,8 @@ export const updateJob = ({
             ":completedAtIso": job.completedAtIso.toISOString(),
             ":running": "running",
           },
+          client,
+          tableName,
           updateExpression:
             "SET #status = :status, #completedAtIso = :completedAtIso, #error = :error",
         }),
@@ -147,6 +160,8 @@ export const updateJob = ({
             ":output": job.output,
             ":running": "running",
           },
+          client,
+          tableName,
           updateExpression:
             "SET #status = :status, #completedAtIso = :completedAtIso, #output = :output",
         }),

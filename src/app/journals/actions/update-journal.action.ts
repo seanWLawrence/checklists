@@ -7,7 +7,12 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { Journal, CreatedAtLocal, Level, JournalAsset } from "../journal.types";
+import {
+  Journal,
+  CreatedAtLocal,
+  Level,
+  JournalAsset,
+} from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { updateItem } from "@/lib/db/update-item";
 import { deleteAllItems } from "@/lib/db/delete-all-items";
@@ -46,9 +51,6 @@ export const updateJournalAction = async (
 
     const content = await liftEither(
       getStringFromFormData({ name: "content", formData }),
-    );
-    const writtenContent = await liftEither(
-      getStringFromFormData({ name: "writtenContent", formData }),
     );
     const transcriptionRaw = await liftEither(
       getStringFromFormData({ name: "transcriptionRaw", formData }),
@@ -122,7 +124,6 @@ export const updateJournalAction = async (
           user,
           createdAtLocal,
           content,
-          writtenContent,
           transcriptionRaw,
           energyLevel,
           moodLevel,
@@ -177,7 +178,6 @@ export const updateJournalAction = async (
         user,
         createdAtLocal,
         content,
-        writtenContent,
         transcriptionRaw,
         energyLevel,
         moodLevel,

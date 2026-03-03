@@ -16,11 +16,11 @@ export const BASE_URL = getRequired("BASE_URL");
 
 // Third-party services
 export const OPENAI_API_KEY = getRequired("OPENAI_API_KEY");
-export const OPENAI_AUDIO_TRANSCRIPTION_MODEL = getRequired(
-  "OPENAI_AUDIO_TRANSCRIPTION_MODEL",
+export const OPENAI_TRANSCRIPTION_MODEL = getRequired(
+  "OPENAI_TRANSCRIPTION_MODEL",
 );
-export const OPENAI_JOURNAL_STRUCTURING_MODEL = getRequired(
-  "OPENAI_JOURNAL_STRUCTURING_MODEL",
+export const OPENAI_TRANSCRIPTION_STRUCTURING_MODEL = getRequired(
+  "OPENAI_TRANSCRIPTION_STRUCTURING_MODEL",
 );
 
 // AWS
