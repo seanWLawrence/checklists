@@ -46,7 +46,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: checklists-infra-prod
 
       - name: Install infra dependencies
@@ -60,13 +60,13 @@ jobs:
 
       - name: Set environment values for CDK
         run: |
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_ENV"
-          echo "BASE_URL=${{ vars.BASE_URL }}" >> "$GITHUB_ENV"
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> "$GITHUB_ENV"
           echo "OPENAI_TRANSCRIPTION_MODEL=${{ vars.OPENAI_TRANSCRIPTION_MODEL }}" >> "$GITHUB_ENV"
           echo "OPENAI_TRANSCRIPTION_STRUCTURING_MODEL=${{ vars.OPENAI_TRANSCRIPTION_STRUCTURING_MODEL }}" >> "$GITHUB_ENV"
-          echo "AWS_ALARM_EMAIL=${{ vars.AWS_ALARM_EMAIL }}" >> "$GITHUB_ENV"
           echo "AWS_JOURNAL_VECTOR_DIMENSION=${{ vars.AWS_JOURNAL_VECTOR_DIMENSION }}" >> "$GITHUB_ENV"
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> "$GITHUB_ENV"
+          echo "BASE_URL=${{ secrets.BASE_URL }}" >> "$GITHUB_ENV"
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> "$GITHUB_ENV"
+          echo "AWS_ALARM_EMAIL=${{ secrets.AWS_ALARM_EMAIL }}" >> "$GITHUB_ENV"
 
       - name: CDK diff
         if: ${{ github.event_name == 'push' || inputs.action == 'diff' || inputs.action == 'deploy' }}
