@@ -49,6 +49,9 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: checklists-infra-prod
 
+      - name: Install esbuild for CDK bundling
+        run: npm install --no-save esbuild@0.27.3
+
       - name: Install infra dependencies
         run: npm ci
         working-directory: infra
