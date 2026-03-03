@@ -4,87 +4,117 @@ This folder deploys:
 
 - S3 assets bucket + CORS policy
 - S3 Vectors bucket + index
-- Shared DynamoDB table (currently used for jobs)
-- SQS queue + DLQ + Lambda worker
-- CloudWatch alarms + shared SNS alarm topic (email)
+- Shared DynamoDB table
+- SQS jobs queue + DLQ
+- Lambda worker for journal transcription
+- CloudWatch alarms + SNS alarm topic
 - IAM user/role/policy for app AWS access
-- AWS Secrets Manager secret containing app runtime AWS values
+- AWS Secrets Manager app secret used by the Next.js app and worker
 
-## Required environment variables
+## Local CDK env
 
-CDK reads these from `infra/.env` (or shell env vars).
+CDK reads from `infra/.env` (or shell env vars). Use [infra/.env.example](/Users/sean/workplace/checklists/infra/.env.example) as the template.
 
-- `AWS_ACCOUNT`
-  - Target AWS account ID
-- `AWS_REGION`
-  - Target region (must support S3 Vectors)
-- `AWS_ALARM_EMAIL`
-  - Email address subscribed to the shared SNS alarm topic
-  - You must confirm the SNS subscription email after deploy
-- `AWS_JOURNAL_VECTOR_DIMENSION`
-  - Vector dimension for the index (for current embeddings: `1024`)
+Required:
+
 - `BASE_URL`
-  - Host used in S3 CORS allowlist
-  - Use host only (example: `app.example.com`, no `https://`)
+  - Production app hostname only, no protocol.
+  - Used for S3 CORS allowlist.
 - `OPENAI_API_KEY`
-  - Stored into the generated app secret
-  - Used by the worker (via runtime Secrets Manager fetch)
+  - Stored in the generated AWS app secret.
+- `OPENAI_TRANSCRIPTION_MODEL`
+  - Passed to the worker Lambda environment.
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+  - Passed to the worker Lambda environment.
+- `AWS_ACCOUNT`
+  - Target AWS account ID.
+- `AWS_REGION`
+  - Target AWS region.
+- `AWS_ALARM_EMAIL`
+  - Email subscribed to the shared SNS alarm topic.
+  - You must confirm the SNS subscription email after deploy.
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+  - Must match the app embedding dimension (currently `1024`).
 
-Use `infra/.env.example` as the template.
+## Deploying from your machine
 
-## Local setup
+1. Copy the template: `cp infra/.env.example infra/.env`
+2. Fill in the production values.
+3. Install infra dependencies: `cd infra && npm ci`
+4. Bootstrap the target account/region once: `npx cdk bootstrap`
+5. Deploy: `npm run deploy`
 
-1. Copy env template:
-   - `cp infra/.env.example infra/.env`
-2. Update values for your target account/environment.
-3. Install dependencies:
-   - `cd infra && npm ci`
+## Production GitHub Actions env
 
-## Deploy
+The production CDK workflow is [infra-cdk.yml](/Users/sean/workplace/checklists/.github/workflows/infra-cdk.yml).
 
-Run from `infra/`:
+Configure the `production` GitHub environment with:
 
-```bash
-npx cdk bootstrap
-npm run deploy
-```
+GitHub `secrets`:
 
-## External setup (outside this repo)
+- `AWS_ROLE_TO_ASSUME_PROD`
+  - IAM role ARN used by GitHub OIDC to deploy CDK in prod.
+- `OPENAI_API_KEY`
+  - Copied into the generated AWS app secret.
 
-1. AWS accounts:
-   - Create separate `dev` and `prod` AWS accounts (recommended).
-2. AWS credentials on your machine:
-   - Configure CLI credentials/profiles with deploy permissions for each account.
-3. CDK bootstrap:
-   - Bootstrap each target account/region before first deploy.
-4. Region support:
-   - Ensure your chosen `AWS_REGION` supports S3 Vectors.
-5. GitHub Actions (prod deploy):
-   - Create OIDC provider and deploy role in prod account.
-   - Configure GitHub environment/variables/secrets (see `docs/infra-ci-setup.md`).
-6. Vercel runtime env vars:
-   - After deploy, pull values from the generated AWS secret and set them in Vercel.
-   - Use root script: `./scripts/pull-aws-secrets.sh`
+GitHub `vars`:
 
-## Outputs / secret handoff
+- `BASE_URL`
+  - Production app hostname only, no protocol.
+- `AWS_REGION`
+- `AWS_ALARM_EMAIL`
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+- `OPENAI_TRANSCRIPTION_MODEL`
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
 
-This stack creates an AWS Secrets Manager secret with app runtime values such as:
+The workflow resolves `AWS_ACCOUNT` dynamically from STS, so you do not need to store `AWS_ACCOUNT` in GitHub.
+
+## Runtime secret handoff after deploy
+
+This stack creates an AWS Secrets Manager secret containing app runtime values such as:
 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_ROLE_ARN`
 - `AWS_BUCKET_NAME`
-- `OPENAI_API_KEY`
 - `AWS_JOURNAL_VECTOR_BUCKET_NAME`
 - `AWS_JOURNAL_VECTOR_INDEX_NAME`
 - `AWS_JOURNAL_VECTOR_DIMENSION`
 - `AWS_TABLE_NAME`
-- `AWS_JOBS_QUEUE_URL` (written by a custom resource after queue creation)
+- `AWS_JOBS_QUEUE_URL`
+- `OPENAI_API_KEY`
 
-Those values are consumed by the app runtime (local `.env.local` and Vercel env vars).
+Those values are consumed by:
+
+- the Next.js app runtime (`.env.local` locally, Vercel env vars in prod)
+- the Lambda worker indirectly, via `AWS_APP_SECRET_NAME` so it can read `OPENAI_API_KEY`
+
+After deploy:
+
+1. Pull the generated secret values with `./scripts/pull-aws-secrets.sh`
+2. Put the app runtime values into Vercel Production env vars
+3. Redeploy Vercel after env var updates if needed
+
+## Worker Lambda runtime env
+
+The worker Lambda environment itself is set by CDK. You do not set these in Vercel.
+
+Required on the deployed function:
+
+- `AWS_REGION`
+- `AWS_BUCKET_NAME`
+- `AWS_TABLE_NAME`
+- `AWS_APP_SECRET_NAME`
+- `OPENAI_TRANSCRIPTION_MODEL`
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+
+Optional on the deployed function:
+
+- `MAX_RECEIVE_ATTEMPTS`
+- `TIMEOUT_IN_MIN`
 
 ## Notes
 
-- Re-deploying updates resources and may rotate values stored in the generated secret.
-- Keep `AWS_JOURNAL_VECTOR_DIMENSION` aligned between infra and app runtime.
-- Confirm the SNS email subscription before expecting alarm notifications.
+- Keep `AWS_JOURNAL_VECTOR_DIMENSION` aligned across infra and app runtime.
+- `OPENAI_TRANSCRIPTION_MODEL` should use a real model id such as `whisper-1`.
+- Re-deploying can rotate secret values stored in Secrets Manager.

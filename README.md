@@ -1,228 +1,187 @@
-# Checklists and journals
+# Checklists and Journals
 
-This is a personal application I wrote for things I use frequently.
+Personal app for recurring checklists and journaling.
 
-## User guide
+## Guides
 
-- Quickstart (non-technical): `docs/quickstart.md`
-- High-level feature guide: `docs/user-guide.md`
+- Quickstart: `docs/quickstart.md`
+- User guide: `docs/user-guide.md`
 - Public API guide: `docs/public-api.md`
 - Public API OpenAPI spec: `docs/public-api.openapi.yaml`
-- Hosted Public API docs: `/api/public/v1/docs`
-- Hosted Public API OpenAPI spec: `/api/public/v1/openapi.yaml`
+- Infra / CDK setup: `infra/README.md`
+- GitHub Actions infra deploy setup: `docs/infra-ci-setup.md`
 
-## Checklists
+## Tech
 
-These are lists that you can use as a TODO of sorts. But they shine when you
-use them for things you do regularly, like making a list of things that you
-pack for travel. You can just reset the list and complete things the next time
-you travel without having to create a new list.
+- Next.js / React
+- Vercel
+- AWS (S3, DynamoDB, SQS, Lambda, Secrets Manager)
+- Upstash / Vercel KV
+- Purify.ts
+- Docker (for local Redis fallback)
 
-It also has some handy things like a note field and time estimate that counts
-for you. For example:
+## Local development
 
-- Do this, 15m
-- Do that, 15m
-- Do this other thing, 2h
-- Do that other thing, 1h
-
-Total 3.5h
-
-There are also some actions like hiding completed, clearing items, clearing
-completed items, duplicating, etc. that make it useful for everyday usage.
-
-Oh and you can do everything with your keyboard easily. Hitting enter when
-focused on a checklist item input creates a new item and focuses to it. And
-everything else is standard keyboard accessibility like Tab, etc.
-
-## Journals
-
-I journal a lot of my phone and wanted to have bullet points without typing `-
-` or `* `, so each new line makes a new bullet point. There are also some
-number sliders to rate how well you each day for different things, like "mood
-level", "energy level", "relationships", etc. I may graph this data over time
-to see how well I do over time, we'll see!
-
-## Prerequisites
+Prerequisites:
 
 - Node.js
 - Docker
 
-## Getting started
+Setup:
 
-> This section is a work in progress
+1. Install dependencies: `npm install`
+2. Copy the app env template: `cp .env.example .env.local`
+3. Fill in the required local runtime values in `.env.local`
+4. Start local Redis fallback: `docker compose up`
+5. Start the app: `npm run dev`
 
-- Clone the repo
-- Install your dependencies with `npm install`
-- Create a Vercel project and free Vercel KV store
-- Pull your Vercel config using the Vercel CLI
-- Add an environment variable called `AUTH_SECRET` in your
-  `.env.development.local` file. This will be your password for logging in.
-  You'll also add this environment variable in the Vercel console. I recommend
-  using a different one for local development vs production.
+For infra deployment from your machine, also:
 
-### Running the local dev server
+1. Copy `infra/.env.example` to `infra/.env`
+2. Fill in the CDK deploy values
+3. Run `cd infra && npm ci`
 
-- In a terminal, start the dev server with `npm run dev`
-- In another terminal, start the local Redis server with `docker compose up`
-- Login with any username, and the value you set for `AUTH_SECRET` as your
-  password. All checklists and journals will be stored under this username.
+## App runtime env (`.env.local` locally, Vercel env in prod)
 
-### Deploying
+Use [/.env.example](/Users/sean/workplace/checklists/.env.example) as the template.
 
-- Connect your cloned repo to Vercel for auto-deployment and it'll auto deploy
-  when you push to the repo
-- Infrastructure (CDK) deploy setup lives in `docs/infra-ci-setup.md`
-- Pulling AWS app secrets:
-  - `scripts/pull-aws-secrets.sh` now supports both accounts:
-    - Pulls `dev` secret values into `.env.local`
-    - Prints `prod` secret values as `KEY=VALUE` lines for Vercel paste
-  - Configure either shell env vars or `.env.local` values:
-    - Optional profiles: `AWS_PROFILE_DEV`, `AWS_PROFILE_PROD`
-  - Run:
-    - `./scripts/pull-aws-secrets.sh`
-
-## Vercel environment variables
-
-Set these in your Vercel project for Production (and Preview if you want those
-deployments to fully work with AWS + embeddings too).
-
-### Centralized in `src/lib/env.*`
-
-### Required
+Required:
 
 - `AUTH_SECRET`
-  - Password/JWT signing secret used by auth flows.
-- `VERCEL_PROJECT_PRODUCTION_URL`
-  - Your production host name (for example `app.example.com`, no protocol).
+  - Password/JWT signing secret.
 - `AWS_REGION`
-  - AWS region for S3/S3 Vectors clients (example: `us-east-1`).
-- `AWS_ACCESS_KEY_ID`
-  - Access key used as master credentials for role assumption.
-- `AWS_SECRET_ACCESS_KEY`
-  - Secret for the above access key.
 - `AWS_ROLE_ARN`
-  - Role ARN the app assumes for AWS operations.
+  - App IAM role ARN assumed by the Next.js runtime.
+- `AWS_ACCESS_KEY_ID`
+  - Base IAM user access key used to assume `AWS_ROLE_ARN`.
+- `AWS_SECRET_ACCESS_KEY`
+  - Base IAM user secret used to assume `AWS_ROLE_ARN`.
 - `AWS_BUCKET_NAME`
-  - S3 bucket name used for journal/checklist asset uploads.
-- `AWS_TABLE_NAME`
-  - Shared DynamoDB table name used by app workflows (including transcription jobs).
-- `AWS_TRANSCRIPTION_JOBS_QUEUE_URL`
-  - SQS queue URL used by the app to enqueue transcription jobs.
 - `AWS_JOURNAL_VECTOR_BUCKET_NAME`
-  - S3 Vector bucket name for journal embeddings.
 - `AWS_JOURNAL_VECTOR_INDEX_NAME`
-  - S3 Vector index name used for query/upsert/delete.
 - `AWS_JOURNAL_VECTOR_DIMENSION`
-  - Embedding dimension (must match your index, example: `1024`).
+- `AWS_TABLE_NAME`
+- `AWS_JOBS_QUEUE_URL`
+  - Queue URL used by the app to enqueue transcription jobs.
+- `OPENAI_API_KEY`
+  - Required for app-side OpenAI usage (journal analysis / embeddings).
 
-### Optional (centralized in `src/lib/env.*`)
+Production-required in Vercel:
+
+- `VERCEL_PROJECT_PRODUCTION_URL`
+  - Hostname only, no protocol.
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+
+Optional:
 
 - `NODE_ENV`
-  - Defaults to `development` locally. Vercel sets this automatically.
-- `ADMIN_USERNAMES`
-  - Comma-separated usernames allowed to access `/journals/vectors` and run
-    embedding backfill (example: `sean,alice`).
-- `JOURNAL_VECTOR_TOP_K`
-  - Candidate count before post-filtering (default `40`).
-- `JOURNAL_VECTOR_MAX_DISTANCE`
-  - Distance cutoff for semantic matches (default `0.9`).
-- `MIN_JOURNAL_ANALYSIS_CHARS`
-  - Minimum content length before running AI analysis (default `40`).
 - `LOG_LEVEL`
-  - Logger level (default `info`).
+- `ADMIN_USERNAMES`
+- `JOURNAL_VECTOR_TOP_K`
+- `JOURNAL_VECTOR_MAX_DISTANCE`
+- `MIN_JOURNAL_ANALYSIS_CHARS`
 - `OPENAI_JOURNAL_ANALYSIS_MODEL`
-  - Journal AI analysis model (default `gpt-4o-mini`).
 - `VERCEL_GIT_COMMIT_SHA`
-  - Optional build metadata injected by Vercel.
 - `NEXT_PUBLIC_THEME_OVERRIDE`
-  - Optional client theme override (`light`, `dark`, or `system`).
+  - `light`, `dark`, or `system`
 
-### Additional required runtime secrets / integrations (not in `src/lib/env.*`)
+## Worker Lambda runtime env (managed by AWS CDK)
 
-- `OPENAI_API_KEY`
-  - Required for journal embeddings and audio transcription (and lambda transcription worker secret loading).
+These are not Vercel env vars. They are set on the deployed Lambda by the CDK stack.
 
-### Lambda transcription worker runtime env (deployed function)
-
-These are consumed by the transcription worker runtime
-(`src/lambda/transcription-worker/index.ts` and `src/lambda/transcription-worker/env.ts`).
-
-### Required
+Required:
 
 - `AWS_REGION`
 - `AWS_BUCKET_NAME`
 - `AWS_TABLE_NAME`
 - `AWS_APP_SECRET_NAME`
-  - Secrets Manager secret name containing app secret JSON. The worker currently
-    reads `OPENAI_API_KEY` from this secret.
-- `OPENAI_AUDIO_TRANSCRIPTION_MODEL`
-  - Speech-to-text model used by the worker.
-- `OPENAI_JOURNAL_STRUCTURING_MODEL`
-  - Structuring model used by the worker.
+  - Secrets Manager secret name the worker reads to get `OPENAI_API_KEY`.
+- `OPENAI_TRANSCRIPTION_MODEL`
+  - Use a real model id such as `whisper-1`.
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
 
-### Optional
+Optional:
 
-- `LOG_LEVEL`
-- `NODE_ENV`
+- `MAX_RECEIVE_ATTEMPTS`
+- `TIMEOUT_IN_MIN`
 
-### Required via Vercel KV integration
+## Infra CDK env (`infra/.env` locally, GitHub Actions env in prod)
 
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
+Use [infra/.env.example](/Users/sean/workplace/checklists/infra/.env.example) as the template.
 
-If you connect Vercel KV through the Vercel integration, these are usually
-added automatically.
-
-## Infra CDK environment variables / secrets
-
-These are used by `infra/lib/env.ts` during CDK synth/deploy (including
-`.github/workflows/infra-cdk.yml`).
-
-### Required
+Required:
 
 - `BASE_URL`
-  - Production host name (no protocol), used for infra config like bucket CORS.
+  - Production hostname only, no protocol.
 - `OPENAI_API_KEY`
-  - Included in the app secret payload provisioned for runtime consumers (for
-    example the transcription worker).
-- `OPENAI_AUDIO_TRANSCRIPTION_MODEL`
-  - Passed through to the transcription worker Lambda environment.
-- `OPENAI_JOURNAL_STRUCTURING_MODEL`
-  - Passed through to the transcription worker Lambda environment.
+- `OPENAI_TRANSCRIPTION_MODEL`
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
 - `AWS_ACCOUNT`
 - `AWS_REGION`
 - `AWS_ALARM_EMAIL`
 - `AWS_JOURNAL_VECTOR_DIMENSION`
 
-### GitHub Actions (`.github/workflows/infra-cdk.yml`)
+## Production deployment checklist
 
-The workflow should provide the above via repo/org `vars` and `secrets`
-(currently using `vars.AWS_REGION_PROD`, `vars.AWS_JOURNAL_VECTOR_DIMENSION`,
-and production secrets for host/API key values).
+### 1. AWS / CDK
 
-## Technology
+Deploy the infra stack first. See [infra/README.md](/Users/sean/workplace/checklists/infra/README.md).
 
-- Next.js/React
-- Vercel
-- Tailwind
-- Redis
-- Purify.ts
-- Docker (for local Redis server)
+### 2. GitHub Actions production env
 
-## Tenets
+For `.github/workflows/infra-cdk.yml`, configure the `production` GitHub environment.
 
-- Typesafe: Makes it much easier to code in
-- Private: I didn't want to share my inner most journal entries and thoughts on
-  a public app that any engineer could read if they wanted to
-- Access to my data: In the same vein as privacy, I want to be able to download
-  all of my data anytime I want
-- Functional style: It makes things easy with Monads to handle runtime
-  validation and chaining async operations with nice error handling.
-- Simple architecture: Vercel and Redis. No infrastructure as code needed for
-  an app this simple.
-- Minimalistic UI: Nothing fancy, just easy to use and works great on mobile.
+GitHub `secrets`:
 
-## License
+- `AWS_ROLE_TO_ASSUME_PROD`
+- `OPENAI_API_KEY`
 
-MIT
+GitHub `vars`:
+
+- `BASE_URL`
+- `AWS_REGION`
+- `AWS_ALARM_EMAIL`
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+- `OPENAI_TRANSCRIPTION_MODEL`
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+
+### 3. Vercel production env
+
+After infra deploy, pull the generated AWS app secret values:
+
+- `./scripts/pull-aws-secrets.sh`
+
+Set the resulting runtime values in Vercel Production:
+
+- `AUTH_SECRET`
+- `VERCEL_PROJECT_PRODUCTION_URL`
+- `AWS_REGION`
+- `AWS_ROLE_ARN`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_BUCKET_NAME`
+- `AWS_JOURNAL_VECTOR_BUCKET_NAME`
+- `AWS_JOURNAL_VECTOR_INDEX_NAME`
+- `AWS_JOURNAL_VECTOR_DIMENSION`
+- `AWS_TABLE_NAME`
+- `AWS_JOBS_QUEUE_URL`
+- `OPENAI_API_KEY`
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+
+Optional but recommended in Vercel:
+
+- `LOG_LEVEL=info`
+- `OPENAI_JOURNAL_ANALYSIS_MODEL=gpt-4o-mini`
+- `ADMIN_USERNAMES=<comma-separated admins>`
+
+### 4. Redeploy
+
+After Vercel env vars are set, redeploy the app so all runtime env changes take effect.
+
+## Notes
+
+- Local development uses the Docker Redis fallback instead of Vercel KV.
+- The app runtime and the worker runtime are separate env surfaces. Do not put Lambda-only vars into Vercel unless you intentionally need them there.
+- The app runtime key is `AWS_JOBS_QUEUE_URL`, not `AWS_TRANSCRIPTION_JOBS_QUEUE_URL`.

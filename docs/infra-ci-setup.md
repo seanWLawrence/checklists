@@ -18,12 +18,16 @@ Enable required reviewers on `production` to gate deploys.
 Add GitHub secret:
 
 - `AWS_ROLE_TO_ASSUME_PROD` = IAM role ARN in prod account
-- `VERCEL_PROJECT_PRODUCTION_URL` = your production hostname (for example `app.seanwlawrence.com`; full URL also works)
+- `OPENAI_API_KEY` = OpenAI API key copied into the generated AWS app secret
 
 Add GitHub variables:
 
-- `AWS_REGION_PROD` (example: `us-east-1`)
+- `BASE_URL` (example: `app.seanwlawrence.com`, hostname only, no protocol)
+- `AWS_REGION` (example: `us-east-1`)
+- `AWS_ALARM_EMAIL` (example: `alerts@example.com`)
 - `AWS_JOURNAL_VECTOR_DIMENSION` (example: `1024`)
+- `OPENAI_TRANSCRIPTION_MODEL` (example: `whisper-1`)
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL` (example: `gpt-4o-mini`)
 
 ## 2) AWS setup for GitHub OIDC deploy role (prod account)
 
@@ -120,11 +124,14 @@ Manual:
 
 The workflow always sets:
 
-- `NODE_ENV=production`
-- `AWS_REGION` from `AWS_REGION_PROD`
+- `BASE_URL` from GitHub `BASE_URL`
+- `AWS_REGION` from GitHub `AWS_REGION`
 - `AWS_ACCOUNT` from AWS caller identity
 - `AWS_JOURNAL_VECTOR_DIMENSION` from `AWS_JOURNAL_VECTOR_DIMENSION`
-- `VERCEL_PROJECT_PRODUCTION_URL` from GitHub secret
+- `AWS_ALARM_EMAIL` from `AWS_ALARM_EMAIL`
+- `OPENAI_API_KEY` from GitHub secret
+- `OPENAI_TRANSCRIPTION_MODEL` from `OPENAI_TRANSCRIPTION_MODEL`
+- `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL` from `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
 
 ## 5) Completion checklist
 
