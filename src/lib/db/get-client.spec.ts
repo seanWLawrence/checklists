@@ -1,16 +1,21 @@
 import { beforeEach, test, vi } from "vitest";
-import { __clearClientCache_forTestingOnly, getClient } from "./get-client";
 
 const value = "value";
 
 beforeEach(() => {
-  __clearClientCache_forTestingOnly();
+  vi.resetModules();
 });
 
 test("caches prod client on subsequent requests", async ({ expect }) => {
   const getProdClientFn = vi.fn().mockReturnValue(value);
 
   vi.stubEnv("NODE_ENV", "production");
+
+  const { __clearClientCache_forTestingOnly, getClient } = await import(
+    "./get-client"
+  );
+
+  __clearClientCache_forTestingOnly();
 
   getClient({
     getProdClientFn,
@@ -29,6 +34,12 @@ test("caches dev client on subsequent requests", async ({ expect }) => {
   const getDevClientFn = vi.fn().mockReturnValue(value);
 
   vi.stubEnv("NODE_ENV", "development");
+
+  const { __clearClientCache_forTestingOnly, getClient } = await import(
+    "./get-client"
+  );
+
+  __clearClientCache_forTestingOnly();
 
   getClient({
     getDevClientFn,
