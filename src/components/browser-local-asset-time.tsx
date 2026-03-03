@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
 
 const getCreatedAtLocal = (date: Date): string => {
   const year = date.getFullYear();
@@ -19,7 +21,8 @@ const formatLocalTimestamp = (date: Date): string => {
 
 export const BrowserLocalAssetTime: React.FC<{
   lastModifiedIso: string;
-}> = ({ lastModifiedIso }) => {
+  inputName?: string;
+}> = ({ lastModifiedIso, inputName }) => {
   const isHydrated = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -32,6 +35,11 @@ export const BrowserLocalAssetTime: React.FC<{
       <div className="space-y-1 text-xs text-zinc-600 dark:text-zinc-300">
         <p>Uploaded: {lastModifiedIso}</p>
         <p>Suggested journal date: unavailable</p>
+        {inputName ? (
+          <Label label="Attach to journal date">
+            <Input type="date" name={inputName} required={true} />
+          </Label>
+        ) : null}
       </div>
     );
   }
@@ -40,6 +48,17 @@ export const BrowserLocalAssetTime: React.FC<{
     <div className="space-y-1 text-xs text-zinc-600 dark:text-zinc-300">
       <p>Uploaded: {formatLocalTimestamp(date)}</p>
       <p>Suggested journal date: {getCreatedAtLocal(date)}</p>
+      {inputName ? (
+        <Label label="Attach to journal date">
+          <Input
+            key="suggested-date"
+            type="date"
+            name={inputName}
+            defaultValue={getCreatedAtLocal(date)}
+            required={true}
+          />
+        </Label>
+      ) : null}
     </div>
   );
 };

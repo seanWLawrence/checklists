@@ -7,6 +7,7 @@ import { Heading } from "@/components/heading";
 import { Image } from "@/components/image";
 import { LinkButton } from "@/components/link-button";
 import { BrowserLocalAssetTime } from "@/components/browser-local-asset-time";
+import { SubmitButton } from "@/components/submit-button";
 import { buttonClassName } from "@/components/button-classes";
 import { getAllItems } from "@/lib/db/get-all-items";
 import { scan } from "@/lib/db/scan";
@@ -22,6 +23,7 @@ import { SinceFilterForm } from "../../components/since-filter-form";
 import { parseSinceRange } from "../../lib/parse-since-range.lib";
 import { prettyDate } from "../../lib/pretty-date.lib";
 import { getAllJournalsScanKey } from "../../model/get-all-created-at-locals.model";
+import { attachOrphanedAssetAction } from "../../actions/attach-orphaned-asset.action";
 
 export const dynamic = "force-dynamic";
 
@@ -154,13 +156,17 @@ const AssetSection: React.FC<{
 
 const OrphanedAssetsSection: React.FC<{
   items: OrphanedAssetItem[];
-}> = ({ items }) => {
+  since: string;
+}> = ({ items, since }) => {
   return (
     <Fieldset legend="Unreferenced assets" className="text-left max-w-prose">
+      <p className="text-sm text-zinc-600 dark:text-zinc-300">
+        {items.length} unreferenced asset{items.length === 1 ? "" : "s"} older
+        than 1 hour.
+      </p>
+
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-300">
-          No unreferenced assets older than 1 hour.
-        </p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-300">Nothing to review.</p>
       ) : (
         <div className="space-y-4">
           {items.map((asset) => (
@@ -172,10 +178,6 @@ const OrphanedAssetsSection: React.FC<{
                 <div className="min-w-0">
                   <p className="truncate font-medium">{asset.filename}</p>
                 </div>
-
-                <BrowserLocalAssetTime
-                  lastModifiedIso={asset.lastModifiedIso}
-                />
               </div>
 
               {asset.variant === "image" && (
@@ -183,6 +185,33 @@ const OrphanedAssetsSection: React.FC<{
               )}
 
               {asset.variant === "audio" && <Audio src={asset.previewUrl} />}
+
+              <form
+                action={async (formData) => {
+                  "use server";
+
+                  await attachOrphanedAssetAction({ formData });
+                }}
+                className="space-y-3"
+              >
+                <input type="hidden" name="filename" value={asset.filename} />
+                <input type="hidden" name="variant" value={asset.variant} />
+                <input type="hidden" name="since" value={since} />
+
+                <BrowserLocalAssetTime
+                  lastModifiedIso={asset.lastModifiedIso}
+                  inputName="createdAtLocal"
+                />
+
+                <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                  Caption defaults to the filename. The selected journal must
+                  already exist.
+                </p>
+
+                <div className="flex w-full justify-end gap-2">
+                  <SubmitButton variant="outline">Attach to journal</SubmitButton>
+                </div>
+              </form>
 
               <div className="flex w-full justify-end gap-2">
                 <a
@@ -351,7 +380,7 @@ const JournalAssetsPage: React.FC<{
           <AssetSection title={GROUPS[0].title} items={imageAssets} />
           <AssetSection title={GROUPS[1].title} items={videoAssets} />
           <AssetSection title={GROUPS[2].title} items={audioAssets} />
-          <OrphanedAssetsSection items={sortedOrphanedAssets} />
+          <OrphanedAssetsSection items={sortedOrphanedAssets} since={since} />
         </div>
       </main>
     );
