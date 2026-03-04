@@ -596,17 +596,17 @@ export const AssetManager: React.FC<{
         }}
       />
 
-      <div className="flex justify-between items-center gap-2">
-        <div className="min-h-4 text-xs text-zinc-600 dark:text-zinc-400">
-          {statusMessage}
-        </div>
-
-        <div className="flex items-center space-x-2">
+      <div className="space-y-2">
+        <div className="flex items-center justify-end gap-2">
           <AudioRecorderInput onChangeAction={onRecordAudioFinished} />
 
           <Button type="button" variant="outline" onClick={onAddFilesClick}>
             Add files
           </Button>
+        </div>
+
+        <div className="min-h-4 text-right text-xs text-zinc-600 dark:text-zinc-400">
+          {statusMessage}
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
 
-type RecorderStatus = "idle" | "recording" | "paused" | "stopped" | "error";
+type RecorderStatus = "idle" | "recording" | "paused" | "error";
 type RecordingTranscriptionMode = "auto" | "skip";
 
 const getExtensionForMime = (mimeType: string): string => {
@@ -214,7 +214,7 @@ export const AudioRecorderInput: React.FC<{
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
         mediaRecorderRef.current = null;
-        setStatus("stopped");
+        setStatus("idle");
       };
 
       mediaRecorderRef.current = recorder;
@@ -249,11 +249,6 @@ export const AudioRecorderInput: React.FC<{
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
-
-    // Hack for onstop to complete before resetting to idle
-    setTimeout(() => {
-      setStatus("idle");
-    }, 1000);
   };
 
   return (
