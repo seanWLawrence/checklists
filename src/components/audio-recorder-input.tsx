@@ -17,6 +17,16 @@ const getExtensionForMime = (mimeType: string): string => {
   return "webm";
 };
 
+export const normalizeRecordedMimeType = (mimeType: string): string => {
+  if (mimeType.includes("audio/webm")) return "audio/webm";
+  if (mimeType.includes("audio/ogg")) return "audio/ogg";
+  if (mimeType.includes("audio/mp4")) return "audio/mp4";
+  if (mimeType.includes("audio/mpeg")) return "audio/mpeg";
+  if (mimeType.includes("audio/wav")) return "audio/wav";
+
+  return mimeType;
+};
+
 const canRecordAudio = (): boolean => {
   return (
     typeof window !== "undefined" &&
@@ -191,10 +201,11 @@ export const AudioRecorderInput: React.FC<{
           return;
         }
 
-        const mimeType =
+        const recorderMimeType =
           recorder.mimeType || chunksRef.current[0]?.type || "audio/webm";
+        const mimeType = normalizeRecordedMimeType(recorderMimeType);
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        const extension = getExtensionForMime(mimeType);
+        const extension = getExtensionForMime(recorderMimeType);
         const filename = `${formatTimestamp(new Date())}.${extension}`;
         const file = new File([blob], filename, { type: mimeType });
 

@@ -22,6 +22,7 @@ import {
 import { SinceFilterForm } from "../../components/since-filter-form";
 import { parseSinceRange } from "../../lib/parse-since-range.lib";
 import { prettyDate } from "../../lib/pretty-date.lib";
+import { getJournalAssetResponseContentType } from "../../lib/get-journal-asset-response-content-type.lib";
 import { getAllJournalsScanKey } from "../../model/get-all-created-at-locals.model";
 import { attachOrphanedAssetAction } from "../../actions/attach-orphaned-asset.action";
 
@@ -300,7 +301,12 @@ const JournalAssetsPage: React.FC<{
         flattenedAssets.map((asset) =>
           EitherAsync(async ({ fromPromise }) => {
             const previewUrl = await fromPromise(
-              getPresignedGetObjectUrl({ filename: asset.filename }),
+              getPresignedGetObjectUrl({
+                filename: asset.filename,
+                responseContentType: getJournalAssetResponseContentType({
+                  filename: asset.filename,
+                }),
+              }),
             );
 
             return {
@@ -316,7 +322,12 @@ const JournalAssetsPage: React.FC<{
         orphanedAssetCandidates.map((asset) =>
           EitherAsync(async ({ fromPromise }) => {
             const previewUrl = await fromPromise(
-              getPresignedGetObjectUrl({ filename: asset.filename }),
+              getPresignedGetObjectUrl({
+                filename: asset.filename,
+                responseContentType: getJournalAssetResponseContentType({
+                  filename: asset.filename,
+                }),
+              }),
             );
 
             return {

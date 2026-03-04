@@ -10,9 +10,11 @@ import { AWS_BUCKET_NAME } from "@/lib/env.server";
 
 export const getPresignedGetObjectUrl = ({
   filename,
+  responseContentType,
   expiresInSeconds = 60,
 }: {
   filename: string;
+  responseContentType?: string;
   expiresInSeconds?: number;
 }): EitherAsync<unknown, string> => {
   return EitherAsync(async ({ throwE }) => {
@@ -22,6 +24,7 @@ export const getPresignedGetObjectUrl = ({
         new GetObjectCommand({
           Bucket: AWS_BUCKET_NAME,
           Key: filename,
+          ResponseContentType: responseContentType,
         }),
         { expiresIn: expiresInSeconds },
       );

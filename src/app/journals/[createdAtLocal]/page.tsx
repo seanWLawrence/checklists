@@ -17,6 +17,7 @@ import {
   getCompletedHobbyLabels,
   getJournalHobbiesWithLegacyFallback,
 } from "../lib/journal-habits";
+import { getJournalAssetResponseContentType } from "../lib/get-journal-asset-response-content-type.lib";
 import { LinkButton } from "@/components/link-button";
 import { getSentimentValenceInfo } from "../lib/get-sentiment-valence-info.lib";
 import { getAllCreatedAtLocals } from "../model/get-all-created-at-locals.model";
@@ -81,7 +82,12 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
         assets.map((asset) => {
           return EitherAsync(async ({ fromPromise }) => {
             const previewUrl = await fromPromise(
-              getPresignedGetObjectUrl({ filename: asset.filename }),
+              getPresignedGetObjectUrl({
+                filename: asset.filename,
+                responseContentType: getJournalAssetResponseContentType({
+                  filename: asset.filename,
+                }),
+              }),
             );
 
             return { asset, previewUrl };

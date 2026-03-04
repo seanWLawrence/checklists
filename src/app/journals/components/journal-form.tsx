@@ -17,6 +17,7 @@ import {
   JOURNAL_HOBBY_FIELDS,
   getJournalHobbiesWithLegacyFallback,
 } from "../lib/journal-habits";
+import { getJournalAssetResponseContentType } from "../lib/get-journal-asset-response-content-type.lib";
 
 const DEFAULT_TEMPLATE =
   "## Dreams" +
@@ -45,7 +46,12 @@ export const JournalForm: React.FC<{
           .map((asset) =>
             EitherAsync(async ({ fromPromise }) => {
               const previewUrl = await fromPromise(
-                getPresignedGetObjectUrl({ filename: asset.filename }),
+                getPresignedGetObjectUrl({
+                  filename: asset.filename,
+                  responseContentType: getJournalAssetResponseContentType({
+                    filename: asset.filename,
+                  }),
+                }),
               );
 
               return { ...asset, previewUrl };
