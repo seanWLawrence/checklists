@@ -24,9 +24,7 @@ const envDefaults = {
 } as const;
 
 for (const [key, value] of Object.entries(envDefaults)) {
-  if (!process.env[key]) {
-    vi.stubEnv(key, value);
-  }
+  vi.stubEnv(key, value);
 }
 
 vi.mock("server-only", () => ({}));
