@@ -123,13 +123,6 @@ export const AudioRecorderInput: React.FC<{
 
         return;
       }
-
-      if (wasAutoPausedRef.current && recorder.state === "paused") {
-        recorder.resume();
-        wasAutoPausedRef.current = false;
-        setStatus("recording");
-        setErrorMessage(null);
-      }
     };
 
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -191,6 +184,15 @@ export const AudioRecorderInput: React.FC<{
         }
       };
 
+      recorder.onpause = () => {
+        setStatus("paused");
+      };
+
+      recorder.onresume = () => {
+        setStatus("recording");
+        setErrorMessage(null);
+      };
+
       recorder.onstop = () => {
         if (chunksRef.current.length === 0) {
           setStatus("error");
@@ -228,18 +230,24 @@ export const AudioRecorderInput: React.FC<{
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.pause();
-      wasAutoPausedRef.current = false;
-      setStatus("paused");
+      try {
+        mediaRecorderRef.current.pause();
+        wasAutoPausedRef.current = false;
+      } catch {
+        setStatus("error");
+        setErrorMessage("Unable to pause recording right now.");
+      }
     }
   };
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current?.state === "paused") {
-      mediaRecorderRef.current.resume();
-      wasAutoPausedRef.current = false;
-      setErrorMessage(null);
-      setStatus("recording");
+      try {
+        mediaRecorderRef.current.resume();
+        wasAutoPausedRef.current = false;
+      } catch {
+        setErrorMessage("Unable to resume recording. Try finishing instead.");
+      }
     }
   };
 
