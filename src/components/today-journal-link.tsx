@@ -22,7 +22,8 @@ export const TodayJournalLink: React.FC = () => {
     () => true,
     () => false,
   );
-  const [linkState, setLinkState] = useState<TodayJournalLinkState>(DEFAULT_STATE);
+  const [linkState, setLinkState] =
+    useState<TodayJournalLinkState>(DEFAULT_STATE);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -57,7 +58,7 @@ export const TodayJournalLink: React.FC = () => {
 
   return (
     <LinkButton href={linkState.href} variant="ghost" prefetch={true}>
-      {linkState.exists ? "Today" : "New journal"}
+      Today
     </LinkButton>
   );
 };
