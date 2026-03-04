@@ -84,13 +84,15 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
                     <LinkButton href="/admin" variant="ghost" prefetch={true}>
                       Admin
                     </LinkButton>
+
+                    <span>/</span>
                   </>
                 )}
-              </div>
 
-              <form action={logoutAction}>
-                <SubmitButton variant="ghost">Sign out</SubmitButton>
-              </form>
+                <form action={logoutAction}>
+                  <SubmitButton variant="ghost">Sign out</SubmitButton>
+                </form>
+              </div>
 
               <ThemeToggleButton />
             </div>
