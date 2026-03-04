@@ -14,9 +14,9 @@ import {
   OPENAI_JOURNAL_ANALYSIS_MODEL,
 } from "@/lib/env.server";
 import { logger } from "@/lib/logger";
-import { normalizeJournalContent } from "./get-journal-embedding-input.lib";
+import { getJournalAnalysisInput } from "./get-journal-embedding-input.lib";
 
-const ANALYSIS_VERSION = 1;
+const ANALYSIS_VERSION = 2;
 
 const emptyAnalysis = ({
   habits,
@@ -62,7 +62,7 @@ export const getJournalAiAnalysis = async ({
   hobbies: JournalHobbies;
 }): Promise<JournalAnalysis> => {
   const now = new Date().toISOString();
-  const normalizedContent = normalizeJournalContent(content);
+  const normalizedContent = getJournalAnalysisInput({ content });
 
   if (
     !normalizedContent ||
