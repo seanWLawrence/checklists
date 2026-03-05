@@ -80,6 +80,7 @@ export const AudioRecorderInput: React.FC<{
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const wasAutoPausedRef = useRef(false);
+  const isFinishingRef = useRef(false);
   const transcriptionModeRef = useRef<RecordingTranscriptionMode>("auto");
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -145,6 +146,100 @@ export const AudioRecorderInput: React.FC<{
     );
   };
 
+  const teardownMedia = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    mediaRecorderRef.current = null;
+  };
+
+  const finalizeRecording = (mimeTypeHint?: string) => {
+    isFinishingRef.current = false;
+
+    if (chunksRef.current.length === 0) {
+      setStatus("error");
+      setErrorMessage("No audio captured. Try recording again.");
+      teardownMedia();
+      return;
+    }
+
+    const fallbackMimeType = chunksRef.current[0]?.type || "audio/webm";
+    const recorderMimeType = mimeTypeHint || fallbackMimeType;
+    const mimeType = normalizeRecordedMimeType(recorderMimeType);
+    const blob = new Blob(chunksRef.current, { type: mimeType });
+    const extension = getExtensionForMime(recorderMimeType);
+    const filename = `${formatTimestamp(new Date())}.${extension}`;
+    const file = new File([blob], filename, { type: mimeType });
+
+    handleFileChange(file);
+    teardownMedia();
+    setStatus("idle");
+  };
+
+  const createRecorder = (stream: MediaStream, preferredMimeType?: string) => {
+    const recorder = new MediaRecorder(stream, {
+      mimeType: preferredMimeType,
+      audioBitsPerSecond: 64_000,
+    });
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunksRef.current.push(event.data);
+      }
+    };
+
+    recorder.onpause = () => {
+      setStatus("paused");
+    };
+
+    recorder.onresume = () => {
+      setStatus("recording");
+      setErrorMessage(null);
+    };
+
+    recorder.onstop = () => {
+      if (wasAutoPausedRef.current && !isFinishingRef.current) {
+        mediaRecorderRef.current = null;
+        setStatus("paused");
+        return;
+      }
+
+      finalizeRecording(recorder.mimeType);
+    };
+
+    return recorder;
+  };
+
+  const startRecorderSegment = async ({
+    resetChunks,
+    transcriptionMode,
+  }: {
+    resetChunks: boolean;
+    transcriptionMode?: RecordingTranscriptionMode;
+  }) => {
+    if (resetChunks) {
+      chunksRef.current = [];
+      wasAutoPausedRef.current = false;
+      isFinishingRef.current = false;
+      setErrorMessage(null);
+      transcriptionModeRef.current = transcriptionMode ?? "auto";
+      handleFileChange(null);
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+      },
+    });
+    streamRef.current = stream;
+    const preferredMimeType = getPreferredMimeType();
+    const recorder = createRecorder(stream, preferredMimeType);
+
+    mediaRecorderRef.current = recorder;
+    recorder.start(1000);
+    setStatus("recording");
+    setErrorMessage(null);
+  };
+
   const startRecording = async (
     transcriptionMode: RecordingTranscriptionMode = "auto",
   ) => {
@@ -158,70 +253,8 @@ export const AudioRecorderInput: React.FC<{
       return;
     }
 
-    setErrorMessage(null);
-    wasAutoPausedRef.current = false;
-    chunksRef.current = [];
-    transcriptionModeRef.current = transcriptionMode;
-
-    handleFileChange(null);
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-        },
-      });
-      streamRef.current = stream;
-      const preferredMimeType = getPreferredMimeType();
-      const recorder = new MediaRecorder(stream, {
-        mimeType: preferredMimeType,
-        audioBitsPerSecond: 64_000,
-      });
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onpause = () => {
-        setStatus("paused");
-      };
-
-      recorder.onresume = () => {
-        setStatus("recording");
-        setErrorMessage(null);
-      };
-
-      recorder.onstop = () => {
-        if (chunksRef.current.length === 0) {
-          setStatus("error");
-          setErrorMessage("No audio captured. Try recording again.");
-          stream.getTracks().forEach((track) => track.stop());
-          streamRef.current = null;
-          mediaRecorderRef.current = null;
-          return;
-        }
-
-        const recorderMimeType =
-          recorder.mimeType || chunksRef.current[0]?.type || "audio/webm";
-        const mimeType = normalizeRecordedMimeType(recorderMimeType);
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        const extension = getExtensionForMime(recorderMimeType);
-        const filename = `${formatTimestamp(new Date())}.${extension}`;
-        const file = new File([blob], filename, { type: mimeType });
-
-        handleFileChange(file);
-
-        stream.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-        mediaRecorderRef.current = null;
-        setStatus("idle");
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start(1000);
-      setStatus("recording");
+      await startRecorderSegment({ resetChunks: true, transcriptionMode });
     } catch {
       setStatus("error");
       setErrorMessage("Microphone access is blocked or unavailable.");
@@ -248,6 +281,17 @@ export const AudioRecorderInput: React.FC<{
       } catch {
         setErrorMessage("Unable to resume recording. Try finishing instead.");
       }
+      return;
+    }
+
+    if (
+      status === "paused" &&
+      wasAutoPausedRef.current &&
+      chunksRef.current.length > 0
+    ) {
+      void startRecorderSegment({ resetChunks: false }).catch(() => {
+        setErrorMessage("Unable to resume recording. Try finishing instead.");
+      });
     }
   };
 
@@ -255,7 +299,13 @@ export const AudioRecorderInput: React.FC<{
     wasAutoPausedRef.current = false;
 
     if (mediaRecorderRef.current) {
+      isFinishingRef.current = true;
       mediaRecorderRef.current.stop();
+      return;
+    }
+
+    if (chunksRef.current.length > 0) {
+      finalizeRecording();
     }
   };
 
