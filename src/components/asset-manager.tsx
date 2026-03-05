@@ -605,9 +605,11 @@ export const AssetManager: React.FC<{
           </Button>
         </div>
 
-        <div className="min-h-4 text-right text-xs text-zinc-600 dark:text-zinc-400">
-          {statusMessage}
-        </div>
+        {statusMessage && (
+          <div className="min-h-4 text-right text-xs text-zinc-600 dark:text-zinc-400">
+            {statusMessage}
+          </div>
+        )}
       </div>
     </div>
   );
