@@ -17,9 +17,10 @@ import {
 } from "@/app/api/assets/presign/put/types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Maybe } from "purify-ts/Maybe";
+import { Codec, string } from "purify-ts/Codec";
 import {
-  TranscriptionJobStatusResponse,
   JobStartResponse,
+  TranscriptionJobStatusResponse,
 } from "@/lambda/worker/job.types";
 
 const TRANSCRIPTION_POLL_MAX_ATTEMPTS = 150;
@@ -113,6 +114,8 @@ export const AssetManager: React.FC<{
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
       isMountedRef.current = false;
 
@@ -397,108 +400,93 @@ export const AssetManager: React.FC<{
   };
 
   const onTranscribeClick = async (asset: UploadedAssetItem) => {
-    setTranscribeStatus({ filename: asset.filename, status: "loading" });
+    await EitherAsync(async ({ liftEither, throwE }) => {
+      setTranscribeStatus({ filename: asset.filename, status: "loading" });
 
-    const response = await fetch(
-      `/api/assets/${encodeURIComponent(asset.filename)}/transcriptions`,
-      { method: "POST" },
-    );
-
-    if (!response.ok) {
-      logger.error("Failed to transcribe asset", response);
-      setTranscribeStatus({ filename: asset.filename, status: "error" });
-      return;
-    }
-
-    const startResponseDecode = JobStartResponse.decode(await response.json());
-
-    if (startResponseDecode.isLeft()) {
-      logger.error(
-        "Invalid transcription start response",
-        startResponseDecode.extract(),
-      );
-      setTranscribeStatus({ filename: asset.filename, status: "error" });
-      return;
-    }
-
-    const json = startResponseDecode.unsafeCoerce();
-
-    let attempts = 0;
-    const maxAttempts = TRANSCRIPTION_POLL_MAX_ATTEMPTS; // ~11 minutes with backoff (2s for first minute, then 5s)
-
-    while (attempts < maxAttempts) {
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      attempts += 1;
-      if (attempts > 1) {
-        const pollDelayMs = getTranscriptionPollDelayMs({
-          attemptNumber: attempts - 1,
-        });
-        await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
-      }
-
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      const statusResponse = await fetch(
-        `/api/jobs/${encodeURIComponent(json.jobId)}`,
-        {
-          method: "GET",
-          cache: "no-store",
-        },
+      const response = await fetch(
+        `/api/assets/${encodeURIComponent(asset.filename)}/transcriptions`,
+        { method: "POST" },
       );
 
-      if (!statusResponse.ok) {
-        logger.error("Failed to load transcription job status", statusResponse);
-        break;
+      if (!response.ok) {
+        return throwE("Failed to start transcription");
       }
 
-      const statusDecode = TranscriptionJobStatusResponse.decode(
-        await statusResponse.json(),
-      );
+      const startJson = await response.json();
+      const { jobId } = await liftEither(JobStartResponse.decode(startJson));
 
-      if (statusDecode.isLeft()) {
-        logger.error(
-          "Invalid transcription status response",
-          statusDecode.extract(),
+      let attempts = 0;
+      const maxAttempts = TRANSCRIPTION_POLL_MAX_ATTEMPTS; // ~11 minutes with backoff (2s for first minute, then 5s)
+
+      while (attempts < maxAttempts) {
+        attempts += 1;
+        if (attempts > 1) {
+          const pollDelayMs = getTranscriptionPollDelayMs({
+            attemptNumber: attempts - 1,
+          });
+
+          await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+        }
+
+        let statusResponse: Response;
+
+        try {
+          statusResponse = await fetch(
+            `/api/jobs/${encodeURIComponent(jobId)}`,
+            {
+              method: "GET",
+              cache: "no-store",
+            },
+          );
+        } catch (error) {
+          logger.error("Failed to poll transcription job status", error);
+          continue;
+        }
+
+        if (!statusResponse.ok) {
+          logger.error(
+            "Failed to load transcription job status",
+            statusResponse,
+          );
+          return throwE("Failed to load transcription job status");
+        }
+
+        const statusJson = await liftEither(
+          TranscriptionJobStatusResponse.decode(await statusResponse.json()),
         );
-        break;
+
+        if (statusJson.status === "succeeded") {
+          if (isMountedRef.current) {
+            setUploadedAssets((current) =>
+              current.map((item) =>
+                item.filename === asset.filename
+                  ? {
+                      ...item,
+                      transcriptionMetadata: statusJson.metadata,
+                    }
+                  : item,
+              ),
+            );
+            onTranscribeChangeAction?.(asset, {
+              transcriptionStructured: statusJson.transcriptionStructured,
+              transcriptionRaw: statusJson.transcriptionRaw ?? "",
+            });
+            setTranscribeStatus({ filename: asset.filename, status: "done" });
+          }
+          return;
+        }
+
+        if (statusJson.status === "failed") {
+          logger.error("Transcription job failed", statusJson.error);
+          return throwE("Transcription job failed");
+        }
       }
-
-      const statusJson = statusDecode.unsafeCoerce();
-
-      if (
-        statusJson.status === "succeeded" &&
-        typeof statusJson.transcriptionStructured === "string"
-      ) {
-        setUploadedAssets((current) =>
-          current.map((item) =>
-            item.filename === asset.filename
-              ? {
-                  ...item,
-                  transcriptionMetadata: statusJson.metadata,
-                }
-              : item,
-          ),
-        );
-        onTranscribeChangeAction?.(asset, {
-          transcriptionStructured: statusJson.transcriptionStructured,
-          transcriptionRaw: statusJson.transcriptionRaw ?? "",
-        });
-        setTranscribeStatus({ filename: asset.filename, status: "done" });
-        return;
+    }).mapLeft((error) => {
+      if (isMountedRef.current) {
+        logger.error("Failed to transcribe asset", error);
+        setTranscribeStatus({ filename: asset.filename, status: "error" });
       }
-
-      if (statusJson.status === "failed") {
-        logger.error("Transcription job failed", statusJson.error);
-        break;
-      }
-    }
-
-    setTranscribeStatus({ filename: asset.filename, status: "error" });
+    });
   };
 
   const onCaptionChange = (asset: UploadedAssetItem, caption: string) => {
