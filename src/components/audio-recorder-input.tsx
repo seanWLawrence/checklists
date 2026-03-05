@@ -198,6 +198,10 @@ export const AudioRecorderInput: React.FC<{
 
     recorder.onstop = () => {
       if (wasAutoPausedRef.current && !isFinishingRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        if (streamRef.current === stream) {
+          streamRef.current = null;
+        }
         mediaRecorderRef.current = null;
         setStatus("paused");
         return;
