@@ -50,6 +50,7 @@ export const transcribeAudio = ({
         openai: {
           prompt:
             "Please provide a faithful transcription of the audio recording. Keep natural phrasing and detail. Do not summarize or strip conversational context.",
+          temperature: 0,
         },
       },
     });
