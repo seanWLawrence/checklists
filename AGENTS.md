@@ -17,7 +17,8 @@
 - Prefer using `Maybe` for optional values that may be absent but don't have failure modes.
 - Put shared functions in `lib`, components in `components`, and domain-specific code in feature folders.
 - Prefer object syntax for parameters.
-- Prefer dependency injection over musing mocks when writing tests
+- Prefer dependency injection over using mocks when writing tests
+- If you're not sure about something, ask! It's better to ask for clarification than to make an incorrect assumption that could lead to wasted time or effort. Be as confident and sure as possible before making changes that they're the expected result from the prompter's instructions and the task requirements. Always double check to make sure that things are ready for production.
 
 ## Session Notes / Pitfalls
 
