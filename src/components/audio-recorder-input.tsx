@@ -6,6 +6,7 @@ import { Button } from "./button";
 
 type RecorderStatus = "idle" | "recording" | "paused" | "error";
 type RecordingTranscriptionMode = "auto" | "skip";
+type BackgroundPauseStrategy = "pause" | "segment";
 
 const getExtensionForMime = (mimeType: string): string => {
   if (mimeType.includes("audio/webm")) return "webm";
@@ -59,6 +60,36 @@ const getPreferredMimeType = (): string | undefined => {
   return candidates.find((type) => MediaRecorder.isTypeSupported(type));
 };
 
+export const getBackgroundPauseStrategy = ({
+  userAgent,
+  platform,
+  maxTouchPoints,
+}: {
+  userAgent: string;
+  platform: string;
+  maxTouchPoints?: number;
+}): BackgroundPauseStrategy => {
+  const touchPoints = maxTouchPoints ?? 0;
+  const isIOSDevice = /iPad|iPhone|iPod/i.test(userAgent);
+  const isIPadOS = platform === "MacIntel" && touchPoints > 1;
+
+  return isIOSDevice || isIPadOS ? "segment" : "pause";
+};
+
+const shouldSegmentOnBackgroundPause = (): boolean => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return (
+    getBackgroundPauseStrategy({
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      maxTouchPoints: navigator.maxTouchPoints,
+    }) === "segment"
+  );
+};
+
 const formatTimestamp = (date: Date): string => {
   const hours24 = date.getHours();
   const hours12 = hours24 % 12 || 12;
@@ -105,10 +136,20 @@ export const AudioRecorderInput: React.FC<{
         if (recorder.state === "recording") {
           // Flush data captured so far before mobile background/screen lock can suspend recording.
           recorder.requestData();
+          wasAutoPausedRef.current = true;
+
+          if (shouldSegmentOnBackgroundPause()) {
+            // iOS/WebKit often fails to append chunks after pause/resume once backgrounded.
+            recorder.stop();
+            setStatus("paused");
+            setErrorMessage(
+              "Recording auto-paused while app was in background. Return to continue.",
+            );
+            return;
+          }
 
           try {
             recorder.pause();
-            wasAutoPausedRef.current = true;
             setStatus("paused");
             setErrorMessage(
               "Recording auto-paused while app is in background. Return to continue.",
