@@ -1,6 +1,7 @@
 import {
   Codec,
   string,
+  number,
   GetType,
   intersect,
   optional,
@@ -228,6 +229,7 @@ export const JournalAsset = Codec.interface({
   caption: string,
   filename: string,
   variant: JournalAssetVariant,
+  fileSizeBytes: optional(number),
   transcriptionMetadata: optional(TranscriptionMetadata),
 });
 

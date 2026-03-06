@@ -43,7 +43,6 @@ const AudioRecorderInput = dynamic(
 
 interface UploadedAssetItem extends JournalAsset {
   previewUrl: string;
-  fileSizeBytes?: number;
 }
 
 type UploadStatus = "uploading" | "error";
@@ -173,6 +172,7 @@ export const AssetManager: React.FC<{
         caption: asset.caption,
         filename: asset.filename,
         variant: asset.variant,
+        fileSizeBytes: asset.fileSizeBytes,
         transcriptionMetadata: asset.transcriptionMetadata,
       })),
     );

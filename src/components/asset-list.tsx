@@ -9,7 +9,6 @@ import { buttonClassName } from "./button-classes";
 
 interface AssetListItem extends JournalAsset {
   previewUrl: string;
-  fileSizeBytes?: number;
 }
 
 type TranscribeStatus = "idle" | "loading" | "done" | "error";
