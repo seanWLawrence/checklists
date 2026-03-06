@@ -5,27 +5,17 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { verifySameOriginRequest } from "@/lib/security/verify-same-origin-request";
 import { getAssetFilename } from "@/lib/aws/s3/get-asset-filename";
 import { getPresignedPutObjectUrl } from "@/lib/aws/s3/get-presigned-put-object-url";
-import { JournalAssetVariant } from "@/app/journals/journal.types";
 import { Either, Left, Right } from "purify-ts/Either";
+import {
+  ALLOWED_EXTENSIONS_BY_VARIANT,
+  getLowercaseExtension,
+} from "@/lib/assets/asset-extensions";
 import {
   AssetsPresignPutObjectBody,
   AssetsPresignPutObjectResponse,
 } from "./types";
 
 const INVALID_FILENAME_PATTERN = /[\/\\\u0000-\u001f\u007f]/;
-const ALLOWED_EXTENSIONS: Record<JournalAssetVariant, Set<string>> = {
-  image: new Set(["jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif"]),
-  audio: new Set(["mp3", "m4a", "aac", "wav", "ogg", "opus", "flac", "webm"]),
-};
-
-const getLowercaseExtension = (filename: string): string | null => {
-  const lastDot = filename.lastIndexOf(".");
-  if (lastDot <= 0 || lastDot === filename.length - 1) {
-    return null;
-  }
-
-  return filename.slice(lastDot + 1).toLowerCase();
-};
 
 export async function POST(request: NextRequest) {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
@@ -70,7 +60,7 @@ export async function POST(request: NextRequest) {
             return Left("Filename must include an extension");
           }
 
-          const allowedExtensions = ALLOWED_EXTENSIONS[body.variant];
+          const allowedExtensions = ALLOWED_EXTENSIONS_BY_VARIANT[body.variant];
           return allowedExtensions.has(extension)
             ? Right(filename)
             : Left(`File extension '.${extension}' is not allowed`);

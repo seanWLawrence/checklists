@@ -11,13 +11,13 @@ import {
 import { logger } from "@/lib/logger";
 import { Image } from "@/components/image";
 import { Audio } from "@/components/audio";
+import { Video } from "@/components/video";
 import {
   AssetsPresignPutObjectBody,
   AssetsPresignPutObjectResponse,
 } from "@/app/api/assets/presign/put/types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { Maybe } from "purify-ts/Maybe";
-import { Codec, string } from "purify-ts/Codec";
 import {
   JobStartResponse,
   TranscriptionJobStatusResponse,
@@ -43,6 +43,7 @@ const AudioRecorderInput = dynamic(
 
 interface UploadedAssetItem extends JournalAsset {
   previewUrl: string;
+  fileSizeBytes?: number;
 }
 
 type UploadStatus = "uploading" | "error";
@@ -51,6 +52,7 @@ interface UploadItem {
   localId: string;
   file: File;
   previewUrl: string;
+  fileSizeBytes: number;
   caption: string;
   variant: JournalAssetVariant;
   status: UploadStatus;
@@ -68,7 +70,26 @@ const getVariant = (file: File): JournalAssetVariant | null => {
     return "audio";
   }
 
+  if (file.type.startsWith("video/")) {
+    return "video";
+  }
+
   return null;
+};
+
+const formatFileSize = ({ fileSizeBytes }: { fileSizeBytes: number }) => {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = fileSizeBytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const formatted = value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1);
+
+  return `${formatted} ${units[unitIndex]}`;
 };
 
 export const AssetManager: React.FC<{
@@ -281,6 +302,7 @@ export const AssetManager: React.FC<{
       localId,
       file,
       previewUrl,
+      fileSizeBytes: file.size,
       caption: file.name,
       variant,
       status: "uploading",
@@ -323,6 +345,7 @@ export const AssetManager: React.FC<{
           variant: upload.variant,
           caption: upload.caption,
           previewUrl: upload.previewUrl,
+          fileSizeBytes: upload.fileSizeBytes,
           transcriptionMetadata: undefined,
         };
 
@@ -502,7 +525,7 @@ export const AssetManager: React.FC<{
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,audio/*,.mp3,.wav,audio/mpeg"
+        accept="image/*,audio/*,video/*,.mp3,.wav,.mp4,.mov,.m4v,audio/mpeg,video/mp4,video/quicktime"
         className="sr-only"
         onChange={onChange}
         multiple
@@ -521,7 +544,12 @@ export const AssetManager: React.FC<{
           {unsavedUploads.map((upload) => (
             <div key={upload.localId} className="space-y-2">
               <div className="flex items-end justify-between text-xs text-zinc-900 dark:text-zinc-100 pb-1">
-                <p className="truncate -mb-1">{upload.caption}</p>
+                <div className="min-w-0">
+                  <p className="truncate -mb-1">{upload.caption}</p>
+                  <p className="text-[10px] text-zinc-600 dark:text-zinc-400">
+                    {formatFileSize({ fileSizeBytes: upload.fileSizeBytes })}
+                  </p>
+                </div>
                 <div className="flex space-x-1">
                   {upload.status === "error" && (
                     <Button
@@ -546,6 +574,8 @@ export const AssetManager: React.FC<{
 
               {upload.variant === "image" ? (
                 <Image src={upload.previewUrl} alt={upload.caption} />
+              ) : upload.variant === "video" ? (
+                <Video src={upload.previewUrl} />
               ) : (
                 <Audio src={upload.previewUrl} />
               )}

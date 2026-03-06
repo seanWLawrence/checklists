@@ -214,9 +214,9 @@ export const JournalAnalysis = Codec.interface({
 
 export type JournalAnalysis = GetType<typeof JournalAnalysis>;
 
-export const JournalAssetVariant = Codec.custom<"audio" | "image">({
+export const JournalAssetVariant = Codec.custom<"audio" | "image" | "video">({
   decode: (input) =>
-    input === "audio" || input === "image"
+    input === "audio" || input === "image" || input === "video"
       ? Right(input)
       : Left(`Invalid asset variant '${input}'`),
   encode: (input) => input,

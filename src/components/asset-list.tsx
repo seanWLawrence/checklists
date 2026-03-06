@@ -1,5 +1,6 @@
 import { Audio } from "@/components/audio";
 import { Image } from "@/components/image";
+import { Video } from "@/components/video";
 import { Button } from "./button";
 import { JournalAsset } from "@/app/journals/journal.types";
 import { Label } from "@/components/label";
@@ -8,9 +9,26 @@ import { buttonClassName } from "./button-classes";
 
 interface AssetListItem extends JournalAsset {
   previewUrl: string;
+  fileSizeBytes?: number;
 }
 
 type TranscribeStatus = "idle" | "loading" | "done" | "error";
+
+const formatFileSize = ({ fileSizeBytes }: { fileSizeBytes: number }) => {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = fileSizeBytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const formatted =
+    value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1);
+
+  return `${formatted} ${units[unitIndex]}`;
+};
 
 export const AssetList: React.FC<{
   assets: AssetListItem[];
@@ -61,7 +79,17 @@ export const AssetList: React.FC<{
         return (
           <div key={asset.filename} className="space-y-0">
             <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100 pb-1">
-              <p className="truncate -mb-1">{asset.caption}</p>
+              <div className="min-w-0">
+                <p className="truncate -mb-1 space-x-1">
+                  <span>{asset.caption}</span>
+
+                  {typeof asset.fileSizeBytes === "number" && (
+                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400">
+                      {formatFileSize({ fileSizeBytes: asset.fileSizeBytes })}
+                    </span>
+                  )}
+                </p>
+              </div>
 
               <div className="flex items-center gap-1">
                 <div>
@@ -112,6 +140,8 @@ export const AssetList: React.FC<{
             <div className="mb-2">
               {asset.variant === "image" ? (
                 <Image src={asset.previewUrl} alt={asset.caption} />
+              ) : asset.variant === "video" ? (
+                <Video src={asset.previewUrl} />
               ) : (
                 <Audio src={asset.previewUrl} />
               )}

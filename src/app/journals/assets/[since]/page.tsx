@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { Audio } from "@/components/audio";
+import { Video } from "@/components/video";
 import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { Image } from "@/components/image";
@@ -25,6 +26,7 @@ import { prettyDate } from "../../lib/pretty-date.lib";
 import { getJournalAssetResponseContentType } from "../../lib/get-journal-asset-response-content-type.lib";
 import { getAllJournalsScanKey } from "../../model/get-all-created-at-locals.model";
 import { attachOrphanedAssetAction } from "../../actions/attach-orphaned-asset.action";
+import { getAssetVariantFromFilename } from "@/lib/assets/asset-extensions";
 
 export const dynamic = "force-dynamic";
 
@@ -50,49 +52,7 @@ const GROUPS = [
   { key: "audio", title: "Audio" },
 ] as const;
 
-const IMAGE_EXTENSIONS = new Set([
-  "jpg",
-  "jpeg",
-  "png",
-  "gif",
-  "webp",
-  "avif",
-  "heic",
-  "heif",
-]);
-const AUDIO_EXTENSIONS = new Set([
-  "mp3",
-  "m4a",
-  "aac",
-  "wav",
-  "ogg",
-  "opus",
-  "flac",
-  "webm",
-]);
 const ORPHANED_ASSET_MIN_AGE_MS = 60 * 60 * 1000;
-
-const getAssetVariantFromFilename = (
-  filename: string,
-): JournalAssetVariant | null => {
-  const extension = filename.includes(".")
-    ? filename.split(".").pop()?.toLowerCase()
-    : null;
-
-  if (!extension) {
-    return null;
-  }
-
-  if (IMAGE_EXTENSIONS.has(extension)) {
-    return "image";
-  }
-
-  if (AUDIO_EXTENSIONS.has(extension)) {
-    return "audio";
-  }
-
-  return null;
-};
 
 const AssetSection: React.FC<{
   title: string;
@@ -125,6 +85,8 @@ const AssetSection: React.FC<{
               )}
 
               {asset.variant === "audio" && <Audio src={asset.previewUrl} />}
+
+              {asset.variant === "video" && <Video src={asset.previewUrl} />}
 
               <div className="flex w-full justify-end gap-2">
                 <LinkButton
@@ -188,6 +150,8 @@ const OrphanedAssetsSection: React.FC<{
               )}
 
               {asset.variant === "audio" && <Audio src={asset.previewUrl} />}
+
+              {asset.variant === "video" && <Video src={asset.previewUrl} />}
 
               <form
                 action={async (formData) => {
@@ -360,7 +324,9 @@ const JournalAssetsPage: React.FC<{
     const audioAssets = sortedAssets.filter(
       (asset) => asset.variant === "audio",
     );
-    const videoAssets: AssetGalleryItem[] = [];
+    const videoAssets = sortedAssets.filter(
+      (asset) => asset.variant === "video",
+    );
     const sortedOrphanedAssets = [...orphanedAssets].sort((a, b) =>
       b.lastModifiedIso.localeCompare(a.lastModifiedIso),
     );

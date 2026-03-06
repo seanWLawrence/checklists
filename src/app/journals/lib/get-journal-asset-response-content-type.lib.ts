@@ -22,6 +22,11 @@ export const getJournalAssetResponseContentType = ({
       return "audio/webm";
     case "flac":
       return "audio/flac";
+    case "mp4":
+    case "m4v":
+      return "video/mp4";
+    case "mov":
+      return "video/quicktime";
     default:
       return undefined;
   }

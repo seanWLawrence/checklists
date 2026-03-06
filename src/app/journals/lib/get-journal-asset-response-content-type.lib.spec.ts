@@ -16,7 +16,13 @@ test("maps opus filenames to an ogg response content type", ({ expect }) => {
   ).toBe("audio/ogg");
 });
 
-test("returns undefined for non-audio files", ({ expect }) => {
+test("maps mp4 filenames to a video response content type", ({ expect }) => {
+  expect(
+    getJournalAssetResponseContentType({ filename: "journal-video.mp4" }),
+  ).toBe("video/mp4");
+});
+
+test("returns undefined for unsupported files", ({ expect }) => {
   expect(
     getJournalAssetResponseContentType({ filename: "photo.jpg" }),
   ).toBeUndefined();
