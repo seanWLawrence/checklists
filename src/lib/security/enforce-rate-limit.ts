@@ -2,7 +2,7 @@ import "@nobush/server-only";
 
 import { EitherAsync } from "purify-ts";
 
-import { getClient } from "@/lib/db/get-client";
+import { getClient } from "@/lib/redis/get-client";
 
 export const enforceRateLimit = ({
   key,

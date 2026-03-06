@@ -14,7 +14,7 @@ import {
 import { ChecklistV2, ChecklistV2Structured } from "../checklist-v2.types";
 import { getChecklistV2Key } from "../model/get-checklist-v2.model";
 import { Metadata } from "@/lib/types";
-import { updateItem } from "@/lib/db/update-item";
+import { updateItem } from "@/lib/redis/update-item";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const updateChecklistV2Action = async (
@@ -24,7 +24,7 @@ export const updateChecklistV2Action = async (
 
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     const metadata = await liftEither(

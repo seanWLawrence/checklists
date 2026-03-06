@@ -3,10 +3,10 @@ import { EitherAsync } from "purify-ts";
 
 import { authorizePublicApiRequest } from "../../lib/authorize-public-api-request";
 import { UUID } from "@/lib/types";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { ChecklistV2 } from "@/app/checklists/checklist-v2.types";
 import { getChecklistV2Key } from "@/app/checklists/model/get-checklist-v2.model";
-import { updateItem } from "@/lib/db/update-item";
+import { updateItem } from "@/lib/redis/update-item";
 import { logger } from "@/lib/logger";
 
 const parseChecklistPatchPayload = (

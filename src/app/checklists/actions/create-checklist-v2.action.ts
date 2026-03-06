@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 import { EitherAsync, intersect } from "purify-ts";
 
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
 import { ChecklistV2Base } from "../checklist-v2.types";
 import { getChecklistV2Key } from "../model/get-checklist-v2.model";
 import { Metadata } from "@/lib/types";
-import { metadata } from "@/lib/db/metadata.factory";
+import { metadata } from "@/lib/redis/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const createChecklistV2Action = async (
@@ -18,7 +18,7 @@ export const createChecklistV2Action = async (
 ): Promise<void> => {
   const response = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     const name = await liftEither(

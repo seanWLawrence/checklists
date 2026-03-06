@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { UUID } from "@/lib/types";
 import { getChecklistV2Key } from "../model/get-checklist-v2.model";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { deleteAllItems } from "@/lib/db/delete-all-items";
+import { deleteAllItems } from "@/lib/redis/delete-all-items";
 
 export const deleteChecklistV2Action = async (id: UUID): Promise<void> => {
   await EitherAsync(async ({ fromPromise }) => {

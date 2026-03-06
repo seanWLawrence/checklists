@@ -2,8 +2,8 @@ import "@nobush/server-only";
 
 import { EitherAsync } from "purify-ts";
 import { secureHashWithSalt } from "./secure-hash-with-salt";
-import { createItem } from "../db/create-item";
-import { expire } from "../db/expire";
+import { createItem } from "../redis/create-item";
+import { expire } from "../redis/expire";
 import { User } from "../types";
 import {
   REFRESH_TOKEN_COOKIE_NAME,
@@ -14,7 +14,7 @@ import { logger } from "../logger";
 import { randomChars } from "./random-chars";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { RefreshToken } from "./auth.types";
-import { metadata } from "../db/metadata.factory";
+import { metadata } from "../redis/metadata.factory";
 import { setCookie } from "./set-cookie";
 
 interface SetRefreshTokenParams {

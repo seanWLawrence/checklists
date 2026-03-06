@@ -2,7 +2,7 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { getJournalKey } from "../model/get-journal.model";
 import { CreatedAtLocal, Journal } from "../journal.types";
 

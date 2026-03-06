@@ -2,7 +2,7 @@ import { logger } from "@/lib/logger";
 import { EitherAsync, Either } from "purify-ts";
 import { CreatedAtLocal } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { scan } from "@/lib/db/scan";
+import { scan } from "@/lib/redis/scan";
 
 import { Key, User } from "@/lib/types";
 

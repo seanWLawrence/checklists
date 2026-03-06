@@ -3,7 +3,7 @@ import { EitherAsync } from "purify-ts";
 import { User } from "@/lib/types";
 import { randomChars } from "../random-chars";
 import { secureHashSha256 } from "../secure-hash-sha256";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import {
   ApiToken,
   ApiTokenScope,
@@ -11,8 +11,8 @@ import {
   ApiTokenId,
 } from "./api-token.types";
 import { getApiTokenKey } from "./get-api-token-key";
-import { metadata } from "@/lib/db/metadata.factory";
-import { expire } from "@/lib/db/expire";
+import { metadata } from "@/lib/redis/metadata.factory";
+import { expire } from "@/lib/redis/expire";
 
 const ONE_YEAR_IN_MILLISECONDS = 365 * 24 * 60 * 60 * 1000;
 
@@ -38,7 +38,9 @@ export const createApiToken = ({
     const secret = await liftEither(randomChars({}));
     const hash = await liftEither(secureHashSha256(secret));
     const defaultExpiresAt = new Date(Date.now() + ONE_YEAR_IN_MILLISECONDS);
-    const resolvedExpiresAt = expiresAtIso ? new Date(expiresAtIso) : defaultExpiresAt;
+    const resolvedExpiresAt = expiresAtIso
+      ? new Date(expiresAtIso)
+      : defaultExpiresAt;
 
     const apiToken = await liftEither(
       ApiToken.decode({

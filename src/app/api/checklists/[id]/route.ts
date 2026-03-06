@@ -3,7 +3,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { UUID } from "@/lib/types";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { getChecklistV2Key } from "@/app/checklists/model/get-checklist-v2.model";
 import {
   ChecklistV2,

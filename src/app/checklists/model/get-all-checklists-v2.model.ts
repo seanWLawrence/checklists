@@ -1,8 +1,8 @@
 import { logger } from "@/lib/logger";
 import { EitherAsync } from "purify-ts";
 import { ChecklistV2 } from "../checklist-v2.types";
-import { scan } from "@/lib/db/scan";
-import { getAllItems } from "@/lib/db/get-all-items";
+import { scan } from "@/lib/redis/scan";
+import { getAllItems } from "@/lib/redis/get-all-items";
 import { Key, User } from "@/lib/types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 

@@ -10,13 +10,13 @@ import { logger } from "@/lib/logger";
 import { Note } from "../types";
 import { getNoteKey } from "../model/get-note.model";
 import { Metadata } from "@/lib/types";
-import { updateItem } from "@/lib/db/update-item";
+import { updateItem } from "@/lib/redis/update-item";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const updateNoteAction = async (formData: FormData): Promise<void> => {
   const response = await EitherAsync(async ({ fromPromise, liftEither }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     const metadata = await liftEither(

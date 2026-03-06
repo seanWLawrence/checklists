@@ -2,9 +2,9 @@ import { EitherAsync } from "purify-ts";
 
 import { User } from "@/lib/types";
 import { ApiToken, ApiTokenId } from "./api-token.types";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { getApiTokenKey } from "./get-api-token-key";
-import { updateItem } from "@/lib/db/update-item";
+import { updateItem } from "@/lib/redis/update-item";
 
 export const revokeApiToken = ({
   user,

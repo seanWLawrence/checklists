@@ -13,10 +13,10 @@ import {
   JournalAsset,
 } from "../journal.types";
 import { validateDateIsUnique } from "../lib/validate-date-is-unique.lib";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import { getJournalKey } from "../model/get-journal.model";
 import { Metadata } from "@/lib/types";
-import { metadata } from "@/lib/db/metadata.factory";
+import { metadata } from "@/lib/redis/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { array } from "purify-ts/Codec";

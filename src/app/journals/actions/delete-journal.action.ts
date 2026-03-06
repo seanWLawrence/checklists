@@ -8,7 +8,7 @@ import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data
 import { logger } from "@/lib/logger";
 import { CreatedAtLocal } from "../journal.types";
 import { getJournal, getJournalKey } from "../model/get-journal.model";
-import { deleteAllItems } from "@/lib/db/delete-all-items";
+import { deleteAllItems } from "@/lib/redis/delete-all-items";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { deleteObject } from "@/lib/aws/s3/delete-object";
 

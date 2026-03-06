@@ -7,17 +7,12 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import {
-  Journal,
-  CreatedAtLocal,
-  Level,
-  JournalAsset,
-} from "../journal.types";
+import { Journal, CreatedAtLocal, Level, JournalAsset } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { updateItem } from "@/lib/db/update-item";
-import { deleteAllItems } from "@/lib/db/delete-all-items";
+import { updateItem } from "@/lib/redis/update-item";
+import { deleteAllItems } from "@/lib/redis/delete-all-items";
 import { getJournalKey } from "../model/get-journal.model";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { array } from "purify-ts/Codec";
 import { Metadata } from "@/lib/types";

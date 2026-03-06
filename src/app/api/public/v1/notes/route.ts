@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync, intersect } from "purify-ts";
 
 import { authorizePublicApiRequest } from "../lib/authorize-public-api-request";
-import { scan } from "@/lib/db/scan";
-import { getAllItems } from "@/lib/db/get-all-items";
+import { scan } from "@/lib/redis/scan";
+import { getAllItems } from "@/lib/redis/get-all-items";
 import { Note, NoteBase } from "@/app/notes/types";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import { getNoteKey } from "@/app/notes/model/get-note.model";
-import { metadata } from "@/lib/db/metadata.factory";
+import { metadata } from "@/lib/redis/metadata.factory";
 import { Metadata, Key } from "@/lib/types";
 import { logger } from "@/lib/logger";
 

@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { EitherAsync, intersect } from "purify-ts";
 
 import { authorizePublicApiRequest } from "../lib/authorize-public-api-request";
-import { scan } from "@/lib/db/scan";
-import { getAllItems } from "@/lib/db/get-all-items";
+import { scan } from "@/lib/redis/scan";
+import { getAllItems } from "@/lib/redis/get-all-items";
 import {
   ChecklistV2,
   ChecklistV2Base,
 } from "@/app/checklists/checklist-v2.types";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 import { getChecklistV2Key } from "@/app/checklists/model/get-checklist-v2.model";
-import { metadata } from "@/lib/db/metadata.factory";
+import { metadata } from "@/lib/redis/metadata.factory";
 import { Metadata, Key } from "@/lib/types";
 import { logger } from "@/lib/logger";
 

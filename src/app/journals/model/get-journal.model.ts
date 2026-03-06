@@ -3,7 +3,7 @@ import { EitherAsync } from "purify-ts";
 import { Key, User } from "@/lib/types";
 import { CreatedAtLocal, Journal } from "../journal.types";
 import { logger } from "@/lib/logger";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 
 export const getJournalKey = ({

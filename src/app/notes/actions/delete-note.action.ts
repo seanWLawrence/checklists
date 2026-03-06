@@ -7,12 +7,12 @@ import { logger } from "@/lib/logger";
 import { UUID } from "@/lib/types";
 import { getNoteKey } from "../model/get-note.model";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
-import { deleteAllItems } from "@/lib/db/delete-all-items";
+import { deleteAllItems } from "@/lib/redis/delete-all-items";
 
 export const deleteNoteAction = async (id: UUID): Promise<void> => {
   await EitherAsync(async ({ fromPromise }) => {
     const user = await fromPromise(
-      validateUserLoggedIn({ variant: 'server-action' }),
+      validateUserLoggedIn({ variant: "server-action" }),
     );
 
     return fromPromise(

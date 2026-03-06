@@ -2,7 +2,7 @@ import { EitherAsync } from "purify-ts";
 import { NextRequest } from "next/server";
 
 import { logger } from "@/lib/logger";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { ApiToken, ApiTokenScope } from "./api-token.types";
 import {
   parseApiToken,
@@ -12,7 +12,7 @@ import { getApiTokenKey } from "./get-api-token-key";
 import { secureHashSha256 } from "../secure-hash-sha256";
 import { constantTimeStringComparison } from "../constant-time-string-comparison";
 import { User } from "@/lib/types";
-import { updateItem } from "@/lib/db/update-item";
+import { updateItem } from "@/lib/redis/update-item";
 
 interface ApiTokenAuthError {
   status: 401 | 403;
@@ -108,7 +108,10 @@ export const validateApiToken = ({
     }).run();
 
     if (touchResult.isLeft()) {
-      logger.warn("Failed to update API token last-used timestamp", touchResult.extract());
+      logger.warn(
+        "Failed to update API token last-used timestamp",
+        touchResult.extract(),
+      );
     }
 
     return { user: storedToken.user, tokenId: storedToken.id };

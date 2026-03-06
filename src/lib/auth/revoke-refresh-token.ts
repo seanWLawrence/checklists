@@ -3,7 +3,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { deleteCookie } from "./delete-cookie";
 import { REFRESH_TOKEN_COOKIE_NAME } from "@/lib/env.server";
-import { deleteAllItems } from "../db/delete-all-items";
+import { deleteAllItems } from "../redis/delete-all-items";
 import { logger } from "../logger";
 
 export const revokeRefreshToken = ({

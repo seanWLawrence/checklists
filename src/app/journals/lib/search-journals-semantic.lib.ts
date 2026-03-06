@@ -16,7 +16,7 @@ import {
 import { queryVectors, QueriedVector } from "@/lib/aws/s3vectors/query-vectors";
 import { getAppEnvironment } from "@/lib/env.server";
 import { getJournalKey } from "../model/get-journal.model";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { logger } from "@/lib/logger";
 import { Key } from "@/lib/types";
 import type { DocumentType } from "@smithy/types";

@@ -9,8 +9,8 @@ import { LinkButton } from "@/components/link-button";
 import { BrowserLocalAssetTime } from "@/components/browser-local-asset-time";
 import { SubmitButton } from "@/components/submit-button";
 import { buttonClassName } from "@/components/button-classes";
-import { getAllItems } from "@/lib/db/get-all-items";
-import { scan } from "@/lib/db/scan";
+import { getAllItems } from "@/lib/redis/get-all-items";
+import { scan } from "@/lib/redis/scan";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 import { listObjects } from "@/lib/aws/s3/list-objects";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
@@ -167,7 +167,9 @@ const OrphanedAssetsSection: React.FC<{
       </p>
 
       {items.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-300">Nothing to review.</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-300">
+          Nothing to review.
+        </p>
       ) : (
         <div className="space-y-4">
           {items.map((asset) => (
@@ -210,7 +212,9 @@ const OrphanedAssetsSection: React.FC<{
                 </p>
 
                 <div className="flex w-full justify-end gap-2">
-                  <SubmitButton variant="outline">Attach to journal</SubmitButton>
+                  <SubmitButton variant="outline">
+                    Attach to journal
+                  </SubmitButton>
                 </div>
               </form>
 

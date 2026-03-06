@@ -13,7 +13,7 @@ vi.mock("@/lib/db/create-item", () => ({
 
 import { POST } from "./route";
 import { authorizePublicApiRequest } from "../lib/authorize-public-api-request";
-import { createItem } from "@/lib/db/create-item";
+import { createItem } from "@/lib/redis/create-item";
 
 test("POST /api/public/v1/notes returns 401 when unauthorized", async ({
   expect,

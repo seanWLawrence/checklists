@@ -1,5 +1,5 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { ChecklistV2 } from "../checklist-v2.types";
 import { ChecklistShareAccess } from "../checklist-share.types";
 import { getChecklistShareKey } from "./get-checklist-share-key";

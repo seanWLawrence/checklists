@@ -1,7 +1,7 @@
 import "@nobush/server-only";
 import { EitherAsync } from "purify-ts/EitherAsync";
 
-import { getSingleItem } from "../db/get-single-item";
+import { getSingleItem } from "../redis/get-single-item";
 import { getRefreshTokenKey } from "./get-refresh-token-key";
 import { RefreshToken } from "./auth.types";
 import { THIRTY_DAYS_IN_MILLISECONDS } from "@/lib/env.server";

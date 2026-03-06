@@ -1,6 +1,6 @@
 import { EitherAsync } from "purify-ts";
 
-import { getSingleItem } from "@/lib/db/get-single-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { logger } from "@/lib/logger";
 import { UUID } from "@/lib/types";

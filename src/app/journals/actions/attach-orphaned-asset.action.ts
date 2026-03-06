@@ -7,8 +7,8 @@ import { Left, Right } from "purify-ts/Either";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { getSingleItem } from "@/lib/db/get-single-item";
-import { updateItem } from "@/lib/db/update-item";
+import { getSingleItem } from "@/lib/redis/get-single-item";
+import { updateItem } from "@/lib/redis/update-item";
 import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import {
   CreatedAtLocal,

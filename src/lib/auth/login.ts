@@ -8,7 +8,7 @@ import { logger } from "../logger";
 import { setAuthTokensAndCookies } from "./set-auth-tokens-and-cookies";
 import { constantTimeStringComparison } from "./constant-time-string-comparison";
 import { revalidatePath } from "next/cache";
-import { getSingleItem } from "../db/get-single-item";
+import { getSingleItem } from "../redis/get-single-item";
 import { Key, UserCredentials } from "../types";
 import { secureHashWithSalt } from "./secure-hash-with-salt";
 import { AUTH_SECRET } from "@/lib/env.server";
@@ -84,9 +84,7 @@ export const login = async ({
 
       const user = { username };
 
-      await fromPromise(
-        setAuthTokensAndCookiesFn({ authSecret, user }),
-      );
+      await fromPromise(setAuthTokensAndCookiesFn({ authSecret, user }));
     },
   ).ifLeft((e) => logger.error(e));
 
