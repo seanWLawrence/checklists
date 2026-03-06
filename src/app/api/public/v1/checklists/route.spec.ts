@@ -7,7 +7,7 @@ vi.mock("../lib/authorize-public-api-request", () => ({
   authorizePublicApiRequest: vi.fn(),
 }));
 
-vi.mock("@/lib/db/create-item", () => ({
+vi.mock("@/lib/redis/create-item", () => ({
   createItem: vi.fn(),
 }));
 

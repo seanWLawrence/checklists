@@ -1,6 +1,6 @@
 import { JournalAssetVariant } from "@/app/journals/journal.types";
 
-export const IMAGE_EXTENSIONS = new Set([
+const IMAGE_EXTENSIONS = new Set([
   "jpg",
   "jpeg",
   "png",
@@ -11,7 +11,7 @@ export const IMAGE_EXTENSIONS = new Set([
   "heif",
 ]);
 
-export const AUDIO_EXTENSIONS = new Set([
+const AUDIO_EXTENSIONS = new Set([
   "mp3",
   "m4a",
   "aac",
@@ -22,7 +22,7 @@ export const AUDIO_EXTENSIONS = new Set([
   "webm",
 ]);
 
-export const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v"]);
 
 export const ALLOWED_EXTENSIONS_BY_VARIANT: Record<
   JournalAssetVariant,
