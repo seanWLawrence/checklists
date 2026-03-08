@@ -7,6 +7,10 @@ import { Button } from "./button";
 type RecorderStatus = "idle" | "recording" | "paused" | "error";
 type RecordingTranscriptionMode = "auto" | "skip";
 type BackgroundPauseStrategy = "pause" | "segment";
+type RecordedAudioSegment = {
+  blob: Blob;
+  mimeType: string;
+};
 
 const getExtensionForMime = (mimeType: string): string => {
   if (mimeType.includes("audio/webm")) return "webm";
@@ -26,6 +30,147 @@ export const normalizeRecordedMimeType = (mimeType: string): string => {
   if (mimeType.includes("audio/wav")) return "audio/wav";
 
   return mimeType;
+};
+
+const getAudioContextConstructor = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const browserWindow = window as Window & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+
+  return globalThis.AudioContext ?? browserWindow.webkitAudioContext ?? null;
+};
+
+const mergeAudioBuffersToWav = (buffers: AudioBuffer[]): Blob => {
+  const totalLength = buffers.reduce((sum, buffer) => sum + buffer.length, 0);
+  const channelCount = Math.max(...buffers.map((buffer) => buffer.numberOfChannels));
+  const sampleRate = buffers[0]!.sampleRate;
+  const mergedBuffer = new AudioBuffer({
+    length: totalLength,
+    numberOfChannels: channelCount,
+    sampleRate,
+  });
+
+  let offset = 0;
+
+  buffers.forEach((buffer) => {
+    for (let channel = 0; channel < channelCount; channel += 1) {
+      const sourceChannel = Math.min(channel, buffer.numberOfChannels - 1);
+      mergedBuffer
+        .getChannelData(channel)
+        .set(buffer.getChannelData(sourceChannel), offset);
+    }
+
+    offset += buffer.length;
+  });
+
+  const bytesPerSample = 2;
+  const blockAlign = channelCount * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const pcmDataLength = mergedBuffer.length * blockAlign;
+  const outputBuffer = new ArrayBuffer(44 + pcmDataLength);
+  const view = new DataView(outputBuffer);
+  let position = 0;
+
+  const writeString = (value: string) => {
+    for (let i = 0; i < value.length; i += 1) {
+      view.setUint8(position, value.charCodeAt(i));
+      position += 1;
+    }
+  };
+
+  writeString("RIFF");
+  view.setUint32(position, 36 + pcmDataLength, true);
+  position += 4;
+  writeString("WAVE");
+  writeString("fmt ");
+  view.setUint32(position, 16, true);
+  position += 4;
+  view.setUint16(position, 1, true);
+  position += 2;
+  view.setUint16(position, channelCount, true);
+  position += 2;
+  view.setUint32(position, sampleRate, true);
+  position += 4;
+  view.setUint32(position, byteRate, true);
+  position += 4;
+  view.setUint16(position, blockAlign, true);
+  position += 2;
+  view.setUint16(position, 16, true);
+  position += 2;
+  writeString("data");
+  view.setUint32(position, pcmDataLength, true);
+  position += 4;
+
+  for (let sampleIndex = 0; sampleIndex < mergedBuffer.length; sampleIndex += 1) {
+    for (let channel = 0; channel < channelCount; channel += 1) {
+      const sample = Math.max(
+        -1,
+        Math.min(1, mergedBuffer.getChannelData(channel)[sampleIndex] ?? 0),
+      );
+      const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+      view.setInt16(position, int16, true);
+      position += bytesPerSample;
+    }
+  }
+
+  return new Blob([outputBuffer], { type: "audio/wav" });
+};
+
+const mergeSegmentsForExport = async (
+  segments: RecordedAudioSegment[],
+): Promise<{ blob: Blob; mimeType: string; extension: string }> => {
+  if (segments.length === 1) {
+    const mimeType = normalizeRecordedMimeType(segments[0]!.mimeType);
+
+    return {
+      blob: new Blob([segments[0]!.blob], { type: mimeType }),
+      mimeType,
+      extension: getExtensionForMime(mimeType),
+    };
+  }
+
+  const AudioContextCtor = getAudioContextConstructor();
+
+  if (!AudioContextCtor) {
+    const fallbackMimeType = normalizeRecordedMimeType(segments[0]!.mimeType);
+
+    return {
+      blob: new Blob(
+        segments.map((segment) => segment.blob),
+        {
+          type: fallbackMimeType,
+        },
+      ),
+      mimeType: fallbackMimeType,
+      extension: getExtensionForMime(fallbackMimeType),
+    };
+  }
+
+  const context = new AudioContextCtor();
+
+  try {
+    const buffers = await Promise.all(
+      segments.map(async (segment) => {
+        const arrayBuffer = await segment.blob.arrayBuffer();
+
+        return context.decodeAudioData(arrayBuffer.slice(0));
+      }),
+    );
+
+    const wavBlob = mergeAudioBuffersToWav(buffers);
+
+    return {
+      blob: wavBlob,
+      mimeType: "audio/wav",
+      extension: "wav",
+    };
+  } finally {
+    await context.close();
+  }
 };
 
 const canRecordAudio = (): boolean => {
@@ -109,7 +254,8 @@ export const AudioRecorderInput: React.FC<{
 }> = ({ onChangeAction }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const chunkBufferRef = useRef<Blob[]>([]);
+  const recordedSegmentsRef = useRef<RecordedAudioSegment[]>([]);
   const wasAutoPausedRef = useRef(false);
   const isFinishingRef = useRef(false);
   const transcriptionModeRef = useRef<RecordingTranscriptionMode>("auto");
@@ -193,25 +339,54 @@ export const AudioRecorderInput: React.FC<{
     mediaRecorderRef.current = null;
   };
 
-  const finalizeRecording = (mimeTypeHint?: string) => {
+  const persistCurrentSegment = (mimeTypeHint?: string) => {
+    if (chunkBufferRef.current.length === 0) {
+      return;
+    }
+
+    const fallbackMimeType = chunkBufferRef.current[0]?.type || "audio/webm";
+    const mimeType = normalizeRecordedMimeType(mimeTypeHint || fallbackMimeType);
+    const blob = new Blob(chunkBufferRef.current, { type: mimeType });
+
+    recordedSegmentsRef.current.push({ blob, mimeType });
+    chunkBufferRef.current = [];
+  };
+
+  const finalizeRecording = async () => {
     isFinishingRef.current = false;
 
-    if (chunksRef.current.length === 0) {
+    if (recordedSegmentsRef.current.length === 0) {
       setStatus("error");
       setErrorMessage("No audio captured. Try recording again.");
       teardownMedia();
       return;
     }
 
-    const fallbackMimeType = chunksRef.current[0]?.type || "audio/webm";
-    const recorderMimeType = mimeTypeHint || fallbackMimeType;
-    const mimeType = normalizeRecordedMimeType(recorderMimeType);
-    const blob = new Blob(chunksRef.current, { type: mimeType });
-    const extension = getExtensionForMime(recorderMimeType);
-    const filename = `${formatTimestamp(new Date())}.${extension}`;
-    const file = new File([blob], filename, { type: mimeType });
+    let output:
+      | { blob: Blob; mimeType: string; extension: string }
+      | undefined;
+
+    try {
+      output = await mergeSegmentsForExport(recordedSegmentsRef.current);
+    } catch {
+      const fallback = recordedSegmentsRef.current[0]!;
+      output = {
+        blob: new Blob(
+          recordedSegmentsRef.current.map((segment) => segment.blob),
+          {
+            type: fallback.mimeType,
+          },
+        ),
+        mimeType: fallback.mimeType,
+        extension: getExtensionForMime(fallback.mimeType),
+      };
+    }
+
+    const filename = `${formatTimestamp(new Date())}.${output.extension}`;
+    const file = new File([output.blob], filename, { type: output.mimeType });
 
     handleFileChange(file);
+    recordedSegmentsRef.current = [];
     teardownMedia();
     setStatus("idle");
   };
@@ -224,7 +399,7 @@ export const AudioRecorderInput: React.FC<{
 
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
+        chunkBufferRef.current.push(event.data);
       }
     };
 
@@ -238,6 +413,8 @@ export const AudioRecorderInput: React.FC<{
     };
 
     recorder.onstop = () => {
+      persistCurrentSegment(recorder.mimeType);
+
       if (wasAutoPausedRef.current && !isFinishingRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         if (streamRef.current === stream) {
@@ -248,7 +425,7 @@ export const AudioRecorderInput: React.FC<{
         return;
       }
 
-      finalizeRecording(recorder.mimeType);
+      void finalizeRecording();
     };
 
     return recorder;
@@ -262,7 +439,8 @@ export const AudioRecorderInput: React.FC<{
     transcriptionMode?: RecordingTranscriptionMode;
   }) => {
     if (resetChunks) {
-      chunksRef.current = [];
+      chunkBufferRef.current = [];
+      recordedSegmentsRef.current = [];
       wasAutoPausedRef.current = false;
       isFinishingRef.current = false;
       setErrorMessage(null);
@@ -332,7 +510,7 @@ export const AudioRecorderInput: React.FC<{
     if (
       status === "paused" &&
       wasAutoPausedRef.current &&
-      chunksRef.current.length > 0
+      recordedSegmentsRef.current.length > 0
     ) {
       void startRecorderSegment({ resetChunks: false }).catch(() => {
         setErrorMessage("Unable to resume recording. Try finishing instead.");
@@ -349,8 +527,8 @@ export const AudioRecorderInput: React.FC<{
       return;
     }
 
-    if (chunksRef.current.length > 0) {
-      finalizeRecording();
+    if (recordedSegmentsRef.current.length > 0) {
+      void finalizeRecording();
     }
   };
 
