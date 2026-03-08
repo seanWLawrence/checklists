@@ -1,10 +1,14 @@
 import { LinkButton } from "@/components/link-button";
 import { Heading } from "@/components/heading";
+import { Label } from "@/components/label";
+import { Input } from "@/components/input";
+import { SubmitButton } from "@/components/submit-button";
 
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllNotes } from "./model/get-all-notes.model";
 import { Note } from "./types";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +53,26 @@ const getCategorizedNotes = (
     );
 };
 
-const Notes: React.FC = async () => {
+const HIDDEN_PREFIX = "Hidden/";
+
+const Notes: React.FC<{
+  searchParams?: Promise<{ q?: string }>;
+}> = async ({ searchParams }) => {
+  const resolvedSearchParams = await searchParams;
+  const q =
+    typeof resolvedSearchParams?.q === "string"
+      ? resolvedSearchParams.q.trim()
+      : "";
+
   const page = await EitherAsync(async ({ fromPromise }) => {
     const notes = await fromPromise(getAllNotes());
-    const categorizedNotes = getCategorizedNotes(notes);
+    const filteredNotes =
+      q.length > 0
+        ? notes.filter((note) =>
+            note.name.toLowerCase().includes(q.toLowerCase()),
+          )
+        : notes.filter((note) => !note.name.trim().startsWith(HIDDEN_PREFIX));
+    const categorizedNotes = getCategorizedNotes(filteredNotes);
 
     return (
       <main>
@@ -67,6 +87,39 @@ const Notes: React.FC = async () => {
               Create
             </Link>
           </div>
+
+          <form
+            className="space-y-2"
+            action={async (formData) => {
+              "use server";
+              const searchText = formData.get("q");
+              const trimmedSearchText =
+                typeof searchText === "string" ? searchText.trim() : "";
+              const params = new URLSearchParams();
+
+              if (trimmedSearchText !== "") {
+                params.set("q", trimmedSearchText);
+              }
+
+              redirect(
+                `/notes${params.size > 0 ? `?${params.toString()}` : ""}`,
+              );
+            }}
+          >
+            <div className="flex max-w-fit items-end space-x-2">
+              <Label label="Search notes">
+                <Input
+                  name="q"
+                  defaultValue={q}
+                  placeholder="Search by note name"
+                  autoComplete="off"
+                  className="min-w-64"
+                />
+              </Label>
+
+              <SubmitButton variant="primary">Filter</SubmitButton>
+            </div>
+          </form>
 
           {!categorizedNotes.length && (
             <p className="text-sm text-zinc-700">No items.</p>
