@@ -2,14 +2,10 @@ import { Audio } from "@/components/audio";
 import { Image } from "@/components/image";
 import { Video } from "@/components/video";
 import { Button } from "./button";
-import { JournalAsset } from "@/app/journals/journal.types";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { buttonClassName } from "./button-classes";
-
-interface AssetListItem extends JournalAsset {
-  previewUrl: string;
-}
+import { AssetItemWithPreview } from "@/components/assets/asset.types";
 
 type TranscribeStatus = "idle" | "loading" | "done" | "error";
 
@@ -30,15 +26,15 @@ const formatFileSize = ({ fileSizeBytes }: { fileSizeBytes: number }) => {
 };
 
 export const AssetList: React.FC<{
-  assets: AssetListItem[];
+  assets: AssetItemWithPreview[];
   onRemoveClick?: (
-    asset: Pick<AssetListItem, "filename" | "previewUrl">,
+    asset: Pick<AssetItemWithPreview, "filename" | "previewUrl">,
   ) => void;
-  onCaptionChange?: (asset: AssetListItem, caption: string) => void;
-  onTranscribeClick?: (asset: AssetListItem) => void;
+  onCaptionChange?: (asset: AssetItemWithPreview, caption: string) => void;
+  onTranscribeClick?: (asset: AssetItemWithPreview) => void;
   transcribeStatusByFilename?: Record<string, TranscribeStatus>;
   shouldShowTranscribeButton?: (
-    asset: AssetListItem,
+    asset: AssetItemWithPreview,
     status: TranscribeStatus | undefined,
   ) => boolean;
 }> = ({

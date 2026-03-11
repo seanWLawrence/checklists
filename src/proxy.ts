@@ -33,6 +33,7 @@ const isProtectedRoute = (pathname: string) =>
   pathname.startsWith("/checklists") ||
   pathname.startsWith("/notes") ||
   pathname.startsWith("/journals") ||
+  pathname.startsWith("/logs") ||
   pathname.startsWith("/admin");
 
 const withCsp = (response: NextResponse, cspHeader: string) => {

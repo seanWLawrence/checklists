@@ -37,6 +37,15 @@ const Home: React.FC = async () => {
       >
         Notes
       </LinkButton>
+
+      <LinkButton
+        href="/logs"
+        variant="outline"
+        className="mr-2 mb-2"
+        prefetch={true}
+      >
+        Logs
+      </LinkButton>
     </main>
   );
 };

@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Label } from "@/components/label";
-import { AssetManager } from "@/components/asset-manager";
 import { Fieldset } from "@/components/fieldset";
 import { JournalAsset } from "../journal.types";
 import { mergeJournalContentByHeading } from "../lib/merge-journal-content-by-heading.lib";
+import { JournalAssetManager } from "./journal-asset-manager";
 
 interface AssetItem extends JournalAsset {
   previewUrl: string;
@@ -84,7 +84,7 @@ export const JournalFormAssetsAndContent: React.FC<{
       </Fieldset>
 
       <Fieldset legend="Assets" className="max-w-prose w-full">
-        <AssetManager
+        <JournalAssetManager
           name={assetsName}
           initialUploadedAssets={initialAssets}
           onTranscribeChangeAction={onTranscribeChange}
