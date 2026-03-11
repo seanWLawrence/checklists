@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
+import { AssetItemWithPreview } from "@/components/assets/asset.types";
 import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
@@ -9,7 +10,8 @@ import { Label } from "@/components/label";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
 import { createLogAction } from "../actions/create-log.action";
-import { Block, BlockVariant, LogSection } from "../log.types";
+import { updateLogAction } from "../actions/update-log.action";
+import { Block, BlockVariant, Log, LogSection } from "../log.types";
 import { LogMediaAssetInput } from "./log-media-asset-input";
 
 const BLOCK_BUTTONS: {
@@ -31,6 +33,12 @@ const isMediaVariant = (
   return variant === "audio" || variant === "image" || variant === "video";
 };
 
+const isMediaBlock = (
+  block: Block,
+): block is Extract<Block, { variant: "audio" | "image" | "video" }> => {
+  return isMediaVariant(block.variant);
+};
+
 const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
   if (variant === "checkbox") {
     return { name: "", variant, value: false };
@@ -50,8 +58,12 @@ const createEmptySection = ({ index }: { index: number }): LogSection => {
   };
 };
 
-export const LogForm: React.FC = () => {
-  const [sections, setSections] = useState<LogSection[]>([]);
+export const LogForm: React.FC<{
+  log?: Log;
+  initialMediaPreviewUrlsByBlockKey?: Record<string, string>;
+}> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
+  const isEdit = Boolean(log);
+  const [sections, setSections] = useState<LogSection[]>(log?.sections ?? []);
   const [openFilePickerSignalByBlockKey, setOpenFilePickerSignalByBlockKey] =
     useState<Record<string, number>>({});
 
@@ -179,12 +191,33 @@ export const LogForm: React.FC = () => {
 
   return (
     <div className="space-y-2 max-w-prose">
-      <Heading level={1}>New log</Heading>
+      <Heading level={1}>{isEdit ? "Edit" : "New"} log</Heading>
 
-      <form action={createLogAction} className="space-y-3">
+      <form action={isEdit ? updateLogAction : createLogAction} className="space-y-3">
         <Label label="Name">
-          <Input type="text" name="name" required className="w-full max-w-none" />
+          <Input
+            type="text"
+            name="name"
+            required
+            defaultValue={log?.name}
+            className="w-full max-w-none"
+          />
         </Label>
+
+        {log && (
+          <input
+            name="metadata"
+            type="hidden"
+            value={JSON.stringify({
+              id: log.id,
+              createdAtIso: log.createdAtIso,
+              updatedAtIso: log.updatedAtIso,
+              user: log.user,
+            })}
+            readOnly
+            required
+          />
+        )}
 
         {sections.map((section, sectionIndex) => (
           <Fieldset
@@ -272,22 +305,43 @@ export const LogForm: React.FC = () => {
                     />
                   )}
 
-                  {isMediaVariant(block.variant) && (
-                    <LogMediaAssetInput
-                      variant={block.variant}
-                      openFilePickerSignal={
-                        openFilePickerSignalByBlockKey[
+                  {isMediaBlock(block) && (
+                    (() => {
+                      const previewUrl =
+                        initialMediaPreviewUrlsByBlockKey[
                           `${sectionIndex}-${blockIndex}`
-                        ]
-                      }
-                      onFilenameChangeAction={(filename) =>
-                        updateBlockValue({
-                          sectionIndex,
-                          blockIndex,
-                          value: filename,
-                        })
-                      }
-                    />
+                        ];
+                      const initialUploadedAssets: AssetItemWithPreview[] =
+                        block.value.trim() !== "" && previewUrl
+                          ? [
+                              {
+                                caption: block.name,
+                                filename: block.value,
+                                variant: block.variant,
+                                previewUrl,
+                              },
+                            ]
+                          : [];
+
+                      return (
+                        <LogMediaAssetInput
+                          variant={block.variant}
+                          initialUploadedAssets={initialUploadedAssets}
+                          openFilePickerSignal={
+                            openFilePickerSignalByBlockKey[
+                              `${sectionIndex}-${blockIndex}`
+                            ]
+                          }
+                          onFilenameChangeAction={(filename) =>
+                            updateBlockValue({
+                              sectionIndex,
+                              blockIndex,
+                              value: filename,
+                            })
+                          }
+                        />
+                      );
+                    })()
                   )}
                 </div>
               ))}

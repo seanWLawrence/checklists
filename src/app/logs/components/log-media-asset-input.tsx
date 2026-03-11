@@ -1,16 +1,22 @@
 "use client";
 
 import { AssetManager } from "@/components/asset-manager";
-import { AssetVariant } from "@/components/assets/asset.types";
+import { AssetItemWithPreview, AssetVariant } from "@/components/assets/asset.types";
 
 export const LogMediaAssetInput: React.FC<{
   variant: AssetVariant;
   onFilenameChangeAction: (filename: string) => void;
   openFilePickerSignal?: number;
-}> = ({ variant, onFilenameChangeAction, openFilePickerSignal }) => {
+  initialUploadedAssets?: AssetItemWithPreview[];
+}> = ({
+  variant,
+  onFilenameChangeAction,
+  openFilePickerSignal,
+  initialUploadedAssets = [],
+}) => {
   return (
     <AssetManager
-      initialUploadedAssets={[]}
+      initialUploadedAssets={initialUploadedAssets}
       shouldEnableTranscription={false}
       shouldShowRecorder={variant === "audio"}
       allowedVariants={[variant]}

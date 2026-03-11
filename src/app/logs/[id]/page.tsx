@@ -8,10 +8,9 @@ import { Audio } from "@/components/audio";
 import { Image } from "@/components/image";
 import { Video } from "@/components/video";
 import { UUID } from "@/lib/types";
-import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
-import { getJournalAssetResponseContentType } from "@/app/journals/lib/get-journal-asset-response-content-type.lib";
 import { getLog } from "../model/get-log.model";
 import { Block } from "../log.types";
+import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
 
 const isMediaBlock = (
   block: Block,
@@ -36,34 +35,10 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
     const id = await liftEither(UUID.decode(unsafeId));
     const log = await fromPromise(getLog(id));
 
-    const mediaEntries = log.sections.flatMap((section, sectionIndex) =>
-      section.blocks.flatMap((block, blockIndex) =>
-        isMediaBlock(block) && block.value.trim() !== ""
-          ? [{ sectionIndex, blockIndex, filename: block.value }]
-          : [],
-      ),
-    );
-
     const previewUrls = await fromPromise(
-      EitherAsync.all(
-        mediaEntries.map(({ sectionIndex, blockIndex, filename }) =>
-          EitherAsync(async ({ fromPromise }) => {
-            const previewUrl = await fromPromise(
-              getPresignedGetObjectUrl({
-                filename,
-                responseContentType: getJournalAssetResponseContentType({
-                  filename,
-                }),
-              }),
-            );
-
-            return {
-              key: `${sectionIndex}-${blockIndex}`,
-              previewUrl,
-            };
-          }),
-        ),
-      ).map((items) => new Map(items.map((item) => [item.key, item.previewUrl]))),
+      getLogMediaPreviewUrls({
+        sections: log.sections,
+      }),
     );
 
     return (
@@ -74,9 +49,9 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
 
             <Link
               className="underline underline-offset-2 text-xs"
-              href="/logs"
+              href={`/logs/${log.id}/edit`}
             >
-              Back
+              Edit
             </Link>
           </div>
 
@@ -93,9 +68,8 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
           <Fieldset key={`${section.name}-${sectionIndex}`} legend={section.name}>
             <div className="space-y-4">
               {section.blocks.map((block, blockIndex) => {
-                const mediaPreviewUrl = previewUrls.get(
-                  `${sectionIndex}-${blockIndex}`,
-                );
+                const mediaPreviewUrl =
+                  previewUrls[`${sectionIndex}-${blockIndex}`];
 
                 return (
                   <div key={`${block.name}-${blockIndex}`} className="space-y-1">
