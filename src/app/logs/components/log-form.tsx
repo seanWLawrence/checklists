@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
 import { createLogAction } from "../actions/create-log.action";
+import { deleteLogAction } from "../actions/delete-log.action";
 import { updateLogAction } from "../actions/update-log.action";
 import { Block, BlockVariant, Log, LogSection } from "../log.types";
 import { LogMediaAssetInput } from "./log-media-asset-input";
@@ -210,6 +211,20 @@ export const LogForm: React.FC<{
                 >
                   <SubmitButton type="submit" variant="ghost">
                     Duplicate
+                  </SubmitButton>
+                </form>
+
+                <form
+                  action={async () => {
+                    Maybe.fromFalsy(window.confirm("Delete?"))
+                      .chain(() => Maybe.fromNullable(log))
+                      .ifJust(async (currentLog) => {
+                        await deleteLogAction(currentLog.id);
+                      });
+                  }}
+                >
+                  <SubmitButton type="submit" variant="ghost">
+                    Delete
                   </SubmitButton>
                 </form>
               </div>

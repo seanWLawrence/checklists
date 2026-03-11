@@ -2,7 +2,7 @@ import { TranscriptionMetadata } from "@/lambda/worker/job.types";
 
 export type AssetVariant = "audio" | "image" | "video";
 
-export interface AssetItem {
+interface AssetItem {
   caption: string;
   filename: string;
   variant: AssetVariant;

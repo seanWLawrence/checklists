@@ -566,23 +566,28 @@ export const AssetManager: React.FC<{
     );
   };
 
-  const accept = useMemo(() => {
-    const acceptValues: string[] = [];
+  const acceptValues: string[] = [];
 
-    if (allowedVariants.includes("image")) {
-      acceptValues.push("image/*");
-    }
+  if (allowedVariants.includes("image")) {
+    acceptValues.push("image/*");
+  }
 
-    if (allowedVariants.includes("audio")) {
-      acceptValues.push("audio/*", ".mp3", ".wav", "audio/mpeg");
-    }
+  if (allowedVariants.includes("audio")) {
+    acceptValues.push("audio/*", ".mp3", ".wav", "audio/mpeg");
+  }
 
-    if (allowedVariants.includes("video")) {
-      acceptValues.push("video/*", ".mp4", ".mov", ".m4v", "video/mp4", "video/quicktime");
-    }
+  if (allowedVariants.includes("video")) {
+    acceptValues.push(
+      "video/*",
+      ".mp4",
+      ".mov",
+      ".m4v",
+      "video/mp4",
+      "video/quicktime",
+    );
+  }
 
-    return acceptValues.join(",");
-  }, [allowedVariants]);
+  const accept = acceptValues.join(",");
 
   const shouldShowTranscribe = shouldEnableTranscription;
   const shouldShowRecorderControl =

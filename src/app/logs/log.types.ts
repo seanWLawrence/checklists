@@ -190,12 +190,12 @@ export const LogSection = Codec.interface({
 
 export type LogSection = GetType<typeof LogSection>;
 
-export const LogBase = Codec.interface({
+const LogBase = Codec.interface({
   name: string,
   sections: array(LogSection),
 });
 
-export type LogBase = GetType<typeof LogBase>;
+type LogBase = GetType<typeof LogBase>;
 
 export const Log = intersect(Metadata, LogBase);
 

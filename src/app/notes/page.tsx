@@ -6,7 +6,6 @@ import { SubmitButton } from "@/components/submit-button";
 
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllNotes } from "./model/get-all-notes.model";
-import { Note } from "./types";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { groupItemsByNameCategory } from "@/lib/group-items-by-name-category";
