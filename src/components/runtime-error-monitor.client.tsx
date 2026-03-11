@@ -8,6 +8,21 @@ type RuntimeErrorState = {
   message: string;
 };
 
+const isNextRedirectError = (value: unknown): boolean => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const maybeError = value as { message?: unknown; digest?: unknown };
+
+  return (
+    (typeof maybeError.message === "string" &&
+      maybeError.message.includes("NEXT_REDIRECT")) ||
+    (typeof maybeError.digest === "string" &&
+      maybeError.digest.includes("NEXT_REDIRECT"))
+  );
+};
+
 const toErrorMessage = (value: unknown): string => {
   if (value instanceof Error && value.message) {
     return value.message;
@@ -27,6 +42,10 @@ export const RuntimeErrorMonitor = () => {
 
   useEffect(() => {
     const onError = (event: ErrorEvent) => {
+      if (isNextRedirectError(event.error)) {
+        return;
+      }
+
       logger.error(event.error ?? event.message ?? "Unknown runtime error");
       setRuntimeError({
         message: toErrorMessage(event.error ?? event.message),
@@ -34,6 +53,10 @@ export const RuntimeErrorMonitor = () => {
     };
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (isNextRedirectError(event.reason)) {
+        return;
+      }
+
       logger.error(event.reason ?? "Unhandled promise rejection");
       setRuntimeError({
         message: toErrorMessage(event.reason),

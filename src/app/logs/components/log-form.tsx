@@ -7,8 +7,10 @@ import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
+import { MenuButton } from "@/components/menu-button";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
+import { Maybe } from "purify-ts/Maybe";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
 import { Block, BlockVariant, Log, LogSection } from "../log.types";
@@ -191,7 +193,46 @@ export const LogForm: React.FC<{
 
   return (
     <div className="space-y-2 max-w-prose">
-      <Heading level={1}>{isEdit ? "Edit" : "New"} log</Heading>
+      <div className="flex space-x-1 items-center">
+        <Heading level={1}>{isEdit ? "Edit" : "New"} log</Heading>
+
+        {isEdit && (
+          <MenuButton
+            variant="ghost"
+            menu={
+              <div className="flex flex-col space-y-2">
+                <form
+                  action={() => {
+                    const name = Maybe.fromNullable(
+                      window.prompt("New name?"),
+                    )
+                      .map((value) => value.trim())
+                      .filter((value) => value.length > 0);
+
+                    const sections = Maybe.fromNullable(sectionsJson);
+
+                    Maybe.sequence([name, sections]).map(
+                      async ([nextName, nextSections]) => {
+                        const formData = new FormData();
+
+                        formData.set("name", nextName);
+                        formData.set("sections", nextSections);
+                        formData.set("redirectToEdit", "true");
+
+                        await createLogAction(formData);
+                      },
+                    );
+                  }}
+                >
+                  <SubmitButton type="submit" variant="ghost">
+                    Duplicate
+                  </SubmitButton>
+                </form>
+              </div>
+            }
+          />
+        )}
+      </div>
 
       <form action={isEdit ? updateLogAction : createLogAction} className="space-y-3">
         <Label label="Name">

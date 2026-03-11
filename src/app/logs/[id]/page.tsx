@@ -99,9 +99,9 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
 
                     {block.variant === "longText" && (
                       block.value.trim() !== "" ? (
-                        <pre className="whitespace-pre-wrap break-words text-sm font-sans">
+                        <p className="whitespace-pre-wrap break-words text-sm">
                           {block.value}
-                        </pre>
+                        </p>
                       ) : (
                         <EmptyValue />
                       )

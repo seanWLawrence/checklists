@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
-import { EitherAsync } from "purify-ts";
+import { EitherAsync, Maybe } from "purify-ts";
 
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
@@ -32,10 +32,15 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
       }),
     );
 
-    return fromPromise(
+    const redirectToEdit = Maybe.fromNullable(formData.get("redirectToEdit"))
+      .chain((value) => (typeof value === "string" ? Maybe.of(value) : Maybe.empty()))
+      .map((value) => value === "true")
+      .orDefault(false);
+
+    const item = await fromPromise(
       createItem({
         item: { ...metadata(user), name, sections },
-        getKeyFn: (item) => getLogKey({ user, id: item.id }),
+        getKeyFn: (createdItem) => getLogKey({ user, id: createdItem.id }),
       })
         .ifRight(() => {
           logger.info(`Successfully created log '${name}'`);
@@ -46,9 +51,16 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
           logger.error(error);
         }),
     );
+
+    return {
+      item,
+      redirectToEdit,
+    };
   });
 
   if (response.isRight()) {
-    redirect(`/logs/${response.extract().id}`, RedirectType.push);
+    const { item, redirectToEdit } = response.extract();
+    const pathname = redirectToEdit ? `/logs/${item.id}/edit` : `/logs/${item.id}`;
+    redirect(pathname, RedirectType.push);
   }
 };
