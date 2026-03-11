@@ -3,6 +3,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { Heading } from "@/components/heading";
 import { getAllLogs } from "./model/get-all-logs.model";
+import { LinkButton } from "@/components/link-button";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,14 @@ const Logs: React.FC = async () => {
 
         <div className="flex flex-wrap">
           {sortedLogs.map((log) => (
-            <div
+            <LinkButton
               key={log.id}
-              className="mr-2 mb-2 rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              href={`/logs/${log.id}`}
+              variant="outline"
+              className="mr-2 mb-2"
             >
               {log.name}
-            </div>
+            </LinkButton>
           ))}
         </div>
       </main>

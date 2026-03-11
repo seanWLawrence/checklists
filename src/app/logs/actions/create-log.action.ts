@@ -35,7 +35,7 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
     return fromPromise(
       createItem({
         item: { ...metadata(user), name, sections },
-        getKeyFn: (item) => getLogKey({ username: user.username, id: item.id }),
+        getKeyFn: (item) => getLogKey({ user, id: item.id }),
       })
         .ifRight(() => {
           logger.info(`Successfully created log '${name}'`);
@@ -49,6 +49,6 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
   });
 
   if (response.isRight()) {
-    redirect("/logs", RedirectType.push);
+    redirect(`/logs/${response.extract().id}`, RedirectType.push);
   }
 };

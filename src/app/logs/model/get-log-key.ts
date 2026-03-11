@@ -1,9 +1,9 @@
-import { Key } from "@/lib/types";
+import { Key, UUID, User } from "@/lib/types";
 
 export const getLogKey = ({
-  username,
+  user,
   id,
 }: {
-  username: string;
-  id: string;
-}): Key => `user#${username}#log#${id}`;
+  user: User;
+  id: UUID;
+}): Key => `user#${user.username}#log#${id}`;
