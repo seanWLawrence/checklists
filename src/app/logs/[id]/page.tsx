@@ -23,6 +23,10 @@ const isMediaBlock = (
   );
 };
 
+const EmptyValue: React.FC = () => {
+  return <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>;
+};
+
 type Params = Promise<{ id: string }>;
 
 const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
@@ -112,22 +116,36 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                     )}
 
                     {block.variant === "shortText" && (
-                      <p className="text-sm">{block.value}</p>
+                      block.value.trim() !== "" ? (
+                        <p className="text-sm">{block.value}</p>
+                      ) : (
+                        <EmptyValue />
+                      )
                     )}
 
                     {block.variant === "longText" && (
-                      <pre className="whitespace-pre-wrap break-words text-sm font-sans">
-                        {block.value}
-                      </pre>
+                      block.value.trim() !== "" ? (
+                        <pre className="whitespace-pre-wrap break-words text-sm font-sans">
+                          {block.value}
+                        </pre>
+                      ) : (
+                        <EmptyValue />
+                      )
                     )}
 
                     {block.variant === "number" && (
-                      <p className="text-sm">{block.value}</p>
+                      Number.isFinite(block.value) ? (
+                        <p className="text-sm">{block.value}</p>
+                      ) : (
+                        <EmptyValue />
+                      )
                     )}
 
                     {isMediaBlock(block) && (
                       <div className="space-y-2">
-                        {mediaPreviewUrl ? (
+                        {block.value.trim() === "" ? (
+                          <EmptyValue />
+                        ) : mediaPreviewUrl ? (
                           <>
                             {block.variant === "image" && (
                               <Image src={mediaPreviewUrl} alt={block.name} />
