@@ -5,23 +5,28 @@ import { AssetItemWithPreview, AssetVariant } from "@/components/assets/asset.ty
 
 export const LogMediaAssetInput: React.FC<{
   variant: AssetVariant;
+  label: string;
   onFilenameChangeAction: (filename: string) => void;
-  openFilePickerSignal?: number;
   initialUploadedAssets?: AssetItemWithPreview[];
 }> = ({
   variant,
+  label,
   onFilenameChangeAction,
-  openFilePickerSignal,
   initialUploadedAssets = [],
 }) => {
   return (
     <AssetManager
-      initialUploadedAssets={initialUploadedAssets}
+      initialUploadedAssets={initialUploadedAssets.map((asset) => ({
+        ...asset,
+        caption: label,
+      }))}
       shouldEnableTranscription={false}
       shouldShowRecorder={variant === "audio"}
+      shouldShowRecorderTranscribeOption={false}
+      shouldShowCaptionField={false}
+      shouldHideAddFilesWhenHasAssets={true}
       allowedVariants={[variant]}
       multiple={false}
-      openFilePickerSignal={openFilePickerSignal}
       onAssetsChangeAction={(assets) => {
         onFilenameChangeAction(assets[0]?.filename ?? "");
       }}

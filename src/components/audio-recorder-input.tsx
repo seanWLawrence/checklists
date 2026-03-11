@@ -251,7 +251,8 @@ export const AudioRecorderInput: React.FC<{
     file: File | null,
     options?: { transcriptionMode: RecordingTranscriptionMode },
   ) => void;
-}> = ({ onChangeAction }) => {
+  shouldShowTranscribeOption?: boolean;
+}> = ({ onChangeAction, shouldShowTranscribeOption = true }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunkBufferRef = useRef<Blob[]>([]);
@@ -551,13 +552,15 @@ export const AudioRecorderInput: React.FC<{
                 Record
               </Button>
 
-              <Button
-                type="button"
-                onClick={() => void startRecording("auto")}
-                variant="outline"
-              >
-                Record + transcribe
-              </Button>
+              {shouldShowTranscribeOption && (
+                <Button
+                  type="button"
+                  onClick={() => void startRecording("auto")}
+                  variant="outline"
+                >
+                  Record + transcribe
+                </Button>
+              )}
             </>
           )}
 

@@ -31,6 +31,7 @@ export const AssetList: React.FC<{
     asset: Pick<AssetItemWithPreview, "filename" | "previewUrl">,
   ) => void;
   onCaptionChange?: (asset: AssetItemWithPreview, caption: string) => void;
+  shouldShowCaptionField?: boolean;
   onTranscribeClick?: (asset: AssetItemWithPreview) => void;
   transcribeStatusByFilename?: Record<string, TranscribeStatus>;
   shouldShowTranscribeButton?: (
@@ -41,6 +42,7 @@ export const AssetList: React.FC<{
   assets,
   onRemoveClick,
   onCaptionChange,
+  shouldShowCaptionField = true,
   onTranscribeClick,
   transcribeStatusByFilename,
   shouldShowTranscribeButton,
@@ -142,7 +144,7 @@ export const AssetList: React.FC<{
               )}
             </div>
 
-            {onCaptionChange && (
+            {onCaptionChange && shouldShowCaptionField && (
               <Label label="Caption" className="w-full">
                 <Input
                   className="w-full"

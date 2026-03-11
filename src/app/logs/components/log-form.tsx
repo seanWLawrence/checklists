@@ -22,11 +22,11 @@ const BLOCK_BUTTONS: {
 }[] = [
   { label: "Short", variant: "shortText" },
   { label: "Long", variant: "longText" },
-  { label: "Checkbox", variant: "checkbox" },
-  { label: "Number", variant: "number" },
   { label: "Audio", variant: "audio" },
   { label: "Image", variant: "image" },
   { label: "Video", variant: "video" },
+  { label: "Number", variant: "number" },
+  { label: "Checkbox", variant: "checkbox" },
 ];
 
 const isMediaVariant = (
@@ -66,8 +66,6 @@ export const LogForm: React.FC<{
 }> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
   const isEdit = Boolean(log);
   const [sections, setSections] = useState<LogSection[]>(log?.sections ?? []);
-  const [openFilePickerSignalByBlockKey, setOpenFilePickerSignalByBlockKey] =
-    useState<Record<string, number>>({});
 
   const sectionsJson = useMemo(() => JSON.stringify(sections), [sections]);
 
@@ -139,15 +137,11 @@ export const LogForm: React.FC<{
       return;
     }
 
-    let newBlockIndex = -1;
-
     setSections((previousSections) =>
       previousSections.map((section, index) => {
         if (index !== sectionIndex) {
           return section;
         }
-
-        newBlockIndex = section.blocks.length;
 
         return {
           ...section,
@@ -158,14 +152,6 @@ export const LogForm: React.FC<{
         };
       }),
     );
-
-    if (isMediaVariant(variant)) {
-      const blockKey = `${sectionIndex}-${newBlockIndex}`;
-      setOpenFilePickerSignalByBlockKey((current) => ({
-        ...current,
-        [blockKey]: (current[blockKey] ?? 0) + 1,
-      }));
-    }
   };
 
   const removeBlock = ({
@@ -203,9 +189,7 @@ export const LogForm: React.FC<{
               <div className="flex flex-col space-y-2">
                 <form
                   action={() => {
-                    const name = Maybe.fromNullable(
-                      window.prompt("New name?"),
-                    )
+                    const name = Maybe.fromNullable(window.prompt("New name?"))
                       .map((value) => value.trim())
                       .filter((value) => value.length > 0);
 
@@ -234,7 +218,10 @@ export const LogForm: React.FC<{
         )}
       </div>
 
-      <form action={isEdit ? updateLogAction : createLogAction} className="space-y-3">
+      <form
+        action={isEdit ? updateLogAction : createLogAction}
+        className="space-y-3"
+      >
         <Label label="Name">
           <Input
             type="text"
@@ -266,145 +253,145 @@ export const LogForm: React.FC<{
             legend={section.name}
             className="space-y-4"
           >
-            <div className="space-y-2">
-              {section.blocks.map((block, blockIndex) => (
+            {section.blocks.length > 0 ? (
+              <div className="space-y-2">
+                {section.blocks.map((block, blockIndex) => (
                 <div
                   key={`${sectionIndex}-${blockIndex}`}
-                  className="space-y-1"
+                  className="space-y-0.5"
                 >
-                  <div className="flex items-center justify-between gap-2 pb-1">
-                    <Label label={block.name} className="w-auto min-w-0" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-xs"
-                      onClick={() => removeBlock({ sectionIndex, blockIndex })}
-                    >
-                      Remove
-                    </Button>
-                  </div>
+                  {!isMediaBlock(block) && (
+                    <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
+                      <div className="min-w-0">
+                        <p className="truncate -mb-1">{block.name}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                          className="text-xs"
+                          onClick={() =>
+                            removeBlock({ sectionIndex, blockIndex })
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
 
-                  {block.variant === "checkbox" && (
-                    <label className="flex w-full items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(block.value)}
+                    {block.variant === "checkbox" && (
+                      <label className="flex w-full items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(block.value)}
+                          onChange={(event) =>
+                            updateBlockValue({
+                              sectionIndex,
+                              blockIndex,
+                              value: event.target.checked,
+                            })
+                          }
+                          className="accent-blue-500"
+                        />
+                        <span>Checked</span>
+                      </label>
+                    )}
+
+                    {block.variant === "number" && (
+                      <Input
+                        type="number"
+                        className="w-full max-w-none"
+                        value={String(block.value)}
                         onChange={(event) =>
                           updateBlockValue({
                             sectionIndex,
                             blockIndex,
-                            value: event.target.checked,
+                            value: Number(event.target.value || "0"),
                           })
                         }
-                        className="accent-blue-500"
                       />
-                      <span>Checked</span>
-                    </label>
-                  )}
+                    )}
 
-                  {block.variant === "number" && (
-                    <Input
-                      type="number"
-                      className="w-full max-w-none"
-                      value={String(block.value)}
-                      onChange={(event) =>
-                        updateBlockValue({
-                          sectionIndex,
-                          blockIndex,
-                          value: Number(event.target.value || "0"),
-                        })
-                      }
-                    />
-                  )}
+                    {block.variant === "shortText" && (
+                      <Input
+                        className="w-full max-w-none"
+                        value={String(block.value)}
+                        onChange={(event) =>
+                          updateBlockValue({
+                            sectionIndex,
+                            blockIndex,
+                            value: event.target.value,
+                          })
+                        }
+                      />
+                    )}
 
-                  {block.variant === "shortText" && (
-                    <Input
-                      className="w-full max-w-none"
-                      value={String(block.value)}
-                      onChange={(event) =>
-                        updateBlockValue({
-                          sectionIndex,
-                          blockIndex,
-                          value: event.target.value,
-                        })
-                      }
-                    />
-                  )}
+                    {block.variant === "longText" && (
+                      <Textarea
+                        className="w-full max-w-none"
+                        value={String(block.value)}
+                        rows={4}
+                        onChange={(event) =>
+                          updateBlockValue({
+                            sectionIndex,
+                            blockIndex,
+                            value: event.target.value,
+                          })
+                        }
+                      />
+                    )}
 
-                  {block.variant === "longText" && (
-                    <Textarea
-                      className="w-full max-w-none"
-                      value={String(block.value)}
-                      rows={4}
-                      onChange={(event) =>
-                        updateBlockValue({
-                          sectionIndex,
-                          blockIndex,
-                          value: event.target.value,
-                        })
-                      }
-                    />
-                  )}
+                    {isMediaBlock(block) &&
+                      (() => {
+                        const previewUrl =
+                          initialMediaPreviewUrlsByBlockKey[
+                            `${sectionIndex}-${blockIndex}`
+                          ];
+                        const initialUploadedAssets: AssetItemWithPreview[] =
+                          block.value.trim() !== "" && previewUrl
+                            ? [
+                                {
+                                  caption: block.name,
+                                  filename: block.value,
+                                  variant: block.variant,
+                                  previewUrl,
+                                },
+                              ]
+                            : [];
 
-                  {isMediaBlock(block) && (
-                    (() => {
-                      const previewUrl =
-                        initialMediaPreviewUrlsByBlockKey[
-                          `${sectionIndex}-${blockIndex}`
-                        ];
-                      const initialUploadedAssets: AssetItemWithPreview[] =
-                        block.value.trim() !== "" && previewUrl
-                          ? [
-                              {
-                                caption: block.name,
-                                filename: block.value,
-                                variant: block.variant,
-                                previewUrl,
-                              },
-                            ]
-                          : [];
+                        return (
+                          <LogMediaAssetInput
+                            variant={block.variant}
+                            initialUploadedAssets={initialUploadedAssets}
+                            label={block.name}
+                            onFilenameChangeAction={(filename) =>
+                              updateBlockValue({
+                                sectionIndex,
+                                blockIndex,
+                                value: filename,
+                              })
+                            }
+                          />
+                        );
+                      })()}
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
-                      return (
-                        <LogMediaAssetInput
-                          variant={block.variant}
-                          initialUploadedAssets={initialUploadedAssets}
-                          openFilePickerSignal={
-                            openFilePickerSignalByBlockKey[
-                              `${sectionIndex}-${blockIndex}`
-                            ]
-                          }
-                          onFilenameChangeAction={(filename) =>
-                            updateBlockValue({
-                              sectionIndex,
-                              blockIndex,
-                              value: filename,
-                            })
-                          }
-                        />
-                      );
-                    })()
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-1 items-center text-xs">
-              <span>Add block:</span>
-
-              {BLOCK_BUTTONS.map(({ label, variant }, index) => (
+            <div className="flex flex-wrap gap-2 items-center text-xs">
+              {BLOCK_BUTTONS.map(({ label, variant }) => (
                 <div
                   key={`${sectionIndex}-${variant}`}
                   className="flex items-center space-x-1"
                 >
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     className="text-xs py-1 px-2"
                     onClick={() => addBlock({ sectionIndex, variant })}
                   >
                     {label}
                   </Button>
-                  {index < BLOCK_BUTTONS.length - 1 && <span>|</span>}
                 </div>
               ))}
             </div>

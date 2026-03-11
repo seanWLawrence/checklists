@@ -99,9 +99,11 @@ export const AssetManager: React.FC<{
   ) => void;
   shouldEnableTranscription?: boolean;
   shouldShowRecorder?: boolean;
+  shouldShowCaptionField?: boolean;
+  shouldHideAddFilesWhenHasAssets?: boolean;
+  shouldShowRecorderTranscribeOption?: boolean;
   allowedVariants?: AssetVariant[];
   multiple?: boolean;
-  openFilePickerSignal?: number;
 }> = ({
   initialUploadedAssets,
   name,
@@ -109,9 +111,11 @@ export const AssetManager: React.FC<{
   onTranscribeChangeAction,
   shouldEnableTranscription = Boolean(onTranscribeChangeAction),
   shouldShowRecorder = true,
+  shouldShowCaptionField = true,
+  shouldHideAddFilesWhenHasAssets = false,
+  shouldShowRecorderTranscribeOption = true,
   allowedVariants = ["audio", "image", "video"],
   multiple = true,
-  openFilePickerSignal,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMountedRef = useRef(true);
@@ -165,12 +169,6 @@ export const AssetManager: React.FC<{
       });
     };
   }, []);
-
-  useEffect(() => {
-    if (typeof openFilePickerSignal === "number") {
-      inputRef.current?.click();
-    }
-  }, [openFilePickerSignal]);
 
   const setTranscribeStatus = ({
     filename,
@@ -587,6 +585,12 @@ export const AssetManager: React.FC<{
   }, [allowedVariants]);
 
   const shouldShowTranscribe = shouldEnableTranscription;
+  const shouldShowRecorderControl =
+    shouldShowRecorder &&
+    allowedVariants.includes("audio") &&
+    (!shouldHideAddFilesWhenHasAssets || uploadedAssets.length === 0);
+  const shouldShowAddFilesButton =
+    !shouldHideAddFilesWhenHasAssets || uploadedAssets.length === 0;
 
   return (
     <div className="space-y-4">
@@ -666,6 +670,7 @@ export const AssetManager: React.FC<{
         assets={uploadedAssets}
         onRemoveClick={onRemoveClick}
         onCaptionChange={onCaptionChange}
+        shouldShowCaptionField={shouldShowCaptionField}
         onTranscribeClick={shouldShowTranscribe ? onTranscribeClick : undefined}
         transcribeStatusByFilename={transcribeStatusByFilename}
         shouldShowTranscribeButton={(asset, status) => {
@@ -686,13 +691,18 @@ export const AssetManager: React.FC<{
 
       <div className="space-y-2">
         <div className="flex items-center justify-end gap-2">
-          {shouldShowRecorder && allowedVariants.includes("audio") && (
-            <AudioRecorderInput onChangeAction={onRecordAudioFinished} />
+          {shouldShowRecorderControl && (
+            <AudioRecorderInput
+              onChangeAction={onRecordAudioFinished}
+              shouldShowTranscribeOption={shouldShowRecorderTranscribeOption}
+            />
           )}
 
-          <Button type="button" variant="outline" onClick={onAddFilesClick}>
-            Add files
-          </Button>
+          {shouldShowAddFilesButton && (
+            <Button type="button" variant="outline" onClick={onAddFilesClick}>
+              Add files
+            </Button>
+          )}
         </div>
 
         {statusMessage && (

@@ -11,7 +11,7 @@ export const Fieldset: React.FC<
   return (
     <fieldset
       className={cn(
-        "space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pt-2 pb-3 rounded-lg w-full min-w-48",
+        "space-y-1 border-2 border-zinc-700 dark:border-zinc-500 px-3 pb-3 rounded-lg w-full min-w-48",
         className,
       )}
     >

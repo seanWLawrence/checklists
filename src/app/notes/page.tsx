@@ -9,49 +9,9 @@ import { getAllNotes } from "./model/get-all-notes.model";
 import { Note } from "./types";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { groupItemsByNameCategory } from "@/lib/group-items-by-name-category";
 
 export const dynamic = "force-dynamic";
-
-const getCategorizedNotes = (
-  notes: Note[],
-): { category: string; notes: Note[] }[] => {
-  const uncategorized: Note[] = [];
-  const result: { [category: string]: Note[] } = {};
-
-  for (const note of notes) {
-    const nameSplit = note.name.trim().split("/");
-
-    if (nameSplit.length === 1) {
-      uncategorized.push(note);
-      continue;
-    }
-
-    const [category, name] = nameSplit;
-
-    if (!result[category]) {
-      result[category] = [];
-    }
-
-    result[category].push({ ...note, name });
-  }
-
-  if (uncategorized.length) {
-    result["Other"] = uncategorized.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-    );
-  }
-
-  return Object.entries(result)
-    .map(([category, notes]) => ({
-      category,
-      notes: [...notes].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-      ),
-    }))
-    .sort((a, b) =>
-      a.category.toLowerCase().localeCompare(b.category.toLowerCase()),
-    );
-};
 
 const HIDDEN_PREFIX = "Hidden/";
 
@@ -72,7 +32,9 @@ const Notes: React.FC<{
             note.name.toLowerCase().includes(q.toLowerCase()),
           )
         : notes.filter((note) => !note.name.trim().startsWith(HIDDEN_PREFIX));
-    const categorizedNotes = getCategorizedNotes(filteredNotes);
+    const categorizedNotes = groupItemsByNameCategory({
+      items: filteredNotes,
+    });
 
     return (
       <main>
@@ -126,13 +88,13 @@ const Notes: React.FC<{
           )}
 
           <div className="space-y-1">
-            {categorizedNotes.map(({ category, notes }) => {
+            {categorizedNotes.map(({ category, items }) => {
               return (
                 <div className="flex flex-col space-y-1" key={category}>
                   <Heading level={3}>{category}</Heading>
 
                   <div className="flex flex-wrap">
-                    {notes.map(({ id, name }) => {
+                    {items.map(({ id, name }) => {
                       return (
                         <LinkButton
                           href={`/notes/${id}`}

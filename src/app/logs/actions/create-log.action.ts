@@ -10,7 +10,7 @@ import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { logger } from "@/lib/logger";
 import { createItem } from "@/lib/redis/create-item";
 import { array } from "purify-ts/Codec";
-import { Log, LogSection } from "../log.types";
+import { LogSection } from "../log.types";
 import { getLogKey } from "../model/get-log-key";
 import { metadata } from "@/lib/redis/metadata.factory";
 
@@ -33,7 +33,9 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
     );
 
     const redirectToEdit = Maybe.fromNullable(formData.get("redirectToEdit"))
-      .chain((value) => (typeof value === "string" ? Maybe.of(value) : Maybe.empty()))
+      .chain((value) =>
+        typeof value === "string" ? Maybe.of(value) : Maybe.empty(),
+      )
       .map((value) => value === "true")
       .orDefault(false);
 
@@ -60,7 +62,9 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
 
   if (response.isRight()) {
     const { item, redirectToEdit } = response.extract();
-    const pathname = redirectToEdit ? `/logs/${item.id}/edit` : `/logs/${item.id}`;
+    const pathname = redirectToEdit
+      ? `/logs/${item.id}/edit`
+      : `/logs/${item.id}`;
     redirect(pathname, RedirectType.push);
   }
 };

@@ -5,59 +5,17 @@ import { ChecklistV2 } from "./checklist-v2.types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllChecklistsV2 } from "./model/get-all-checklists-v2.model";
 import Link from "next/link";
+import { groupItemsByNameCategory } from "@/lib/group-items-by-name-category";
 
 export const dynamic = "force-dynamic";
-
-const getCategorizedChecklists = (
-  checklists: ChecklistV2[],
-): { category: string; checklists: ChecklistV2[] }[] => {
-  const uncategorized: ChecklistV2[] = [];
-  const result: { [category: string]: ChecklistV2[] } = {};
-
-  for (const checklist of checklists) {
-    const nameSplit = checklist.name.trim().split("/");
-
-    if (nameSplit.length === 1) {
-      uncategorized.push(checklist);
-      continue;
-    }
-
-    const [category, name] = nameSplit;
-
-    if (!result[category]) {
-      result[category] = [];
-    }
-
-    result[category].push({ ...checklist, name });
-  }
-
-  if (uncategorized.length) {
-    result["Other"] = uncategorized.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-    );
-  }
-
-  return Object.entries(result)
-    .map(([category, checklists]) => {
-      return {
-        category,
-        checklists: [
-          ...checklists.sort((a, b) =>
-            a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-          ),
-        ],
-      };
-    })
-    .sort((a, b) =>
-      a.category.toLowerCase().localeCompare(b.category.toLowerCase()),
-    );
-};
 
 const ChecklistsV2: React.FC = async () => {
   const page = await EitherAsync(async ({ fromPromise }) => {
     const checklists = await fromPromise(getAllChecklistsV2());
 
-    const categorizedChecklists = getCategorizedChecklists(checklists);
+    const categorizedChecklists = groupItemsByNameCategory({
+      items: checklists,
+    });
 
     return (
       <main className="space-y-6">
@@ -78,13 +36,13 @@ const ChecklistsV2: React.FC = async () => {
           )}
 
           <div className="space-y-1">
-            {categorizedChecklists.map(({ category, checklists }) => {
+            {categorizedChecklists.map(({ category, items }) => {
               return (
                 <div className="flex flex-col space-y-1" key={category}>
                   <Heading level={3}>{category}</Heading>
 
                   <div className="flex flex-wrap" key={category}>
-                    {checklists.map(({ id, name }) => {
+                    {items.map(({ id, name }) => {
                       return (
                         <LinkButton
                           href={`/checklists/${id}`}

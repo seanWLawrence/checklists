@@ -78,7 +78,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                     </div>
 
                     {block.variant === "checkbox" && (
-                      <label className="flex w-full items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm">
+                      <label className="flex w-full items-center gap-2 text-sm">
                         <input
                           type="checkbox"
                           checked={block.value}
@@ -120,7 +120,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                         {block.value.trim() === "" ? (
                           <EmptyValue />
                         ) : mediaPreviewUrl ? (
-                          <>
+                          <div className="space-y-1">
                             {block.variant === "image" && (
                               <Image src={mediaPreviewUrl} alt={block.name} />
                             )}
@@ -130,7 +130,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                             {block.variant === "video" && (
                               <Video src={mediaPreviewUrl} />
                             )}
-                          </>
+                          </div>
                         ) : (
                           <p className="text-sm text-zinc-600 dark:text-zinc-300">
                             No file attached.
