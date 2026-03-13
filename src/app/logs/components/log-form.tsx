@@ -43,14 +43,14 @@ const isMediaBlock = (
 
 const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
   if (variant === "checkbox") {
-    return { name: "", variant, value: false };
+    return { variant, value: false };
   }
 
   if (variant === "number") {
-    return { name: "", variant, value: 0 };
+    return { variant, value: 0 };
   }
 
-  return { name: "", variant, value: "" };
+  return { variant, value: "" };
 };
 
 const createEmptySection = ({ index }: { index: number }): LogSection => {
@@ -136,13 +136,6 @@ export const LogForm: React.FC<{
     sectionIndex: number;
     variant: BlockVariant;
   }) => {
-    const blockName = window.prompt("Block label?");
-    const trimmedBlockName = blockName?.trim();
-
-    if (!trimmedBlockName) {
-      return;
-    }
-
     setSections((previousSections) =>
       previousSections.map((section, index) => {
         if (index !== sectionIndex) {
@@ -151,10 +144,7 @@ export const LogForm: React.FC<{
 
         return {
           ...section,
-          blocks: [
-            ...section.blocks,
-            { ...createDefaultBlock({ variant }), name: trimmedBlockName },
-          ],
+          blocks: [...section.blocks, createDefaultBlock({ variant })],
         };
       }),
     );
@@ -279,10 +269,7 @@ export const LogForm: React.FC<{
                     className="space-y-0.5"
                   >
                     {!isMediaBlock(block) && (
-                      <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                        <div className="min-w-0">
-                          <p className="truncate -mb-1">{block.name}</p>
-                        </div>
+                      <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
                         <Button
                           type="button"
                           variant="ghost"
@@ -368,7 +355,7 @@ export const LogForm: React.FC<{
                           block.value.trim() !== "" && previewUrl
                             ? [
                                 {
-                                  caption: block.name,
+                                  caption: "",
                                   filename: block.value,
                                   variant: block.variant,
                                   previewUrl,
@@ -380,7 +367,7 @@ export const LogForm: React.FC<{
                           <LogMediaAssetInput
                             variant={block.variant}
                             initialUploadedAssets={initialUploadedAssets}
-                            label={block.name}
+                            label=""
                             onFilenameChangeAction={(filename) =>
                               updateBlockValue({
                                 sectionIndex,

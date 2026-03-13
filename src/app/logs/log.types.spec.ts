@@ -16,13 +16,13 @@ test("Log decodes with all block variants", ({ expect }) => {
       {
         name: "Morning",
         blocks: [
-          { name: "Workout", variant: "checkbox", value: true },
-          { name: "Focus", variant: "shortText", value: "Deep work" },
-          { name: "Reflection", variant: "longText", value: "Good momentum." },
-          { name: "Energy", variant: "number", value: 4 },
-          { name: "Voice note", variant: "audio", value: "audio/test.m4a" },
-          { name: "Desk setup", variant: "image", value: "image/test.jpg" },
-          { name: "Demo clip", variant: "video", value: "video/test.mp4" },
+          { variant: "checkbox", value: true },
+          { variant: "shortText", value: "Deep work" },
+          { variant: "longText", value: "Good momentum." },
+          { variant: "number", value: 4 },
+          { variant: "audio", value: "audio/test.m4a" },
+          { variant: "image", value: "image/test.jpg" },
+          { variant: "video", value: "video/test.mp4" },
         ],
       },
     ],
@@ -43,7 +43,7 @@ test("Log decode fails for unknown block variant", ({ expect }) => {
     sections: [
       {
         name: "Morning",
-        blocks: [{ name: "Mystery", variant: "toggle", value: true }],
+        blocks: [{ variant: "toggle", value: true }],
       },
     ],
   });
@@ -65,7 +65,7 @@ test("Log decode fails when block value type is invalid for its variant", ({
     sections: [
       {
         name: "Morning",
-        blocks: [{ name: "Workout", variant: "checkbox", value: "yes" }],
+        blocks: [{ variant: "checkbox", value: "yes" }],
       },
     ],
   });

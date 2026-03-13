@@ -81,7 +81,6 @@ const VideoVariant = Codec.custom<"video">({
 });
 
 const CheckboxBlock = Codec.interface({
-  name: string,
   variant: CheckboxVariant,
   value: boolean,
 });
@@ -89,7 +88,6 @@ const CheckboxBlock = Codec.interface({
 export type CheckboxBlock = GetType<typeof CheckboxBlock>;
 
 const ShortTextBlock = Codec.interface({
-  name: string,
   variant: ShortTextVariant,
   value: string,
 });
@@ -97,7 +95,6 @@ const ShortTextBlock = Codec.interface({
 export type ShortTextBlock = GetType<typeof ShortTextBlock>;
 
 const LongTextBlock = Codec.interface({
-  name: string,
   variant: LongTextVariant,
   value: string,
 });
@@ -105,7 +102,6 @@ const LongTextBlock = Codec.interface({
 export type LongTextBlock = GetType<typeof LongTextBlock>;
 
 const NumberBlock = Codec.interface({
-  name: string,
   variant: NumberVariant,
   value: number,
 });
@@ -113,7 +109,6 @@ const NumberBlock = Codec.interface({
 export type NumberBlock = GetType<typeof NumberBlock>;
 
 const AudioBlock = Codec.interface({
-  name: string,
   variant: AudioVariant,
   value: string,
 });
@@ -121,7 +116,6 @@ const AudioBlock = Codec.interface({
 export type AudioBlock = GetType<typeof AudioBlock>;
 
 const ImageBlock = Codec.interface({
-  name: string,
   variant: ImageVariant,
   value: string,
 });
@@ -129,7 +123,6 @@ const ImageBlock = Codec.interface({
 export type ImageBlock = GetType<typeof ImageBlock>;
 
 const VideoBlock = Codec.interface({
-  name: string,
   variant: VideoVariant,
   value: string,
 });

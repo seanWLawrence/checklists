@@ -72,11 +72,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                   previewUrls[`${sectionIndex}-${blockIndex}`];
 
                 return (
-                  <div key={`${block.name}-${blockIndex}`} className="space-y-1">
-                    <div className="text-xs text-zinc-600 dark:text-zinc-300">
-                      {block.name}
-                    </div>
-
+                  <div key={blockIndex} className="space-y-1">
                     {block.variant === "checkbox" && (
                       <label className="flex w-full items-center gap-2 text-sm">
                         <input
@@ -122,7 +118,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                         ) : mediaPreviewUrl ? (
                           <div className="space-y-1">
                             {block.variant === "image" && (
-                              <Image src={mediaPreviewUrl} alt={block.name} />
+                              <Image src={mediaPreviewUrl} alt="" />
                             )}
                             {block.variant === "audio" && (
                               <Audio src={mediaPreviewUrl} />
