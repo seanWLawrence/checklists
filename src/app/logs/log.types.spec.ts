@@ -16,13 +16,24 @@ test("Log decodes with all block variants", ({ expect }) => {
       {
         name: "Morning",
         blocks: [
-          { variant: "checkbox", value: true },
-          { variant: "shortText", value: "Deep work" },
-          { variant: "longText", value: "Good momentum." },
-          { variant: "number", value: 4 },
-          { variant: "audio", value: "audio/test.m4a" },
-          { variant: "image", value: "image/test.jpg" },
-          { variant: "video", value: "video/test.mp4" },
+          { variant: "shortMarkdown", value: "# Heading" },
+          { variant: "longMarkdown", value: "Some longer notes here." },
+          {
+            variant: "asset",
+            assetVariant: "audio",
+            filename: "audio/test.m4a",
+          },
+          {
+            variant: "asset",
+            assetVariant: "image",
+            filename: "image/test.jpg",
+            fileSizeBytes: 1024,
+          },
+          {
+            variant: "asset",
+            assetVariant: "video",
+            filename: "video/test.mp4",
+          },
         ],
       },
     ],
@@ -51,7 +62,7 @@ test("Log decode fails for unknown block variant", ({ expect }) => {
   expect(decoded.isLeft()).toBe(true);
 });
 
-test("Log decode fails when block value type is invalid for its variant", ({
+test("Log decode fails when asset block has invalid assetVariant", ({
   expect,
 }) => {
   const nowIso = "2026-03-10T12:00:00.000Z";
@@ -65,7 +76,7 @@ test("Log decode fails when block value type is invalid for its variant", ({
     sections: [
       {
         name: "Morning",
-        blocks: [{ variant: "checkbox", value: "yes" }],
+        blocks: [{ variant: "asset", assetVariant: "pdf", filename: "doc.pdf" }],
       },
     ],
   });

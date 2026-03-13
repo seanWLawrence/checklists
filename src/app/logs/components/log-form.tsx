@@ -13,41 +13,36 @@ import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
-import { Block, BlockVariant, Log, LogSection } from "../log.types";
+import {
+  AssetVariant,
+  Block,
+  BlockVariant,
+  Log,
+  LogSection,
+} from "../log.types";
 import { LogMediaAssetInput } from "./log-media-asset-input";
 
 const BLOCK_BUTTONS: {
   label: string;
   variant: BlockVariant;
+  assetVariant?: AssetVariant;
 }[] = [
-  { label: "Short", variant: "shortText" },
-  { label: "Long", variant: "longText" },
-  { label: "Audio", variant: "audio" },
-  { label: "Image", variant: "image" },
-  { label: "Video", variant: "video" },
-  { label: "Number", variant: "number" },
-  { label: "Checkbox", variant: "checkbox" },
+  { label: "Short", variant: "shortMarkdown" },
+  { label: "Long", variant: "longMarkdown" },
+  { label: "Audio", variant: "asset", assetVariant: "audio" },
+  { label: "Image", variant: "asset", assetVariant: "image" },
+  { label: "Video", variant: "asset", assetVariant: "video" },
 ];
 
-const isMediaVariant = (
-  variant: BlockVariant,
-): variant is "audio" | "image" | "video" => {
-  return variant === "audio" || variant === "image" || variant === "video";
-};
-
-const isMediaBlock = (
-  block: Block,
-): block is Extract<Block, { variant: "audio" | "image" | "video" }> => {
-  return isMediaVariant(block.variant);
-};
-
-const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
-  if (variant === "checkbox") {
-    return { variant, value: false };
-  }
-
-  if (variant === "number") {
-    return { variant, value: 0 };
+const createDefaultBlock = ({
+  variant,
+  assetVariant,
+}: {
+  variant: BlockVariant;
+  assetVariant?: AssetVariant;
+}): Block => {
+  if (variant === "asset") {
+    return { variant, assetVariant: assetVariant ?? "image", filename: "" };
   }
 
   return { variant, value: "" };
@@ -76,7 +71,7 @@ export const LogForm: React.FC<{
   }: {
     sectionIndex: number;
     blockIndex: number;
-    value: string | number | boolean;
+    value: string;
   }) => {
     setSections((previousSections) =>
       previousSections.map((section, index) => {
@@ -91,15 +86,39 @@ export const LogForm: React.FC<{
               return block;
             }
 
-            if (block.variant === "checkbox") {
-              return { ...block, value: Boolean(value) };
+            return { ...block, value };
+          }),
+        };
+      }),
+    );
+  };
+
+  const updateAssetBlockFilename = ({
+    sectionIndex,
+    blockIndex,
+    filename,
+  }: {
+    sectionIndex: number;
+    blockIndex: number;
+    filename: string;
+  }) => {
+    setSections((previousSections) =>
+      previousSections.map((section, index) => {
+        if (index !== sectionIndex) {
+          return section;
+        }
+
+        return {
+          ...section,
+          blocks: section.blocks.map((block, currentBlockIndex) => {
+            if (
+              currentBlockIndex !== blockIndex ||
+              block.variant !== "asset"
+            ) {
+              return block;
             }
 
-            if (block.variant === "number") {
-              return { ...block, value: Number(value) };
-            }
-
-            return { ...block, value: String(value) };
+            return { ...block, filename };
           }),
         };
       }),
@@ -132,9 +151,11 @@ export const LogForm: React.FC<{
   const addBlock = ({
     sectionIndex,
     variant,
+    assetVariant,
   }: {
     sectionIndex: number;
     variant: BlockVariant;
+    assetVariant?: AssetVariant;
   }) => {
     setSections((previousSections) =>
       previousSections.map((section, index) => {
@@ -144,7 +165,10 @@ export const LogForm: React.FC<{
 
         return {
           ...section,
-          blocks: [...section.blocks, createDefaultBlock({ variant })],
+          blocks: [
+            ...section.blocks,
+            createDefaultBlock({ variant, assetVariant }),
+          ],
         };
       }),
     );
@@ -268,58 +292,23 @@ export const LogForm: React.FC<{
                     key={`${sectionIndex}-${blockIndex}`}
                     className="space-y-0.5"
                   >
-                    {!isMediaBlock(block) && (
-                      <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="text-xs"
-                          onClick={() =>
-                            removeBlock({ sectionIndex, blockIndex })
-                          }
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    )}
-
-                    {block.variant === "checkbox" && (
-                      <label className="flex w-full items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(block.value)}
-                          onChange={(event) =>
-                            updateBlockValue({
-                              sectionIndex,
-                              blockIndex,
-                              value: event.target.checked,
-                            })
-                          }
-                          className="accent-blue-500"
-                        />
-                        <span>Checked</span>
-                      </label>
-                    )}
-
-                    {block.variant === "number" && (
-                      <Input
-                        type="number"
-                        className="w-full max-w-none"
-                        value={String(block.value)}
-                        onChange={(event) =>
-                          updateBlockValue({
-                            sectionIndex,
-                            blockIndex,
-                            value: Number(event.target.value || "0"),
-                          })
+                    <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs"
+                        onClick={() =>
+                          removeBlock({ sectionIndex, blockIndex })
                         }
-                      />
-                    )}
+                      >
+                        Remove
+                      </Button>
+                    </div>
 
-                    {block.variant === "shortText" && (
+                    {block.variant === "shortMarkdown" && (
                       <Input
                         className="w-full max-w-none"
-                        value={String(block.value)}
+                        value={block.value}
                         onChange={(event) =>
                           updateBlockValue({
                             sectionIndex,
@@ -330,10 +319,10 @@ export const LogForm: React.FC<{
                       />
                     )}
 
-                    {block.variant === "longText" && (
+                    {block.variant === "longMarkdown" && (
                       <Textarea
                         className="w-full max-w-none"
-                        value={String(block.value)}
+                        value={block.value}
                         rows={4}
                         onChange={(event) =>
                           updateBlockValue({
@@ -345,19 +334,19 @@ export const LogForm: React.FC<{
                       />
                     )}
 
-                    {isMediaBlock(block) &&
+                    {block.variant === "asset" &&
                       (() => {
                         const previewUrl =
                           initialMediaPreviewUrlsByBlockKey[
                             `${sectionIndex}-${blockIndex}`
                           ];
                         const initialUploadedAssets: AssetItemWithPreview[] =
-                          block.value.trim() !== "" && previewUrl
+                          block.filename.trim() !== "" && previewUrl
                             ? [
                                 {
                                   caption: "",
-                                  filename: block.value,
-                                  variant: block.variant,
+                                  filename: block.filename,
+                                  variant: block.assetVariant,
                                   previewUrl,
                                 },
                               ]
@@ -365,14 +354,14 @@ export const LogForm: React.FC<{
 
                         return (
                           <LogMediaAssetInput
-                            variant={block.variant}
+                            variant={block.assetVariant}
                             initialUploadedAssets={initialUploadedAssets}
                             label=""
                             onFilenameChangeAction={(filename) =>
-                              updateBlockValue({
+                              updateAssetBlockFilename({
                                 sectionIndex,
                                 blockIndex,
-                                value: filename,
+                                filename,
                               })
                             }
                           />
@@ -384,16 +373,18 @@ export const LogForm: React.FC<{
             ) : null}
 
             <div className="flex flex-wrap gap-2 items-center text-xs">
-              {BLOCK_BUTTONS.map(({ label, variant }) => (
+              {BLOCK_BUTTONS.map(({ label, variant, assetVariant }) => (
                 <div
-                  key={`${sectionIndex}-${variant}`}
+                  key={`${sectionIndex}-${variant}-${assetVariant ?? ""}`}
                   className="flex items-center space-x-1"
                 >
                   <Button
                     type="button"
                     variant="outline"
                     className="text-xs py-1 px-2"
-                    onClick={() => addBlock({ sectionIndex, variant })}
+                    onClick={() =>
+                      addBlock({ sectionIndex, variant, assetVariant })
+                    }
                   >
                     {label}
                   </Button>

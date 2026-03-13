@@ -9,22 +9,8 @@ import { Image } from "@/components/image";
 import { Video } from "@/components/video";
 import { UUID } from "@/lib/types";
 import { getLog } from "../model/get-log.model";
-import { Block } from "../log.types";
 import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
-
-const isMediaBlock = (
-  block: Block,
-): block is Extract<Block, { variant: "audio" | "image" | "video" }> => {
-  return (
-    block.variant === "audio" ||
-    block.variant === "image" ||
-    block.variant === "video"
-  );
-};
-
-const EmptyValue: React.FC = () => {
-  return <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>;
-};
+import { PrettyContent } from "@/app/notes/[id]/pretty-content.client";
 
 type Params = Promise<{ id: string }>;
 
@@ -72,58 +58,36 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                   previewUrls[`${sectionIndex}-${blockIndex}`];
 
                 return (
-                  <div key={blockIndex} className="space-y-1">
-                    {block.variant === "checkbox" && (
-                      <label className="flex w-full items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={block.value}
-                          readOnly
-                          className="accent-blue-500"
-                        />
-                        <span>{block.value ? "Checked" : "Not checked"}</span>
-                      </label>
-                    )}
-
-                    {block.variant === "shortText" && (
+                  <div key={blockIndex}>
+                    {block.variant === "shortMarkdown" && (
                       block.value.trim() !== "" ? (
-                        <p className="text-sm">{block.value}</p>
+                        <PrettyContent content={block.value} />
                       ) : (
-                        <EmptyValue />
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
                       )
                     )}
 
-                    {block.variant === "longText" && (
+                    {block.variant === "longMarkdown" && (
                       block.value.trim() !== "" ? (
-                        <p className="whitespace-pre-wrap break-words text-sm">
-                          {block.value}
-                        </p>
+                        <PrettyContent content={block.value} />
                       ) : (
-                        <EmptyValue />
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
                       )
                     )}
 
-                    {block.variant === "number" && (
-                      Number.isFinite(block.value) ? (
-                        <p className="text-sm">{block.value}</p>
-                      ) : (
-                        <EmptyValue />
-                      )
-                    )}
-
-                    {isMediaBlock(block) && (
+                    {block.variant === "asset" && (
                       <div className="space-y-2">
-                        {block.value.trim() === "" ? (
-                          <EmptyValue />
+                        {block.filename.trim() === "" ? (
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
                         ) : mediaPreviewUrl ? (
                           <div className="space-y-1">
-                            {block.variant === "image" && (
+                            {block.assetVariant === "image" && (
                               <Image src={mediaPreviewUrl} alt="" />
                             )}
-                            {block.variant === "audio" && (
+                            {block.assetVariant === "audio" && (
                               <Audio src={mediaPreviewUrl} />
                             )}
-                            {block.variant === "video" && (
+                            {block.assetVariant === "video" && (
                               <Video src={mediaPreviewUrl} />
                             )}
                           </div>

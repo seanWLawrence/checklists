@@ -5,29 +5,18 @@ import {
   Left,
   Right,
   array,
-  boolean,
   intersect,
   number,
   string,
 } from "purify-ts";
+import { optional } from "purify-ts/Codec";
 
-export type BlockVariant =
-  | "checkbox"
-  | "shortText"
-  | "longText"
-  | "number"
-  | "audio"
-  | "image"
-  | "video";
+export type BlockVariant = "shortMarkdown" | "longMarkdown" | "asset";
 
 const blockVariantSet = new Set<BlockVariant>([
-  "checkbox",
-  "shortText",
-  "longText",
-  "number",
-  "audio",
-  "image",
-  "video",
+  "shortMarkdown",
+  "longMarkdown",
+  "asset",
 ]);
 
 const BlockVariant = Codec.custom<BlockVariant>({
@@ -38,105 +27,62 @@ const BlockVariant = Codec.custom<BlockVariant>({
   encode: (input) => input,
 });
 
-const CheckboxVariant = Codec.custom<"checkbox">({
+const ShortMarkdownVariant = Codec.custom<"shortMarkdown">({
   decode: (input) =>
-    input === "checkbox" ? Right(input) : Left(`Invalid variant '${input}'`),
+    input === "shortMarkdown"
+      ? Right(input)
+      : Left(`Invalid variant '${input}'`),
   encode: (input) => input,
 });
 
-const ShortTextVariant = Codec.custom<"shortText">({
+const LongMarkdownVariant = Codec.custom<"longMarkdown">({
   decode: (input) =>
-    input === "shortText" ? Right(input) : Left(`Invalid variant '${input}'`),
+    input === "longMarkdown"
+      ? Right(input)
+      : Left(`Invalid variant '${input}'`),
   encode: (input) => input,
 });
 
-const LongTextVariant = Codec.custom<"longText">({
+const AssetBlockVariant = Codec.custom<"asset">({
   decode: (input) =>
-    input === "longText" ? Right(input) : Left(`Invalid variant '${input}'`),
+    input === "asset" ? Right(input) : Left(`Invalid variant '${input}'`),
   encode: (input) => input,
 });
 
-const NumberVariant = Codec.custom<"number">({
+export type AssetVariant = "audio" | "image" | "video";
+
+export const AssetVariant = Codec.custom<AssetVariant>({
   decode: (input) =>
-    input === "number" ? Right(input) : Left(`Invalid variant '${input}'`),
+    input === "audio" || input === "image" || input === "video"
+      ? Right(input as AssetVariant)
+      : Left(`Invalid asset variant '${input}'`),
   encode: (input) => input,
 });
 
-const AudioVariant = Codec.custom<"audio">({
-  decode: (input) =>
-    input === "audio" ? Right(input) : Left(`Invalid variant '${input}'`),
-  encode: (input) => input,
-});
-
-const ImageVariant = Codec.custom<"image">({
-  decode: (input) =>
-    input === "image" ? Right(input) : Left(`Invalid variant '${input}'`),
-  encode: (input) => input,
-});
-
-const VideoVariant = Codec.custom<"video">({
-  decode: (input) =>
-    input === "video" ? Right(input) : Left(`Invalid variant '${input}'`),
-  encode: (input) => input,
-});
-
-const CheckboxBlock = Codec.interface({
-  variant: CheckboxVariant,
-  value: boolean,
-});
-
-export type CheckboxBlock = GetType<typeof CheckboxBlock>;
-
-const ShortTextBlock = Codec.interface({
-  variant: ShortTextVariant,
+const ShortMarkdownBlock = Codec.interface({
+  variant: ShortMarkdownVariant,
   value: string,
 });
 
-export type ShortTextBlock = GetType<typeof ShortTextBlock>;
+export type ShortMarkdownBlock = GetType<typeof ShortMarkdownBlock>;
 
-const LongTextBlock = Codec.interface({
-  variant: LongTextVariant,
+const LongMarkdownBlock = Codec.interface({
+  variant: LongMarkdownVariant,
   value: string,
 });
 
-export type LongTextBlock = GetType<typeof LongTextBlock>;
+export type LongMarkdownBlock = GetType<typeof LongMarkdownBlock>;
 
-const NumberBlock = Codec.interface({
-  variant: NumberVariant,
-  value: number,
+const AssetBlock = Codec.interface({
+  variant: AssetBlockVariant,
+  assetVariant: AssetVariant,
+  filename: string,
+  fileSizeBytes: optional(number),
 });
 
-export type NumberBlock = GetType<typeof NumberBlock>;
+export type AssetBlock = GetType<typeof AssetBlock>;
 
-const AudioBlock = Codec.interface({
-  variant: AudioVariant,
-  value: string,
-});
-
-export type AudioBlock = GetType<typeof AudioBlock>;
-
-const ImageBlock = Codec.interface({
-  variant: ImageVariant,
-  value: string,
-});
-
-export type ImageBlock = GetType<typeof ImageBlock>;
-
-const VideoBlock = Codec.interface({
-  variant: VideoVariant,
-  value: string,
-});
-
-export type VideoBlock = GetType<typeof VideoBlock>;
-
-export type Block =
-  | CheckboxBlock
-  | ShortTextBlock
-  | LongTextBlock
-  | NumberBlock
-  | AudioBlock
-  | ImageBlock
-  | VideoBlock;
+export type Block = ShortMarkdownBlock | LongMarkdownBlock | AssetBlock;
 
 const decodeBlockByVariant = (input: unknown) => {
   if (typeof input !== "object" || input === null || !("variant" in input)) {
@@ -152,20 +98,12 @@ const decodeBlockByVariant = (input: unknown) => {
   const variant = variantEither.extract();
 
   switch (variant) {
-    case "checkbox":
-      return CheckboxBlock.decode(input);
-    case "shortText":
-      return ShortTextBlock.decode(input);
-    case "longText":
-      return LongTextBlock.decode(input);
-    case "number":
-      return NumberBlock.decode(input);
-    case "audio":
-      return AudioBlock.decode(input);
-    case "image":
-      return ImageBlock.decode(input);
-    case "video":
-      return VideoBlock.decode(input);
+    case "shortMarkdown":
+      return ShortMarkdownBlock.decode(input);
+    case "longMarkdown":
+      return LongMarkdownBlock.decode(input);
+    case "asset":
+      return AssetBlock.decode(input);
     default:
       return Left(`Invalid block variant '${variant}'`);
   }
