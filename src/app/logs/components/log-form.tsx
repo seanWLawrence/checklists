@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
-import { AssetItemWithPreview } from "@/components/assets/asset.types";
 import { AssetManager } from "@/components/asset-manager";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
@@ -11,23 +11,82 @@ import { MenuButton } from "@/components/menu-button";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
+import { EitherAsync } from "purify-ts/EitherAsync";
+import { logger } from "@/lib/logger";
+import {
+  AssetsPresignPutObjectBody,
+  AssetsPresignPutObjectResponse,
+} from "@/app/api/assets/presign/put/types";
+import { AssetVariant } from "@/components/assets/asset.types";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
-import { Block, BlockVariant, Log } from "../log.types";
+import { AssetBlock, Block, BlockVariant, Log } from "../log.types";
 
-const BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
+const AudioRecorderInput = dynamic(
+  () =>
+    import("@/components/audio-recorder-input").then(
+      (module) => module.AudioRecorderInput,
+    ),
+  { ssr: false },
+);
+
+const getAssetVariant = (file: File): AssetVariant | null => {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("audio/")) return "audio";
+  if (file.type.startsWith("video/")) return "video";
+  return null;
+};
+
+const uploadFile = (
+  file: File,
+): EitherAsync<unknown, Pick<AssetBlock, "filename" | "assetVariant" | "fileSizeBytes">> => {
+  return EitherAsync(async ({ liftEither, throwE }) => {
+    const assetVariant = getAssetVariant(file);
+
+    if (!assetVariant) {
+      return throwE(`Unsupported file type: ${file.type}`);
+    }
+
+    const body = await liftEither(
+      AssetsPresignPutObjectBody.decode({
+        filename: file.name,
+        contentType: file.type,
+        variant: assetVariant,
+      }).map((decoded) => JSON.stringify(decoded)),
+    );
+
+    const presignResponse = await fetch("/api/assets/presign/put", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+
+    if (!presignResponse.ok) {
+      return throwE("Failed to get upload URL");
+    }
+
+    const { uploadUrl, filename } = await liftEither(
+      AssetsPresignPutObjectResponse.decode(await presignResponse.json()),
+    );
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: file.type ? { "Content-Type": file.type } : undefined,
+      body: file,
+    });
+
+    if (!uploadResponse.ok) {
+      return throwE("Failed to upload file");
+    }
+
+    return { filename, assetVariant, fileSizeBytes: file.size };
+  });
+};
+
+const MARKDOWN_BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
   { label: "Short", variant: "shortMarkdown" },
   { label: "Long", variant: "longMarkdown" },
-  { label: "Asset", variant: "asset" },
 ];
-
-const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
-  if (variant === "asset") {
-    return { variant, assetVariant: "image", filename: "" };
-  }
-
-  return { variant, value: "" };
-};
 
 export const LogForm: React.FC<{
   log?: Log;
@@ -35,6 +94,8 @@ export const LogForm: React.FC<{
 }> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
   const isEdit = Boolean(log);
   const [blocks, setBlocks] = useState<Block[]>(log?.blocks ?? []);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
 
@@ -53,34 +114,45 @@ export const LogForm: React.FC<{
     );
   };
 
-  const updateAssetBlock = ({
-    blockIndex,
-    assets,
-  }: {
-    blockIndex: number;
-    assets: AssetItemWithPreview[];
-  }) => {
-    const asset = assets[0];
-
-    setBlocks((previousBlocks) =>
-      previousBlocks.map((block, index) => {
-        if (index !== blockIndex || block.variant !== "asset") return block;
-
-        return {
-          ...block,
-          filename: asset?.filename ?? "",
-          assetVariant: asset?.variant ?? block.assetVariant,
-          fileSizeBytes: asset?.fileSizeBytes,
-        };
-      }),
-    );
-  };
-
-  const addBlock = ({ variant }: { variant: BlockVariant }) => {
+  const addMarkdownBlock = ({ variant }: { variant: BlockVariant }) => {
     setBlocks((previousBlocks) => [
       ...previousBlocks,
-      createDefaultBlock({ variant }),
+      { variant, value: "" } as Block,
     ]);
+  };
+
+  const addAssetFromFile = async (file: File) => {
+    setIsUploading(true);
+
+    const result = await uploadFile(file).run();
+
+    result.caseOf({
+      Right: ({ filename, assetVariant, fileSizeBytes }) => {
+        setBlocks((previousBlocks) => [
+          ...previousBlocks,
+          { variant: "asset", filename, assetVariant, fileSizeBytes },
+        ]);
+      },
+      Left: (error) => {
+        logger.error("Failed to upload asset", error);
+      },
+    });
+
+    setIsUploading(false);
+  };
+
+  const onFilesSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+
+    for (const file of files) {
+      await addAssetFromFile(file);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const removeBlock = ({ blockIndex }: { blockIndex: number }) => {
@@ -220,16 +292,13 @@ export const LogForm: React.FC<{
                           ]
                         : []
                     }
-                    allowedVariants={["audio", "image", "video"]}
+                    allowedVariants={[block.assetVariant]}
                     multiple={false}
-                    shouldShowRecorder={true}
+                    shouldShowRecorder={false}
                     shouldShowCaptionField={false}
                     shouldHideAddFilesWhenHasAssets={true}
                     shouldEnableTranscription={false}
                     shouldShowRecorderTranscribeOption={false}
-                    onAssetsChangeAction={(assets) =>
-                      updateAssetBlock({ blockIndex, assets })
-                    }
                   />
                 )}
               </div>
@@ -239,19 +308,45 @@ export const LogForm: React.FC<{
 
         <input type="hidden" name="blocks" value={blocksJson} readOnly />
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,audio/*,video/*"
+          multiple
+          className="sr-only"
+          onChange={onFilesSelected}
+        />
+
         <div className="flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            {BLOCK_BUTTONS.map(({ label, variant }) => (
+          <div className="flex flex-wrap gap-2 items-center">
+            {MARKDOWN_BLOCK_BUTTONS.map(({ label, variant }) => (
               <Button
                 key={variant}
                 type="button"
                 variant="outline"
                 className="text-xs py-1 px-2"
-                onClick={() => addBlock({ variant })}
+                onClick={() => addMarkdownBlock({ variant })}
               >
                 {label}
               </Button>
             ))}
+
+            <AudioRecorderInput
+              onChangeAction={async (file) => {
+                if (file) await addAssetFromFile(file);
+              }}
+              shouldShowTranscribeOption={false}
+            />
+
+            <Button
+              type="button"
+              variant="outline"
+              className="text-xs py-1 px-2"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading ? "Uploading..." : "Add files"}
+            </Button>
           </div>
 
           <SubmitButton type="submit" variant="primary">
