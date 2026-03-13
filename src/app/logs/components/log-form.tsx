@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import { AssetItemWithPreview } from "@/components/assets/asset.types";
+import { AssetManager } from "@/components/asset-manager";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
@@ -12,30 +13,17 @@ import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
-import { AssetVariant, Block, BlockVariant, Log } from "../log.types";
-import { LogMediaAssetInput } from "./log-media-asset-input";
+import { Block, BlockVariant, Log } from "../log.types";
 
-const BLOCK_BUTTONS: {
-  label: string;
-  variant: BlockVariant;
-  assetVariant?: AssetVariant;
-}[] = [
+const BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
   { label: "Short", variant: "shortMarkdown" },
   { label: "Long", variant: "longMarkdown" },
-  { label: "Audio", variant: "asset", assetVariant: "audio" },
-  { label: "Image", variant: "asset", assetVariant: "image" },
-  { label: "Video", variant: "asset", assetVariant: "video" },
+  { label: "Asset", variant: "asset" },
 ];
 
-const createDefaultBlock = ({
-  variant,
-  assetVariant,
-}: {
-  variant: BlockVariant;
-  assetVariant?: AssetVariant;
-}): Block => {
+const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
   if (variant === "asset") {
-    return { variant, assetVariant: assetVariant ?? "image", filename: "" };
+    return { variant, assetVariant: "image", filename: "" };
   }
 
   return { variant, value: "" };
@@ -59,43 +47,39 @@ export const LogForm: React.FC<{
   }) => {
     setBlocks((previousBlocks) =>
       previousBlocks.map((block, index) => {
-        if (index !== blockIndex) {
-          return block;
-        }
-
+        if (index !== blockIndex) return block;
         return { ...block, value };
       }),
     );
   };
 
-  const updateAssetBlockFilename = ({
+  const updateAssetBlock = ({
     blockIndex,
-    filename,
+    assets,
   }: {
     blockIndex: number;
-    filename: string;
+    assets: AssetItemWithPreview[];
   }) => {
+    const asset = assets[0];
+
     setBlocks((previousBlocks) =>
       previousBlocks.map((block, index) => {
-        if (index !== blockIndex || block.variant !== "asset") {
-          return block;
-        }
+        if (index !== blockIndex || block.variant !== "asset") return block;
 
-        return { ...block, filename };
+        return {
+          ...block,
+          filename: asset?.filename ?? "",
+          assetVariant: asset?.variant ?? block.assetVariant,
+          fileSizeBytes: asset?.fileSizeBytes,
+        };
       }),
     );
   };
 
-  const addBlock = ({
-    variant,
-    assetVariant,
-  }: {
-    variant: BlockVariant;
-    assetVariant?: AssetVariant;
-  }) => {
+  const addBlock = ({ variant }: { variant: BlockVariant }) => {
     setBlocks((previousBlocks) => [
       ...previousBlocks,
-      createDefaultBlock({ variant, assetVariant }),
+      createDefaultBlock({ variant }),
     ]);
   };
 
@@ -217,33 +201,37 @@ export const LogForm: React.FC<{
                   />
                 )}
 
-                {block.variant === "asset" &&
-                  (() => {
-                    const previewUrl =
-                      initialMediaPreviewUrlsByBlockKey[`${blockIndex}`];
-                    const initialUploadedAssets: AssetItemWithPreview[] =
-                      block.filename.trim() !== "" && previewUrl
+                {block.variant === "asset" && (
+                  <AssetManager
+                    initialUploadedAssets={
+                      block.filename.trim() !== "" &&
+                      initialMediaPreviewUrlsByBlockKey[`${blockIndex}`]
                         ? [
                             {
                               caption: "",
                               filename: block.filename,
                               variant: block.assetVariant,
-                              previewUrl,
+                              previewUrl:
+                                initialMediaPreviewUrlsByBlockKey[
+                                  `${blockIndex}`
+                                ],
+                              fileSizeBytes: block.fileSizeBytes,
                             },
                           ]
-                        : [];
-
-                    return (
-                      <LogMediaAssetInput
-                        variant={block.assetVariant}
-                        initialUploadedAssets={initialUploadedAssets}
-                        label=""
-                        onFilenameChangeAction={(filename) =>
-                          updateAssetBlockFilename({ blockIndex, filename })
-                        }
-                      />
-                    );
-                  })()}
+                        : []
+                    }
+                    allowedVariants={["audio", "image", "video"]}
+                    multiple={false}
+                    shouldShowRecorder={true}
+                    shouldShowCaptionField={false}
+                    shouldHideAddFilesWhenHasAssets={true}
+                    shouldEnableTranscription={false}
+                    shouldShowRecorderTranscribeOption={false}
+                    onAssetsChangeAction={(assets) =>
+                      updateAssetBlock({ blockIndex, assets })
+                    }
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -253,13 +241,13 @@ export const LogForm: React.FC<{
 
         <div className="flex flex-wrap gap-2 items-center justify-between">
           <div className="flex flex-wrap gap-2">
-            {BLOCK_BUTTONS.map(({ label, variant, assetVariant }) => (
+            {BLOCK_BUTTONS.map(({ label, variant }) => (
               <Button
-                key={`${variant}-${assetVariant ?? ""}`}
+                key={variant}
                 type="button"
                 variant="outline"
                 className="text-xs py-1 px-2"
-                onClick={() => addBlock({ variant, assetVariant })}
+                onClick={() => addBlock({ variant })}
               >
                 {label}
               </Button>
