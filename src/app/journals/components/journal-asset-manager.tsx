@@ -33,7 +33,6 @@ export const JournalAssetManager: React.FC<{
       }
       shouldEnableTranscription={true}
       shouldShowRecorder={true}
-      allowedVariants={["audio", "image", "video"]}
       multiple={true}
     />
   );

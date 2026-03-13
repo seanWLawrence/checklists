@@ -10,7 +10,7 @@ import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { logger } from "@/lib/logger";
 import { createItem } from "@/lib/redis/create-item";
 import { array } from "purify-ts/Codec";
-import { LogSection } from "../log.types";
+import { Block } from "../log.types";
 import { getLogKey } from "../model/get-log-key";
 import { metadata } from "@/lib/redis/metadata.factory";
 
@@ -24,11 +24,11 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
       getStringFromFormData({ name: "name", formData }),
     );
 
-    const sections = await liftEither(
+    const blocks = await liftEither(
       getJsonFromFormData({
-        name: "sections",
+        name: "blocks",
         formData,
-        decoder: array(LogSection),
+        decoder: array(Block),
       }),
     );
 
@@ -41,7 +41,7 @@ export const createLogAction = async (formData: FormData): Promise<void> => {
 
     const item = await fromPromise(
       createItem({
-        item: { ...metadata(user), name, sections },
+        item: { ...metadata(user), name, blocks },
         getKeyFn: (createdItem) => getLogKey({ user, id: createdItem.id }),
       })
         .ifRight(() => {

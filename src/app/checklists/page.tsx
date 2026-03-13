@@ -1,7 +1,6 @@
 import { LinkButton } from "@/components/link-button";
 import { Heading } from "@/components/heading";
 
-import { ChecklistV2 } from "./checklist-v2.types";
 import { EitherAsync } from "purify-ts/EitherAsync";
 import { getAllChecklistsV2 } from "./model/get-all-checklists-v2.model";
 import Link from "next/link";

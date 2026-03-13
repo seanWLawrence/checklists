@@ -12,19 +12,17 @@ test("Log decodes with all block variants", ({ expect }) => {
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
+    blocks: [
+      { variant: "shortMarkdown", value: "# Heading" },
+      { variant: "longMarkdown", value: "Some longer notes here." },
+      { variant: "asset", assetVariant: "audio", filename: "audio/test.m4a" },
       {
-        name: "Morning",
-        blocks: [
-          { name: "Workout", variant: "checkbox", value: true },
-          { name: "Focus", variant: "shortText", value: "Deep work" },
-          { name: "Reflection", variant: "longText", value: "Good momentum." },
-          { name: "Energy", variant: "number", value: 4 },
-          { name: "Voice note", variant: "audio", value: "audio/test.m4a" },
-          { name: "Desk setup", variant: "image", value: "image/test.jpg" },
-          { name: "Demo clip", variant: "video", value: "video/test.mp4" },
-        ],
+        variant: "asset",
+        assetVariant: "image",
+        filename: "image/test.jpg",
+        fileSizeBytes: 1024,
       },
+      { variant: "asset", assetVariant: "video", filename: "video/test.mp4" },
     ],
   });
 
@@ -40,18 +38,13 @@ test("Log decode fails for unknown block variant", ({ expect }) => {
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
-      {
-        name: "Morning",
-        blocks: [{ name: "Mystery", variant: "toggle", value: true }],
-      },
-    ],
+    blocks: [{ variant: "toggle", value: true }],
   });
 
   expect(decoded.isLeft()).toBe(true);
 });
 
-test("Log decode fails when block value type is invalid for its variant", ({
+test("Log decode fails when asset block has invalid assetVariant", ({
   expect,
 }) => {
   const nowIso = "2026-03-10T12:00:00.000Z";
@@ -62,12 +55,7 @@ test("Log decode fails when block value type is invalid for its variant", ({
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
-      {
-        name: "Morning",
-        blocks: [{ name: "Workout", variant: "checkbox", value: "yes" }],
-      },
-    ],
+    blocks: [{ variant: "asset", assetVariant: "pdf", filename: "doc.pdf" }],
   });
 
   expect(decoded.isLeft()).toBe(true);
