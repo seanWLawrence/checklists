@@ -12,30 +12,17 @@ test("Log decodes with all block variants", ({ expect }) => {
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
+    blocks: [
+      { variant: "shortMarkdown", value: "# Heading" },
+      { variant: "longMarkdown", value: "Some longer notes here." },
+      { variant: "asset", assetVariant: "audio", filename: "audio/test.m4a" },
       {
-        name: "Morning",
-        blocks: [
-          { variant: "shortMarkdown", value: "# Heading" },
-          { variant: "longMarkdown", value: "Some longer notes here." },
-          {
-            variant: "asset",
-            assetVariant: "audio",
-            filename: "audio/test.m4a",
-          },
-          {
-            variant: "asset",
-            assetVariant: "image",
-            filename: "image/test.jpg",
-            fileSizeBytes: 1024,
-          },
-          {
-            variant: "asset",
-            assetVariant: "video",
-            filename: "video/test.mp4",
-          },
-        ],
+        variant: "asset",
+        assetVariant: "image",
+        filename: "image/test.jpg",
+        fileSizeBytes: 1024,
       },
+      { variant: "asset", assetVariant: "video", filename: "video/test.mp4" },
     ],
   });
 
@@ -51,12 +38,7 @@ test("Log decode fails for unknown block variant", ({ expect }) => {
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
-      {
-        name: "Morning",
-        blocks: [{ variant: "toggle", value: true }],
-      },
-    ],
+    blocks: [{ variant: "toggle", value: true }],
   });
 
   expect(decoded.isLeft()).toBe(true);
@@ -73,12 +55,7 @@ test("Log decode fails when asset block has invalid assetVariant", ({
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    sections: [
-      {
-        name: "Morning",
-        blocks: [{ variant: "asset", assetVariant: "pdf", filename: "doc.pdf" }],
-      },
-    ],
+    blocks: [{ variant: "asset", assetVariant: "pdf", filename: "doc.pdf" }],
   });
 
   expect(decoded.isLeft()).toBe(true);

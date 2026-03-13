@@ -2,23 +2,21 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
 import { getJournalAssetResponseContentType } from "@/app/journals/lib/get-journal-asset-response-content-type.lib";
-import { LogSection } from "../log.types";
+import { Block } from "../log.types";
 
 export const getLogMediaPreviewUrls = ({
-  sections,
+  blocks,
 }: {
-  sections: LogSection[];
+  blocks: Block[];
 }): EitherAsync<unknown, Record<string, string>> => {
-  const mediaEntries = sections.flatMap((section, sectionIndex) =>
-    section.blocks.flatMap((block, blockIndex) =>
-      block.variant === "asset" && block.filename.trim() !== ""
-        ? [{ sectionIndex, blockIndex, filename: block.filename }]
-        : [],
-    ),
+  const mediaEntries = blocks.flatMap((block, blockIndex) =>
+    block.variant === "asset" && block.filename.trim() !== ""
+      ? [{ blockIndex, filename: block.filename }]
+      : [],
   );
 
   return EitherAsync.all(
-    mediaEntries.map(({ sectionIndex, blockIndex, filename }) =>
+    mediaEntries.map(({ blockIndex, filename }) =>
       EitherAsync(async ({ fromPromise }) => {
         const previewUrl = await fromPromise(
           getPresignedGetObjectUrl({
@@ -29,11 +27,10 @@ export const getLogMediaPreviewUrls = ({
           }),
         );
 
-        return {
-          key: `${sectionIndex}-${blockIndex}`,
-          previewUrl,
-        };
+        return { key: `${blockIndex}`, previewUrl };
       }),
     ),
-  ).map((items) => Object.fromEntries(items.map((item) => [item.key, item.previewUrl])));
+  ).map((items) =>
+    Object.fromEntries(items.map((item) => [item.key, item.previewUrl])),
+  );
 };

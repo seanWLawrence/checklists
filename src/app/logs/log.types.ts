@@ -114,16 +114,9 @@ export const Block = Codec.custom<Block>({
   encode: (input) => input,
 });
 
-export const LogSection = Codec.interface({
-  name: string,
-  blocks: array(Block),
-});
-
-export type LogSection = GetType<typeof LogSection>;
-
 export const LogBase = Codec.interface({
   name: string,
-  sections: array(LogSection),
+  blocks: array(Block),
 });
 
 export type LogBase = GetType<typeof LogBase>;

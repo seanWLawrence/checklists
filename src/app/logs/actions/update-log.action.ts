@@ -11,7 +11,7 @@ import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data
 import { logger } from "@/lib/logger";
 import { Metadata } from "@/lib/types";
 import { updateItem } from "@/lib/redis/update-item";
-import { Log, LogSection } from "../log.types";
+import { Block, Log } from "../log.types";
 import { getLogKey } from "../model/get-log-key";
 
 export const updateLogAction = async (formData: FormData): Promise<void> => {
@@ -28,11 +28,11 @@ export const updateLogAction = async (formData: FormData): Promise<void> => {
       getStringFromFormData({ name: "name", formData }),
     );
 
-    const sections = await liftEither(
+    const blocks = await liftEither(
       getJsonFromFormData({
-        name: "sections",
+        name: "blocks",
         formData,
-        decoder: array(LogSection),
+        decoder: array(Block),
       }),
     );
 
@@ -43,7 +43,7 @@ export const updateLogAction = async (formData: FormData): Promise<void> => {
         createdAtIso: metadata.createdAtIso.toISOString(),
         updatedAtIso: new Date().toISOString(),
         name,
-        sections,
+        blocks,
       }),
     );
 

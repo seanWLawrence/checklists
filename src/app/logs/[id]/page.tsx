@@ -1,7 +1,6 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
 import Link from "next/link";
 
-import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { RelativeTime } from "@/components/relative-time";
 import { Audio } from "@/components/audio";
@@ -22,9 +21,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
     const log = await fromPromise(getLog(id));
 
     const previewUrls = await fromPromise(
-      getLogMediaPreviewUrls({
-        sections: log.sections,
-      }),
+      getLogMediaPreviewUrls({ blocks: log.blocks }),
     );
 
     return (
@@ -44,66 +41,61 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
           <RelativeTime date={log.updatedAtIso} />
         </div>
 
-        {log.sections.length === 0 && (
+        {log.blocks.length === 0 && (
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            No sections yet.
+            No blocks yet.
           </p>
         )}
 
-        {log.sections.map((section, sectionIndex) => (
-          <Fieldset key={`${section.name}-${sectionIndex}`} legend={section.name}>
-            <div className="space-y-4">
-              {section.blocks.map((block, blockIndex) => {
-                const mediaPreviewUrl =
-                  previewUrls[`${sectionIndex}-${blockIndex}`];
+        <div className="space-y-4">
+          {log.blocks.map((block, blockIndex) => {
+            const mediaPreviewUrl = previewUrls[`${blockIndex}`];
 
-                return (
-                  <div key={blockIndex}>
-                    {block.variant === "shortMarkdown" && (
-                      block.value.trim() !== "" ? (
-                        <PrettyContent content={block.value} />
-                      ) : (
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
-                      )
-                    )}
+            return (
+              <div key={blockIndex}>
+                {block.variant === "shortMarkdown" && (
+                  block.value.trim() !== "" ? (
+                    <PrettyContent content={block.value} />
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
+                  )
+                )}
 
-                    {block.variant === "longMarkdown" && (
-                      block.value.trim() !== "" ? (
-                        <PrettyContent content={block.value} />
-                      ) : (
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
-                      )
-                    )}
+                {block.variant === "longMarkdown" && (
+                  block.value.trim() !== "" ? (
+                    <PrettyContent content={block.value} />
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
+                  )
+                )}
 
-                    {block.variant === "asset" && (
-                      <div className="space-y-2">
-                        {block.filename.trim() === "" ? (
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
-                        ) : mediaPreviewUrl ? (
-                          <div className="space-y-1">
-                            {block.assetVariant === "image" && (
-                              <Image src={mediaPreviewUrl} alt="" />
-                            )}
-                            {block.assetVariant === "audio" && (
-                              <Audio src={mediaPreviewUrl} />
-                            )}
-                            {block.assetVariant === "video" && (
-                              <Video src={mediaPreviewUrl} />
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                            No file attached.
-                          </p>
+                {block.variant === "asset" && (
+                  <div className="space-y-2">
+                    {block.filename.trim() === "" ? (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
+                    ) : mediaPreviewUrl ? (
+                      <div>
+                        {block.assetVariant === "image" && (
+                          <Image src={mediaPreviewUrl} alt="" />
+                        )}
+                        {block.assetVariant === "audio" && (
+                          <Audio src={mediaPreviewUrl} />
+                        )}
+                        {block.assetVariant === "video" && (
+                          <Video src={mediaPreviewUrl} />
                         )}
                       </div>
+                    ) : (
+                      <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                        No file attached.
+                      </p>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </Fieldset>
-        ))}
+                )}
+              </div>
+            );
+          })}
+        </div>
       </main>
     );
   })
