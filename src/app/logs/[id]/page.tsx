@@ -3,9 +3,7 @@ import Link from "next/link";
 
 import { Heading } from "@/components/heading";
 import { RelativeTime } from "@/components/relative-time";
-import { Audio } from "@/components/audio";
-import { Image } from "@/components/image";
-import { Video } from "@/components/video";
+import { AssetPreview } from "@/components/asset-preview";
 import { UUID } from "@/lib/types";
 import { getLog } from "../model/get-log.model";
 import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
@@ -70,27 +68,16 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                 )}
 
                 {block.variant === "asset" && (
-                  <div className="space-y-2">
-                    {block.filename.trim() === "" ? (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
-                    ) : mediaPreviewUrl ? (
-                      <div>
-                        {block.assetVariant === "image" && (
-                          <Image src={mediaPreviewUrl} alt="" />
-                        )}
-                        {block.assetVariant === "audio" && (
-                          <Audio src={mediaPreviewUrl} />
-                        )}
-                        {block.assetVariant === "video" && (
-                          <Video src={mediaPreviewUrl} />
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                        No file attached.
-                      </p>
-                    )}
-                  </div>
+                  mediaPreviewUrl ? (
+                    <AssetPreview
+                      assetVariant={block.assetVariant}
+                      previewUrl={mediaPreviewUrl}
+                    />
+                  ) : (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                      No file attached.
+                    </p>
+                  )
                 )}
               </div>
             );

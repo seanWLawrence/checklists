@@ -3,9 +3,6 @@
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
-import { Audio } from "@/components/audio";
-import { Image } from "@/components/image";
-import { Video } from "@/components/video";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
@@ -13,16 +10,11 @@ import { MenuButton } from "@/components/menu-button";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
-import { EitherAsync } from "purify-ts/EitherAsync";
-import { logger } from "@/lib/logger";
-import {
-  AssetsPresignPutObjectBody,
-  AssetsPresignPutObjectResponse,
-} from "@/app/api/assets/presign/put/types";
-import { AssetVariant } from "@/components/assets/asset.types";
+import { AssetPreview } from "@/components/asset-preview";
+import { useAssetUpload } from "@/hooks/use-asset-upload";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
-import { AssetBlock, Block, BlockVariant, Log } from "../log.types";
+import { Block, BlockVariant, Log } from "../log.types";
 
 const AudioRecorderInput = dynamic(
   () =>
@@ -32,61 +24,6 @@ const AudioRecorderInput = dynamic(
   { ssr: false },
 );
 
-const getAssetVariant = (file: File): AssetVariant | null => {
-  if (file.type.startsWith("image/")) return "image";
-  if (file.type.startsWith("audio/")) return "audio";
-  if (file.type.startsWith("video/")) return "video";
-  return null;
-};
-
-const uploadFile = (
-  file: File,
-): EitherAsync<
-  unknown,
-  Pick<AssetBlock, "filename" | "assetVariant" | "fileSizeBytes">
-> => {
-  return EitherAsync(async ({ liftEither, throwE }) => {
-    const assetVariant = getAssetVariant(file);
-
-    if (!assetVariant) {
-      return throwE(`Unsupported file type: ${file.type}`);
-    }
-
-    const body = await liftEither(
-      AssetsPresignPutObjectBody.decode({
-        filename: file.name,
-        contentType: file.type,
-        variant: assetVariant,
-      }).map((decoded) => JSON.stringify(decoded)),
-    );
-
-    const presignResponse = await fetch("/api/assets/presign/put", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-
-    if (!presignResponse.ok) {
-      return throwE("Failed to get upload URL");
-    }
-
-    const { uploadUrl, filename } = await liftEither(
-      AssetsPresignPutObjectResponse.decode(await presignResponse.json()),
-    );
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: file.type ? { "Content-Type": file.type } : undefined,
-      body: file,
-    });
-
-    if (!uploadResponse.ok) {
-      return throwE("Failed to upload file");
-    }
-
-    return { filename, assetVariant, fileSizeBytes: file.size };
-  });
-};
 
 const MARKDOWN_BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
   { label: "Short", variant: "shortMarkdown" },
@@ -104,7 +41,7 @@ export const LogForm: React.FC<{
   const [localPreviewsByFilename, setLocalPreviewsByFilename] = useState<
     Record<string, string>
   >({});
-  const [isUploading, setIsUploading] = useState(false);
+  const { upload, isUploading } = useAssetUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
@@ -132,26 +69,16 @@ export const LogForm: React.FC<{
   };
 
   const addAssetFromFile = async (file: File) => {
-    setIsUploading(true);
-    const blobUrl = URL.createObjectURL(file);
+    const uploaded = await upload(file);
 
-    const result = await uploadFile(file).run();
-
-    result.caseOf({
-      Right: ({ filename, assetVariant, fileSizeBytes }) => {
-        setBlocks((previousBlocks) => [
-          ...previousBlocks,
-          { variant: "asset", filename, assetVariant, fileSizeBytes },
-        ]);
-        setLocalPreviewsByFilename((prev) => ({ ...prev, [filename]: blobUrl }));
-      },
-      Left: (error) => {
-        URL.revokeObjectURL(blobUrl);
-        logger.error("Failed to upload asset", error);
-      },
-    });
-
-    setIsUploading(false);
+    if (uploaded) {
+      const { filename, assetVariant, fileSizeBytes, previewUrl } = uploaded;
+      setBlocks((previousBlocks) => [
+        ...previousBlocks,
+        { variant: "asset", filename, assetVariant, fileSizeBytes },
+      ]);
+      setLocalPreviewsByFilename((prev) => ({ ...prev, [filename]: previewUrl }));
+    }
   };
 
   const onFilesSelected = async (
@@ -300,17 +227,10 @@ export const LogForm: React.FC<{
                   }
 
                   return (
-                    <div>
-                      {block.assetVariant === "image" && (
-                        <Image src={previewUrl} alt="" />
-                      )}
-                      {block.assetVariant === "audio" && (
-                        <Audio src={previewUrl} />
-                      )}
-                      {block.assetVariant === "video" && (
-                        <Video src={previewUrl} />
-                      )}
-                    </div>
+                    <AssetPreview
+                      assetVariant={block.assetVariant}
+                      previewUrl={previewUrl}
+                    />
                   );
                 })()}
               </div>
