@@ -3,7 +3,9 @@
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
-import { AssetManager } from "@/components/asset-manager";
+import { Audio } from "@/components/audio";
+import { Image } from "@/components/image";
+import { Video } from "@/components/video";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
@@ -39,7 +41,10 @@ const getAssetVariant = (file: File): AssetVariant | null => {
 
 const uploadFile = (
   file: File,
-): EitherAsync<unknown, Pick<AssetBlock, "filename" | "assetVariant" | "fileSizeBytes">> => {
+): EitherAsync<
+  unknown,
+  Pick<AssetBlock, "filename" | "assetVariant" | "fileSizeBytes">
+> => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     const assetVariant = getAssetVariant(file);
 
@@ -88,12 +93,17 @@ const MARKDOWN_BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
   { label: "Long", variant: "longMarkdown" },
 ];
 
+const BUTTON_CLASS = "text-xs py-1 px-2";
+
 export const LogForm: React.FC<{
   log?: Log;
   initialMediaPreviewUrlsByBlockKey?: Record<string, string>;
 }> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
   const isEdit = Boolean(log);
   const [blocks, setBlocks] = useState<Block[]>(log?.blocks ?? []);
+  const [localPreviewsByFilename, setLocalPreviewsByFilename] = useState<
+    Record<string, string>
+  >({});
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -123,6 +133,7 @@ export const LogForm: React.FC<{
 
   const addAssetFromFile = async (file: File) => {
     setIsUploading(true);
+    const blobUrl = URL.createObjectURL(file);
 
     const result = await uploadFile(file).run();
 
@@ -132,8 +143,10 @@ export const LogForm: React.FC<{
           ...previousBlocks,
           { variant: "asset", filename, assetVariant, fileSizeBytes },
         ]);
+        setLocalPreviewsByFilename((prev) => ({ ...prev, [filename]: blobUrl }));
       },
       Left: (error) => {
+        URL.revokeObjectURL(blobUrl);
         logger.error("Failed to upload asset", error);
       },
     });
@@ -273,34 +286,33 @@ export const LogForm: React.FC<{
                   />
                 )}
 
-                {block.variant === "asset" && (
-                  <AssetManager
-                    initialUploadedAssets={
-                      block.filename.trim() !== "" &&
-                      initialMediaPreviewUrlsByBlockKey[`${blockIndex}`]
-                        ? [
-                            {
-                              caption: "",
-                              filename: block.filename,
-                              variant: block.assetVariant,
-                              previewUrl:
-                                initialMediaPreviewUrlsByBlockKey[
-                                  `${blockIndex}`
-                                ],
-                              fileSizeBytes: block.fileSizeBytes,
-                            },
-                          ]
-                        : []
-                    }
-                    allowedVariants={[block.assetVariant]}
-                    multiple={false}
-                    shouldShowRecorder={false}
-                    shouldShowCaptionField={false}
-                    shouldHideAddFilesWhenHasAssets={true}
-                    shouldEnableTranscription={false}
-                    shouldShowRecorderTranscribeOption={false}
-                  />
-                )}
+                {block.variant === "asset" && (() => {
+                  const previewUrl =
+                    initialMediaPreviewUrlsByBlockKey[`${blockIndex}`] ??
+                    localPreviewsByFilename[block.filename];
+
+                  if (!previewUrl) {
+                    return (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {block.filename}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div>
+                      {block.assetVariant === "image" && (
+                        <Image src={previewUrl} alt="" />
+                      )}
+                      {block.assetVariant === "audio" && (
+                        <Audio src={previewUrl} />
+                      )}
+                      {block.assetVariant === "video" && (
+                        <Video src={previewUrl} />
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -324,7 +336,7 @@ export const LogForm: React.FC<{
                 key={variant}
                 type="button"
                 variant="outline"
-                className="text-xs py-1 px-2"
+                className={BUTTON_CLASS}
                 onClick={() => addMarkdownBlock({ variant })}
               >
                 {label}
@@ -336,12 +348,13 @@ export const LogForm: React.FC<{
                 if (file) await addAssetFromFile(file);
               }}
               shouldShowTranscribeOption={false}
+              recordButtonClassName={BUTTON_CLASS}
             />
 
             <Button
               type="button"
               variant="outline"
-              className="text-xs py-1 px-2"
+              className={BUTTON_CLASS}
               disabled={isUploading}
               onClick={() => fileInputRef.current?.click()}
             >
