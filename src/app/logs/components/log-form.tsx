@@ -268,7 +268,7 @@ export const LogForm: React.FC<{
                 if (file) await addAssetFromFile(file);
               }}
               shouldShowTranscribeOption={false}
-              recordButtonClassName={BUTTON_CLASS}
+              buttonClassName={BUTTON_CLASS}
             />
 
             <Button

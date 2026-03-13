@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { EitherAsync } from "purify-ts/EitherAsync";
-import { Maybe } from "purify-ts/Maybe";
 
 import { Button } from "@/components/button";
 import { AssetList } from "@/components/asset-list";
@@ -11,10 +10,7 @@ import { logger } from "@/lib/logger";
 import { Image } from "@/components/image";
 import { Audio } from "@/components/audio";
 import { Video } from "@/components/video";
-import {
-  AssetsPresignPutObjectBody,
-  AssetsPresignPutObjectResponse,
-} from "@/app/api/assets/presign/put/types";
+import { uploadAsset, getAssetVariant } from "@/lib/upload-asset";
 import {
   JobStartResponse,
   TranscriptionJobStatusResponse,
@@ -54,21 +50,6 @@ interface UploadItem {
   error?: string;
 }
 
-const getVariant = (file: File): AssetVariant | null => {
-  if (file.type.startsWith("image/")) {
-    return "image";
-  }
-
-  if (file.type.startsWith("audio/")) {
-    return "audio";
-  }
-
-  if (file.type.startsWith("video/")) {
-    return "video";
-  }
-
-  return null;
-};
 
 const formatFileSize = ({ fileSizeBytes }: { fileSizeBytes: number }) => {
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -240,72 +221,6 @@ export const AssetManager: React.FC<{
     });
   };
 
-  const uploadFile = (
-    file: File,
-  ): EitherAsync<unknown, { filename: string }> => {
-    return EitherAsync(async ({ liftEither, fromPromise, throwE }) => {
-      const variant = await liftEither(
-        Maybe.fromNullable(getVariant(file)).toEither(
-          "Missing or invalid file type.",
-        ),
-      );
-
-      if (!allowedVariants.includes(variant)) {
-        return throwE(`Unsupported file variant '${variant}'`);
-      }
-
-      try {
-        const body = await liftEither(
-          AssetsPresignPutObjectBody.decode({
-            filename: file.name,
-            contentType: file.type,
-            variant,
-          }).map((decodedBody) => JSON.stringify(decodedBody)),
-        );
-
-        const presignPutResponse = await fetch("/api/assets/presign/put", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body,
-        });
-
-        if (!presignPutResponse.ok) {
-          logger.error(presignPutResponse);
-
-          return throwE("Failed to fetch presigned URL");
-        }
-
-        const { uploadUrl, filename } = await fromPromise(
-          EitherAsync(async ({ liftEither: liftEitherInner }) => {
-            const json = await presignPutResponse.json();
-
-            return liftEitherInner(AssetsPresignPutObjectResponse.decode(json));
-          }),
-        );
-
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: file.type ? { "Content-Type": file.type } : undefined,
-          body: file,
-        });
-
-        if (!uploadResponse.ok) {
-          logger.error(uploadResponse);
-
-          return throwE("Failed to upload asset.");
-        }
-
-        return { filename };
-      } catch (error) {
-        logger.error("Failed to upload assets", error);
-
-        return throwE(error);
-      }
-    });
-  };
-
   const startUpload = (
     file: File,
     options?: {
@@ -313,7 +228,7 @@ export const AssetManager: React.FC<{
       transcriptionMode?: "auto" | "skip";
     },
   ) => {
-    const variant = getVariant(file);
+    const variant = getAssetVariant(file);
 
     if (!variant || !allowedVariants.includes(variant)) {
       logger.error("Missing or invalid file type.");
@@ -356,7 +271,7 @@ export const AssetManager: React.FC<{
       ),
     );
 
-    const response = await uploadFile(upload.file).run();
+    const response = await uploadAsset(upload.file).run();
 
     response.caseOf({
       Left: (error) => {

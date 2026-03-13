@@ -252,8 +252,8 @@ export const AudioRecorderInput: React.FC<{
     options?: { transcriptionMode: RecordingTranscriptionMode },
   ) => void;
   shouldShowTranscribeOption?: boolean;
-  recordButtonClassName?: string;
-}> = ({ onChangeAction, shouldShowTranscribeOption = true, recordButtonClassName }) => {
+  buttonClassName?: string;
+}> = ({ onChangeAction, shouldShowTranscribeOption = true, buttonClassName }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunkBufferRef = useRef<Blob[]>([]);
@@ -549,7 +549,7 @@ export const AudioRecorderInput: React.FC<{
                 type="button"
                 onClick={() => void startRecording("skip")}
                 variant="outline"
-                className={recordButtonClassName}
+                className={buttonClassName}
               >
                 Record
               </Button>
@@ -567,19 +567,19 @@ export const AudioRecorderInput: React.FC<{
           )}
 
           {status === "recording" && (
-            <Button type="button" variant="ghost" className={recordButtonClassName} onClick={pauseRecording}>
+            <Button type="button" variant="ghost" className={buttonClassName} onClick={pauseRecording}>
               Pause
             </Button>
           )}
 
           {status === "paused" && (
-            <Button type="button" variant="ghost" className={recordButtonClassName} onClick={resumeRecording}>
+            <Button type="button" variant="ghost" className={buttonClassName} onClick={resumeRecording}>
               Resume
             </Button>
           )}
 
           {(status === "recording" || status === "paused") && (
-            <Button type="button" variant="outline" className={recordButtonClassName} onClick={finishRecording}>
+            <Button type="button" variant="outline" className={buttonClassName} onClick={finishRecording}>
               Finish
             </Button>
           )}
