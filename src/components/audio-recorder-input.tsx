@@ -567,19 +567,19 @@ export const AudioRecorderInput: React.FC<{
           )}
 
           {status === "recording" && (
-            <Button type="button" variant="ghost" onClick={pauseRecording}>
+            <Button type="button" variant="ghost" className={recordButtonClassName} onClick={pauseRecording}>
               Pause
             </Button>
           )}
 
           {status === "paused" && (
-            <Button type="button" variant="ghost" onClick={resumeRecording}>
+            <Button type="button" variant="ghost" className={recordButtonClassName} onClick={resumeRecording}>
               Resume
             </Button>
           )}
 
           {(status === "recording" || status === "paused") && (
-            <Button type="button" variant="outline" onClick={finishRecording}>
+            <Button type="button" variant="outline" className={recordButtonClassName} onClick={finishRecording}>
               Finish
             </Button>
           )}
