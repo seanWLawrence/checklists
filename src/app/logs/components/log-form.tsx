@@ -106,6 +106,12 @@ export const LogForm: React.FC<{
     );
   };
 
+  const removeSection = ({ sectionIndex }: { sectionIndex: number }) => {
+    setSections((previousSections) =>
+      previousSections.filter((_, index) => index !== sectionIndex),
+    );
+  };
+
   const addSection = () => {
     const sectionName = window.prompt("Section name?");
     const trimmedSectionName = sectionName?.trim();
@@ -250,24 +256,36 @@ export const LogForm: React.FC<{
         {sections.map((section, sectionIndex) => (
           <Fieldset
             key={sectionIndex}
-            legend={section.name}
+            legend={
+              <span className="flex items-center justify-between gap-.5 w-full">
+                <span>{section.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-xs font-normal underline"
+                  onClick={() => removeSection({ sectionIndex })}
+                >
+                  Remove
+                </Button>
+              </span>
+            }
             className="space-y-4"
           >
             {section.blocks.length > 0 ? (
               <div className="space-y-2">
                 {section.blocks.map((block, blockIndex) => (
-                <div
-                  key={`${sectionIndex}-${blockIndex}`}
-                  className="space-y-0.5"
-                >
-                  {!isMediaBlock(block) && (
-                    <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                      <div className="min-w-0">
-                        <p className="truncate -mb-1">{block.name}</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
+                  <div
+                    key={`${sectionIndex}-${blockIndex}`}
+                    className="space-y-0.5"
+                  >
+                    {!isMediaBlock(block) && (
+                      <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
+                        <div className="min-w-0">
+                          <p className="truncate -mb-1">{block.name}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
                           className="text-xs"
                           onClick={() =>
                             removeBlock({ sectionIndex, blockIndex })
