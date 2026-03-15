@@ -9,14 +9,14 @@ export const getLogMediaPreviewUrls = ({
 }: {
   blocks: Block[];
 }): EitherAsync<unknown, Record<string, string>> => {
-  const mediaEntries = blocks.flatMap((block, blockIndex) =>
+  const mediaEntries = blocks.flatMap((block) =>
     block.variant === "asset" && block.filename.trim() !== ""
-      ? [{ blockIndex, filename: block.filename }]
+      ? [{ filename: block.filename }]
       : [],
   );
 
   return EitherAsync.all(
-    mediaEntries.map(({ blockIndex, filename }) =>
+    mediaEntries.map(({ filename }) =>
       EitherAsync(async ({ fromPromise }) => {
         const previewUrl = await fromPromise(
           getPresignedGetObjectUrl({
@@ -27,7 +27,7 @@ export const getLogMediaPreviewUrls = ({
           }),
         );
 
-        return { key: `${blockIndex}`, previewUrl };
+        return { key: filename, previewUrl };
       }),
     ),
   ).map((items) =>
