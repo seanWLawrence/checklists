@@ -235,6 +235,33 @@ const shouldSegmentOnBackgroundPause = (): boolean => {
   );
 };
 
+export const shouldRetryGetUserMediaWithoutConstraints = (
+  error: unknown,
+): boolean => {
+  return (
+    (error instanceof DOMException && error.name === "OverconstrainedError") ||
+    error instanceof TypeError
+  );
+};
+
+export const getMicrophoneAccessErrorMessage = (error: unknown): string => {
+  if (error instanceof DOMException) {
+    switch (error.name) {
+      case "NotAllowedError":
+      case "SecurityError":
+        return "Microphone access was denied. Check browser or iOS app settings and try again.";
+      case "NotFoundError":
+        return "No microphone was found on this device.";
+      case "NotReadableError":
+        return "The microphone is already in use by another app.";
+      case "OverconstrainedError":
+        return "This device rejected the preferred microphone settings. Try again.";
+    }
+  }
+
+  return "Microphone access is unavailable right now. Please try again.";
+};
+
 const formatTimestamp = (date: Date): string => {
   const hours24 = date.getHours();
   const hours12 = hours24 % 12 || 12;
@@ -433,6 +460,22 @@ export const AudioRecorderInput: React.FC<{
     return recorder;
   };
 
+  const getAudioStream = async (): Promise<MediaStream> => {
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+        },
+      });
+    } catch (error) {
+      if (shouldRetryGetUserMediaWithoutConstraints(error)) {
+        return navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      throw error;
+    }
+  };
+
   const startRecorderSegment = async ({
     resetChunks,
     transcriptionMode,
@@ -450,11 +493,7 @@ export const AudioRecorderInput: React.FC<{
       handleFileChange(null);
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        channelCount: 1,
-      },
-    });
+    const stream = await getAudioStream();
     streamRef.current = stream;
     const preferredMimeType = getPreferredMimeType();
     const recorder = createRecorder(stream, preferredMimeType);
@@ -480,9 +519,9 @@ export const AudioRecorderInput: React.FC<{
 
     try {
       await startRecorderSegment({ resetChunks: true, transcriptionMode });
-    } catch {
+    } catch (error) {
       setStatus("error");
-      setErrorMessage("Microphone access is blocked or unavailable.");
+      setErrorMessage(getMicrophoneAccessErrorMessage(error));
     }
   };
 
