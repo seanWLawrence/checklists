@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "CI=true npm test && npm run lint && next build",
-    "migrate:journals:v2": "node scripts/migrate-journals-v2.cjs",
     "build:no-ci": "next build",
     "dev": "next dev",
     "lint": "eslint . && knip",
