@@ -1,95 +1,81 @@
 import { test } from "vitest";
+
 import {
-  getCompletedHabitLabels,
-  getCompletedHobbyLabels,
-  getJournalHabitsAndHobbiesFromFormData,
-  getJournalHobbiesWithLegacyFallback,
+  getJournalCheckInDisplayGroups,
+  getJournalCheckInFromFormData,
+  getTrackedActivities,
 } from "./journal-habits";
 
-test("getJournalHabitsAndHobbiesFromFormData splits daily habits and hobbies", ({
+test("getJournalCheckInFromFormData assembles ratings and grouped activities", ({
   expect,
 }) => {
   const formData = new FormData();
-  formData.set("strengthTraining", "true");
-  formData.set("followSleepSchedule", "on");
-  formData.set("music", "1");
-  formData.set("programming", "true");
+  formData.set("ratingMood", "4");
+  formData.set("ratingEnergy", "3");
+  formData.set("ratingProductivity", "5");
+  formData.set("bodyStrengthTraining", "aLot");
+  formData.set("mindGratitude", "medium");
+  formData.set("interestsProgramming", "some");
+  formData.set("vicesScrolling", "");
 
-  const { habits, hobbies } = getJournalHabitsAndHobbiesFromFormData({
-    formData,
-  });
+  const result = getJournalCheckInFromFormData({ formData });
 
-  expect(habits.strengthTraining).toBe(true);
-  expect(habits.followSleepSchedule).toBe(true);
-  expect(habits.music).toBe(undefined);
-  expect(hobbies.music).toBe(true);
-  expect(hobbies.programming).toBe(true);
-  expect(hobbies.reading).toBe(false);
-});
-
-test("getJournalHobbiesWithLegacyFallback reads hobby flags from legacy habits", ({
-  expect,
-}) => {
-  const resolved = getJournalHobbiesWithLegacyFallback({
-    hobbies: undefined,
-    habits: {
-      strengthTraining: true,
-      martialArts: false,
-      cardio: false,
-      mindfulness: false,
-      coldExposure: false,
-      stretch: false,
-      breathwork: false,
-      music: true,
-      woodworking: false,
-      writing: false,
-      reading: true,
-      filming: false,
-      learning: false,
-      followSleepSchedule: false,
+  expect(result.isRight()).toBe(true);
+  expect(result.extract()).toEqual({
+    ratings: {
+      mood: 4,
+      energy: 3,
+      productivity: 5,
+    },
+    body: {
+      strengthTraining: "aLot",
+    },
+    mind: {
+      gratitude: "medium",
+    },
+    interests: {
+      programming: "some",
     },
   });
-
-  expect(resolved.music).toBe(true);
-  expect(resolved.reading).toBe(true);
-  expect(resolved.writing).toBe(undefined);
 });
 
-test("completed label helpers return selected labels only", ({ expect }) => {
-  const habits = {
-    strengthTraining: true,
-    martialArts: undefined,
-    cardio: false,
-    mindfulness: false,
-    coldExposure: false,
-    stretch: false,
-    breathwork: false,
-    music: undefined,
-    woodworking: undefined,
-    writing: undefined,
-    reading: undefined,
-    filming: undefined,
-    learning: undefined,
-    followSleepSchedule: true,
-  };
-  const hobbies = {
-    martialArts: true,
-    music: false,
-    programming: true,
-    woodworking: false,
-    writing: false,
-    reading: true,
-    filming: false,
-    learning: false,
-  };
+test("display helpers only return tracked activities", ({ expect }) => {
+  const checkIn = {
+    ratings: { mood: 4, energy: 4, productivity: 4 },
+    body: { cardio: "some" as const },
+    relationships: undefined,
+    mind: undefined,
+    interests: { reading: "aLot" as const },
+    vices: undefined,
+  } as never;
 
-  expect(getCompletedHabitLabels(habits)).toEqual([
-    "Strength training",
-    "Follow sleep schedule",
+  expect(getJournalCheckInDisplayGroups({ checkIn })).toEqual([
+    {
+      key: "body",
+      label: "Body",
+      items: [{ key: "cardio", label: "Cardio", value: "some" }],
+    },
+    {
+      key: "interests",
+      label: "Interests",
+      items: [{ key: "reading", label: "Reading", value: "aLot" }],
+    },
   ]);
-  expect(getCompletedHobbyLabels(hobbies)).toEqual([
-    "Martial arts",
-    "Programming",
-    "Reading",
+
+  expect(getTrackedActivities({ checkIn })).toEqual([
+    {
+      key: "body.cardio",
+      label: "Cardio",
+      groupKey: "body",
+      groupLabel: "Body",
+      value: "some",
+    },
+    {
+      key: "interests.reading",
+      label: "Reading",
+      groupKey: "interests",
+      groupLabel: "Interests",
+      value: "aLot",
+    },
   ]);
 });

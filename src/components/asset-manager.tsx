@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { EitherAsync } from "purify-ts/EitherAsync";
 
 import { Button } from "@/components/button";
 import { AssetList } from "@/components/asset-list";
@@ -12,15 +11,11 @@ import { Audio } from "@/components/audio";
 import { Video } from "@/components/video";
 import { uploadAsset, getAssetVariant } from "@/lib/upload-asset";
 import {
-  JobStartResponse,
-  TranscriptionJobStatusResponse,
-} from "@/lambda/worker/job.types";
-import {
   AssetItemWithPreview,
   AssetVariant,
 } from "@/components/assets/asset.types";
+import { useTranscription } from "@/hooks/use-transcription";
 
-const TRANSCRIPTION_POLL_MAX_ATTEMPTS = 150;
 const ALLOWED_VARIANTS = ["audio", "image", "video"];
 const accept = [
   "image/*",
@@ -35,14 +30,6 @@ const accept = [
   "video/mp4",
   "video/quicktime",
 ].join(",");
-
-const getTranscriptionPollDelayMs = ({
-  attemptNumber,
-}: {
-  attemptNumber: number;
-}) => {
-  return attemptNumber <= 30 ? 2000 : 5000;
-};
 
 const AudioRecorderInput = dynamic(
   () =>
@@ -94,6 +81,7 @@ export const AssetManager: React.FC<{
       transcriptionRaw: string;
     },
   ) => void;
+  onTranscribingChangeAction?: (isTranscribing: boolean) => void;
   shouldEnableTranscription?: boolean;
   shouldShowRecorder?: boolean;
   shouldShowCaptionField?: boolean;
@@ -105,6 +93,7 @@ export const AssetManager: React.FC<{
   name,
   onAssetsChangeAction,
   onTranscribeChangeAction,
+  onTranscribingChangeAction,
   shouldEnableTranscription = Boolean(onTranscribeChangeAction),
   shouldShowRecorder = true,
   shouldShowCaptionField = true,
@@ -123,9 +112,6 @@ export const AssetManager: React.FC<{
     initialUploadedAssets,
   );
   const [unsavedUploads, setUnsavedUploads] = useState<UploadItem[]>([]);
-  const [transcribeStatusByFilename, setTranscribeStatusByFilename] = useState<
-    Record<string, "idle" | "loading" | "done" | "error">
-  >({});
   const [
     recordingTranscriptionModeByFilename,
     setRecordingTranscriptionModeByFilename,
@@ -169,22 +155,46 @@ export const AssetManager: React.FC<{
     };
   }, []);
 
-  const setTranscribeStatus = ({
-    filename,
-    status,
-  }: {
-    filename: string;
-    status: "idle" | "loading" | "done" | "error";
-  }) => {
-    if (!isMountedRef.current) {
-      return;
-    }
+  const {
+    startTranscription,
+    clearTranscriptionState,
+    statusByFilename: transcribeStatusByFilename,
+    isTranscribing,
+  } = useTranscription({
+    onCompleted: ({
+      filename,
+      transcriptionStructured,
+      transcriptionRaw,
+      metadata,
+    }) => {
+      const uploadedAsset = uploadedAssetsRef.current.find(
+        (item) => item.filename === filename,
+      );
 
-    setTranscribeStatusByFilename((current) => ({
-      ...current,
-      [filename]: status,
-    }));
-  };
+      if (!uploadedAsset || !isMountedRef.current) {
+        return;
+      }
+
+      setUploadedAssets((current) =>
+        current.map((item) =>
+          item.filename === filename
+            ? {
+                ...item,
+                transcriptionMetadata: metadata,
+              }
+            : item,
+        ),
+      );
+      onTranscribeChangeAction?.(uploadedAsset, {
+        transcriptionStructured,
+        transcriptionRaw,
+      });
+    },
+  });
+
+  useEffect(() => {
+    onTranscribingChangeAction?.(isTranscribing);
+  }, [isTranscribing, onTranscribingChangeAction]);
 
   const serializedAssets = useMemo(() => {
     return JSON.stringify(
@@ -203,7 +213,7 @@ export const AssetManager: React.FC<{
       (upload) => upload.status === "uploading",
     );
     const hasTranscribingAssets = shouldEnableTranscription
-      ? Object.values(transcribeStatusByFilename).includes("loading")
+      ? isTranscribing
       : false;
 
     if (hasUploadingAssets && hasTranscribingAssets) {
@@ -219,7 +229,7 @@ export const AssetManager: React.FC<{
     }
 
     return null;
-  }, [shouldEnableTranscription, transcribeStatusByFilename, unsavedUploads]);
+  }, [isTranscribing, shouldEnableTranscription, unsavedUploads]);
 
   const onAddFilesClick = () => {
     inputRef.current?.click();
@@ -346,7 +356,7 @@ export const AssetManager: React.FC<{
           upload.variant === "audio" &&
           upload.transcriptionMode === "auto"
         ) {
-          void onTranscribeClick(uploadedAsset);
+          void startTranscription({ filename: uploadedAsset.filename });
         }
       },
     });
@@ -399,6 +409,7 @@ export const AssetManager: React.FC<{
         ),
       );
     });
+    clearTranscriptionState({ filename: asset.filename });
   };
 
   const onTranscribeClick = async (asset: AssetItemWithPreview) => {
@@ -406,92 +417,7 @@ export const AssetManager: React.FC<{
       return;
     }
 
-    await EitherAsync(async ({ liftEither, throwE }) => {
-      setTranscribeStatus({ filename: asset.filename, status: "loading" });
-
-      const response = await fetch(
-        `/api/assets/${encodeURIComponent(asset.filename)}/transcriptions`,
-        { method: "POST" },
-      );
-
-      if (!response.ok) {
-        return throwE("Failed to start transcription");
-      }
-
-      const startJson = await response.json();
-      const { jobId } = await liftEither(JobStartResponse.decode(startJson));
-
-      let attempts = 0;
-
-      while (attempts < TRANSCRIPTION_POLL_MAX_ATTEMPTS) {
-        attempts += 1;
-        if (attempts > 1) {
-          const pollDelayMs = getTranscriptionPollDelayMs({
-            attemptNumber: attempts - 1,
-          });
-
-          await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
-        }
-
-        let statusResponse: Response;
-
-        try {
-          statusResponse = await fetch(
-            `/api/jobs/${encodeURIComponent(jobId)}`,
-            {
-              method: "GET",
-              cache: "no-store",
-            },
-          );
-        } catch (error) {
-          logger.error("Failed to poll transcription job status", error);
-          continue;
-        }
-
-        if (!statusResponse.ok) {
-          logger.error(
-            "Failed to load transcription job status",
-            statusResponse,
-          );
-          return throwE("Failed to load transcription job status");
-        }
-
-        const statusJson = await liftEither(
-          TranscriptionJobStatusResponse.decode(await statusResponse.json()),
-        );
-
-        if (statusJson.status === "succeeded") {
-          if (isMountedRef.current) {
-            setUploadedAssets((current) =>
-              current.map((item) =>
-                item.filename === asset.filename
-                  ? {
-                      ...item,
-                      transcriptionMetadata: statusJson.metadata,
-                    }
-                  : item,
-              ),
-            );
-            onTranscribeChangeAction?.(asset, {
-              transcriptionStructured: statusJson.transcriptionStructured,
-              transcriptionRaw: statusJson.transcriptionRaw ?? "",
-            });
-            setTranscribeStatus({ filename: asset.filename, status: "done" });
-          }
-          return;
-        }
-
-        if (statusJson.status === "failed") {
-          logger.error("Transcription job failed", statusJson.error);
-          return throwE("Transcription job failed");
-        }
-      }
-    }).mapLeft((error) => {
-      if (isMountedRef.current) {
-        logger.error("Failed to transcribe asset", error);
-        setTranscribeStatus({ filename: asset.filename, status: "error" });
-      }
-    });
+    await startTranscription({ filename: asset.filename });
   };
 
   const onCaptionChange = (asset: AssetItemWithPreview, caption: string) => {

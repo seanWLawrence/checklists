@@ -1,10 +1,10 @@
 import {
   Journal,
   RadarChartData,
-  TotalLevelsByTypeAndValue,
+  TotalRatingsByTypeAndValue,
 } from "../journal.types";
 import {
-  getTotalLevelsByTypeAndValue,
+  getTotalRatingsByTypeAndValue,
   average,
   median,
   mode,
@@ -13,104 +13,64 @@ import {
 } from "./journal-analytics-chart-math.lib";
 
 export const getRadarChartData = (journals: Journal[]): RadarChartData => {
-  const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
-    getTotalLevelsByTypeAndValue(journals);
-
-  const total = journals.length;
+  const totalRatingsByTypeAndValue: TotalRatingsByTypeAndValue =
+    getTotalRatingsByTypeAndValue(journals);
 
   return [
     {
       name: "Energy",
-      levelType: "energyLevel" as const,
+      ratingType: "energy" as const,
       average: average({
-        total,
-        num: totalLevelsByTypeAndValue.energyLevel.total,
+        count: totalRatingsByTypeAndValue.energy.ratings.length,
+        num: totalRatingsByTypeAndValue.energy.total,
       }),
-      median: median(totalLevelsByTypeAndValue.energyLevel.levels),
-      mode: mode(totalLevelsByTypeAndValue.energyLevel),
+      median: median(totalRatingsByTypeAndValue.energy.ratings),
+      mode: mode(totalRatingsByTypeAndValue.energy),
       eightiethPercentile: percentile({
         percentile: 0.8,
-        totals: totalLevelsByTypeAndValue.energyLevel,
+        totals: totalRatingsByTypeAndValue.energy,
       }),
       twentiethPercentile: percentile({
         percentile: 0.2,
-        totals: totalLevelsByTypeAndValue.energyLevel,
+        totals: totalRatingsByTypeAndValue.energy,
       }),
       fullMark: maxLevel,
     },
     {
       name: "Mood",
-      levelType: "moodLevel" as const,
+      ratingType: "mood" as const,
       average: average({
-        total,
-        num: totalLevelsByTypeAndValue.moodLevel.total,
+        count: totalRatingsByTypeAndValue.mood.ratings.length,
+        num: totalRatingsByTypeAndValue.mood.total,
       }),
-      median: median(totalLevelsByTypeAndValue.moodLevel.levels),
-      mode: mode(totalLevelsByTypeAndValue.moodLevel),
+      median: median(totalRatingsByTypeAndValue.mood.ratings),
+      mode: mode(totalRatingsByTypeAndValue.mood),
       eightiethPercentile: percentile({
         percentile: 0.8,
-        totals: totalLevelsByTypeAndValue.moodLevel,
+        totals: totalRatingsByTypeAndValue.mood,
       }),
       twentiethPercentile: percentile({
         percentile: 0.2,
-        totals: totalLevelsByTypeAndValue.moodLevel,
+        totals: totalRatingsByTypeAndValue.mood,
       }),
       fullMark: maxLevel,
     },
     {
-      name: "Health",
-      levelType: "healthLevel" as const,
+      name: "Productivity",
+      ratingType: "productivity" as const,
       average: average({
-        total,
-        num: totalLevelsByTypeAndValue.healthLevel.total,
+        count: totalRatingsByTypeAndValue.productivity.ratings.length,
+        num: totalRatingsByTypeAndValue.productivity.total,
       }),
-      median: median(totalLevelsByTypeAndValue.healthLevel.levels),
-      mode: mode(totalLevelsByTypeAndValue.healthLevel),
+      median: median(totalRatingsByTypeAndValue.productivity.ratings),
+      mode: mode(totalRatingsByTypeAndValue.productivity),
       eightiethPercentile: percentile({
         percentile: 0.8,
-        totals: totalLevelsByTypeAndValue.healthLevel,
+        totals: totalRatingsByTypeAndValue.productivity,
       }),
       twentiethPercentile: percentile({
         percentile: 0.2,
-        totals: totalLevelsByTypeAndValue.healthLevel,
-      }),
-      fullMark: maxLevel,
-    },
-    {
-      name: "Creativity",
-      levelType: "creativityLevel" as const,
-      average: average({
-        total,
-        num: totalLevelsByTypeAndValue.creativityLevel.total,
-      }),
-      median: median(totalLevelsByTypeAndValue.creativityLevel.levels),
-      mode: mode(totalLevelsByTypeAndValue.creativityLevel),
-      eightiethPercentile: percentile({
-        percentile: 0.8,
-        totals: totalLevelsByTypeAndValue.creativityLevel,
-      }),
-      twentiethPercentile: percentile({
-        percentile: 0.2,
-        totals: totalLevelsByTypeAndValue.creativityLevel,
-      }),
-      fullMark: maxLevel,
-    },
-    {
-      name: "Relation",
-      levelType: "relationshipsLevel" as const,
-      average: average({
-        total,
-        num: totalLevelsByTypeAndValue.relationshipsLevel.total,
-      }),
-      median: median(totalLevelsByTypeAndValue.relationshipsLevel.levels),
-      mode: mode(totalLevelsByTypeAndValue.relationshipsLevel),
-      eightiethPercentile: percentile({
-        percentile: 0.8,
-        totals: totalLevelsByTypeAndValue.relationshipsLevel,
-      }),
-      twentiethPercentile: percentile({
-        percentile: 0.2,
-        totals: totalLevelsByTypeAndValue.relationshipsLevel,
+        totals: totalRatingsByTypeAndValue.productivity,
       }),
       fullMark: maxLevel,
     },

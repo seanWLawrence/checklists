@@ -13,14 +13,18 @@ const makeJournal = (createdAtLocal: string) =>
     createdAtIso: new Date("2026-01-01T00:00:00.000Z"),
     updatedAtIso: new Date("2026-01-01T00:00:00.000Z"),
     user,
-    content: `Entry for ${createdAtLocal}`,
+    schemaVersion: 2,
     createdAtLocal,
-    assets: undefined,
-    energyLevel: undefined,
-    moodLevel: undefined,
-    healthLevel: undefined,
-    creativityLevel: undefined,
-    relationshipsLevel: undefined,
+    entry: {
+      content: `Entry for ${createdAtLocal}`,
+    },
+    checkIn: {
+      ratings: {
+        mood: 3,
+        energy: 3,
+        productivity: 3,
+      },
+    },
   }) as never;
 
 const makeDeps = ({

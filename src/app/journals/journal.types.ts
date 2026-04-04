@@ -6,11 +6,10 @@ import {
   intersect,
   optional,
   array,
-  boolean as booleanCodec,
 } from "purify-ts/Codec";
 import { Left, Right } from "purify-ts/Either";
-import { Metadata } from "@/lib/types";
-import { TranscriptionMetadata } from "@/lambda/worker/job.types";
+import { Metadata } from "../../lib/types";
+import { TranscriptionMetadata } from "../../lambda/worker/job.types";
 
 /**
  * YYYY-MM-DD
@@ -81,28 +80,30 @@ export const Since = Codec.custom<Since>({
   encode: (input) => input,
 });
 
-export type Level = 1 | 2 | 3 | 4 | 5;
+export type Rating = 1 | 2 | 3 | 4 | 5;
 
-export const Level = Codec.custom<Level>({
+export const Rating = Codec.custom<Rating>({
   decode: (input) => {
     const val = Number(input);
 
     return val > 0 && val < 6
-      ? Right(input as Level)
-      : Left(`Invalid level ${input}`);
+      ? Right(val as Rating)
+      : Left(`Invalid rating ${input}`);
   },
   encode: (input) => input,
 });
 
-export const JournalLevels = Codec.interface({
-  energyLevel: optional(Level),
-  moodLevel: optional(Level),
-  healthLevel: optional(Level),
-  creativityLevel: optional(Level),
-  relationshipsLevel: optional(Level),
-});
+export type ActivityAmount = "some" | "medium" | "aLot";
 
-export type JournalLevels = GetType<typeof JournalLevels>;
+const activityAmounts = new Set<ActivityAmount>(["some", "medium", "aLot"]);
+
+export const ActivityAmount = Codec.custom<ActivityAmount>({
+  decode: (input) =>
+    typeof input === "string" && activityAmounts.has(input as ActivityAmount)
+      ? Right(input as ActivityAmount)
+      : Left(`Invalid activity amount '${input}'`),
+  encode: (input) => input,
+});
 
 export type SentimentLabel = "negative" | "mixed" | "neutral" | "positive";
 
@@ -141,45 +142,13 @@ const SentimentConfidence = Codec.custom<number>({
   encode: (input) => input,
 });
 
-const JournalSentiment = Codec.interface({
+export const JournalSentiment = Codec.interface({
   valence: SentimentValence,
   label: SentimentLabel,
   confidence: optional(SentimentConfidence),
 });
 
-type JournalSentiment = GetType<typeof JournalSentiment>;
-
-export const JournalHabits = Codec.interface({
-  strengthTraining: optional(booleanCodec),
-  martialArts: optional(booleanCodec),
-  cardio: optional(booleanCodec),
-  mindfulness: optional(booleanCodec),
-  coldExposure: optional(booleanCodec),
-  stretch: optional(booleanCodec),
-  breathwork: optional(booleanCodec),
-  music: optional(booleanCodec),
-  woodworking: optional(booleanCodec),
-  writing: optional(booleanCodec),
-  reading: optional(booleanCodec),
-  filming: optional(booleanCodec),
-  learning: optional(booleanCodec),
-  followSleepSchedule: optional(booleanCodec),
-});
-
-export type JournalHabits = GetType<typeof JournalHabits>;
-
-export const JournalHobbies = Codec.interface({
-  martialArts: optional(booleanCodec),
-  music: optional(booleanCodec),
-  programming: optional(booleanCodec),
-  woodworking: optional(booleanCodec),
-  writing: optional(booleanCodec),
-  reading: optional(booleanCodec),
-  filming: optional(booleanCodec),
-  learning: optional(booleanCodec),
-});
-
-export type JournalHobbies = GetType<typeof JournalHobbies>;
+export type JournalSentiment = GetType<typeof JournalSentiment>;
 
 const AnalysisUpdatedAtIso = Codec.custom<string>({
   decode: (input) => {
@@ -189,7 +158,7 @@ const AnalysisUpdatedAtIso = Codec.custom<string>({
     if (input instanceof Date && !Number.isNaN(input.getTime())) {
       return Right(input.toISOString());
     }
-    return Left(`Invalid analysisUpdatedAt '${input}'`);
+    return Left(`Invalid analysis.updatedAt '${input}'`);
   },
   encode: (input) => input,
 });
@@ -199,7 +168,7 @@ const AnalysisVersion = Codec.custom<number>({
     const val = Number(input);
     return Number.isInteger(val) && val > 0
       ? Right(val)
-      : Left(`Invalid analysisVersion '${input}'`);
+      : Left(`Invalid analysis.version '${input}'`);
   },
   encode: (input) => input,
 });
@@ -207,10 +176,8 @@ const AnalysisVersion = Codec.custom<number>({
 export const JournalAnalysis = Codec.interface({
   dailySummary: optional(string),
   sentiment: optional(JournalSentiment),
-  habits: optional(JournalHabits),
-  hobbies: optional(JournalHobbies),
-  analysisUpdatedAt: optional(AnalysisUpdatedAtIso),
-  analysisVersion: optional(AnalysisVersion),
+  updatedAt: optional(AnalysisUpdatedAtIso),
+  version: optional(AnalysisVersion),
 });
 
 export type JournalAnalysis = GetType<typeof JournalAnalysis>;
@@ -235,85 +202,127 @@ export const JournalAsset = Codec.interface({
 
 export type JournalAsset = GetType<typeof JournalAsset>;
 
-export const JournalBase = intersect(
-  intersect(
-    Codec.interface({
-      content: optional(string),
-      transcriptionRaw: optional(string),
-      createdAtLocal: CreatedAtLocal,
-      assets: optional(array(JournalAsset)),
-    }),
-    JournalLevels,
-  ),
-  JournalAnalysis,
-);
+export const JournalEntry = Codec.interface({
+  content: optional(string),
+  transcriptionRaw: optional(string),
+  assets: optional(array(JournalAsset)),
+});
 
-export type JournalBase = GetType<typeof JournalBase>;
+export type JournalEntry = GetType<typeof JournalEntry>;
+
+export const JournalRatings = Codec.interface({
+  mood: optional(Rating),
+  energy: optional(Rating),
+  productivity: optional(Rating),
+});
+
+export type JournalRatings = GetType<typeof JournalRatings>;
+export type JournalRatingKey = keyof JournalRatings;
+
+const JournalBodyCheckIn = Codec.interface({
+  goodNutrition: optional(ActivityAmount),
+  cardio: optional(ActivityAmount),
+  strengthTraining: optional(ActivityAmount),
+  coldExposure: optional(ActivityAmount),
+  stretching: optional(ActivityAmount),
+  followSleepSchedule: optional(ActivityAmount),
+});
+
+type JournalBodyCheckIn = GetType<typeof JournalBodyCheckIn>;
+
+const JournalRelationshipsCheckIn = Codec.interface({
+  family: optional(ActivityAmount),
+  friends: optional(ActivityAmount),
+  spouse: optional(ActivityAmount),
+  self: optional(ActivityAmount),
+  pup: optional(ActivityAmount),
+});
+
+type JournalRelationshipsCheckIn = GetType<
+  typeof JournalRelationshipsCheckIn
+>;
+
+const JournalMindCheckIn = Codec.interface({
+  mindfulness: optional(ActivityAmount),
+  gratitude: optional(ActivityAmount),
+  breathwork: optional(ActivityAmount),
+});
+
+type JournalMindCheckIn = GetType<typeof JournalMindCheckIn>;
+
+const JournalInterestsCheckIn = Codec.interface({
+  writing: optional(ActivityAmount),
+  reading: optional(ActivityAmount),
+  programming: optional(ActivityAmount),
+  music: optional(ActivityAmount),
+  woodworking: optional(ActivityAmount),
+  martialArts: optional(ActivityAmount),
+  learning: optional(ActivityAmount),
+  filmmaking: optional(ActivityAmount),
+  philosophy: optional(ActivityAmount),
+});
+
+type JournalInterestsCheckIn = GetType<typeof JournalInterestsCheckIn>;
+
+const JournalVicesCheckIn = Codec.interface({
+  scrolling: optional(ActivityAmount),
+  junkFood: optional(ActivityAmount),
+  procrastination: optional(ActivityAmount),
+  avoidance: optional(ActivityAmount),
+  gossip: optional(ActivityAmount),
+  negativity: optional(ActivityAmount),
+  multitasking: optional(ActivityAmount),
+  workLate: optional(ActivityAmount),
+});
+
+type JournalVicesCheckIn = GetType<typeof JournalVicesCheckIn>;
+
+export const JournalCheckIn = Codec.interface({
+  ratings: optional(JournalRatings),
+  body: optional(JournalBodyCheckIn),
+  relationships: optional(JournalRelationshipsCheckIn),
+  mind: optional(JournalMindCheckIn),
+  interests: optional(JournalInterestsCheckIn),
+  vices: optional(JournalVicesCheckIn),
+});
+
+export type JournalCheckIn = GetType<typeof JournalCheckIn>;
+
+const JournalSchemaVersion = Codec.custom<2>({
+  decode: (input) => (Number(input) === 2 ? Right(2) : Left("Invalid schemaVersion")),
+  encode: (input) => input,
+});
+
+const JournalBase = Codec.interface({
+  schemaVersion: JournalSchemaVersion,
+  createdAtLocal: CreatedAtLocal,
+  entry: JournalEntry,
+  checkIn: JournalCheckIn,
+  analysis: optional(JournalAnalysis),
+});
+
+type JournalBase = GetType<typeof JournalBase>;
 
 export const Journal = intersect(Metadata, JournalBase);
 
 export type Journal = GetType<typeof Journal>;
 
-// TODO build this feature out
-// type ExperienceCategory =
-//   | "fun"
-//   | "funny"
-//   | "sad"
-//   | "challenging"
-//   | "pivotal"
-//   | "peaceful";
-//
-// const experienceCategories = new Set<ExperienceCategory>([
-//   "fun",
-//   "funny",
-//   "sad",
-//   "challenging",
-//   "pivotal",
-//   "peaceful",
-// ]);
-//
-// const ExperienceCategory = Codec.custom({
-//   decode: (input) => {
-//     return typeof input === "string" &&
-//       experienceCategories.has(input as ExperienceCategory)
-//       ? Right(input)
-//       : Left(`Invalid ExperienceCategory: '${input}'`);
-//   },
-//   encode: (input) => input,
-// });
-//
-// const ExperienceBase = Codec.interface({
-//   name: string,
-//   approximateDate: optional(CreatedAtLocal),
-//   categories: array(ExperienceCategory),
-//   content: string,
-// });
-//
-// type ExperienceBase = GetType<typeof ExperienceBase>;
-//
-// const Experience = intersect(Metadata, ExperienceBase);
-//
-// type Experience = GetType<typeof Experience>;
-
-export type JournalLevelsRadarChartDataType = {
+export type JournalRatingsRadarChartDataType = {
   name: string;
   average: number;
   median: number;
   mode: number;
   eightiethPercentile: number;
   twentiethPercentile: number;
-  levelType: keyof JournalLevels;
+  ratingType: JournalRatingKey;
   fullMark: number;
 };
-export type RadarChartData = JournalLevelsRadarChartDataType[];
+export type RadarChartData = JournalRatingsRadarChartDataType[];
 
-export interface JournalLevelTypeAndValueCount {
-  /**
-   * @example Energy
-   */
+export interface JournalRatingTypeAndValueCount {
   name: string;
   total: number;
-  levels: { level: Level; updatedAtIso: Date }[];
+  ratings: { rating: Rating; updatedAtIso: Date }[];
   1: number;
   2: number;
   3: number;
@@ -321,7 +330,7 @@ export interface JournalLevelTypeAndValueCount {
   5: number;
 }
 
-export type TotalLevelsByTypeAndValue = Record<
-  keyof JournalLevels,
-  JournalLevelTypeAndValueCount
+export type TotalRatingsByTypeAndValue = Record<
+  JournalRatingKey,
+  JournalRatingTypeAndValueCount
 >;

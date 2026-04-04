@@ -17,7 +17,13 @@ export const JournalAssetManager: React.FC<{
       transcriptionRaw: string;
     },
   ) => void;
-}> = ({ name, initialUploadedAssets, onTranscribeChangeAction }) => {
+  onTranscribingChangeAction?: (isTranscribing: boolean) => void;
+}> = ({
+  name,
+  initialUploadedAssets,
+  onTranscribeChangeAction,
+  onTranscribingChangeAction,
+}) => {
   return (
     <AssetManager
       name={name}
@@ -34,6 +40,7 @@ export const JournalAssetManager: React.FC<{
       shouldEnableTranscription={true}
       shouldShowRecorder={true}
       multiple={true}
+      onTranscribingChangeAction={onTranscribingChangeAction}
     />
   );
 };

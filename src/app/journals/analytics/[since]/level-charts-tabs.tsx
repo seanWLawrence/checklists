@@ -8,44 +8,29 @@ import { AverageKey } from "./line-chart";
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { PieChartData } from "../../lib/get-pie-chart-data.lib";
 
-type LevelKey =
-  | "energyLevel"
-  | "moodLevel"
-  | "healthLevel"
-  | "creativityLevel"
-  | "relationshipsLevel";
+type RatingKey = "energy" | "mood" | "productivity";
 
-type LevelTab = {
-  key: LevelKey;
+type RatingTab = {
+  key: RatingKey;
   averageKey: AverageKey;
   name: string;
 };
 
-const LEVEL_TABS: LevelTab[] = [
+const RATING_TABS: RatingTab[] = [
   {
-    key: "energyLevel",
-    averageKey: "energyLevelAvg7",
+    key: "energy",
+    averageKey: "energyAvg7",
     name: "Energy",
   },
   {
-    key: "moodLevel",
-    averageKey: "moodLevelAvg7",
+    key: "mood",
+    averageKey: "moodAvg7",
     name: "Mood",
   },
   {
-    key: "healthLevel",
-    averageKey: "healthLevelAvg7",
-    name: "Health",
-  },
-  {
-    key: "creativityLevel",
-    averageKey: "creativityLevelAvg7",
-    name: "Creativity",
-  },
-  {
-    key: "relationshipsLevel",
-    averageKey: "relationshipsLevelAvg7",
-    name: "Relationships",
+    key: "productivity",
+    averageKey: "productivityAvg7",
+    name: "Productivity",
   },
 ];
 
@@ -54,16 +39,14 @@ const LineChart = dynamic(
   { ssr: false, loading: () => <div className="min-h-[200px]" /> },
 );
 
-// TODO cleanup
-
 export const LevelChartsTabs: React.FC<{
   pie: PieChartData;
   line: LineChartData;
 }> = ({ pie, line }) => {
-  const [selectedKey, setSelectedKey] = useState<LevelKey>("energyLevel");
+  const [selectedKey, setSelectedKey] = useState<RatingKey>("energy");
 
   const selectedTab = useMemo(() => {
-    return LEVEL_TABS.find((tab) => tab.key === selectedKey) ?? LEVEL_TABS[0];
+    return RATING_TABS.find((tab) => tab.key === selectedKey) ?? RATING_TABS[0];
   }, [selectedKey]);
 
   const pieData = useMemo(() => {
@@ -73,7 +56,7 @@ export const LevelChartsTabs: React.FC<{
   return (
     <div className="space-y-4 w-full">
       <div className="flex flex-wrap gap-2 justify-center w-full min-w-[90vw]">
-        {LEVEL_TABS.map((tab) => {
+        {RATING_TABS.map((tab) => {
           const isActive = tab.key === selectedKey;
           return (
             <Button

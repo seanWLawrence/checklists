@@ -6,6 +6,7 @@ import { RelativeTime } from "@/components/relative-time";
 import { AssetPreview } from "@/components/asset-preview";
 import { UUID } from "@/lib/types";
 import { getLog } from "../model/get-log.model";
+import { getLogBlockPreviewUrl } from "../lib/get-log-block-preview-url";
 import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
 import { PrettyContent } from "@/app/notes/[id]/pretty-content.client";
 
@@ -47,7 +48,10 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
 
         <div className="space-y-4">
           {log.blocks.map((block, blockIndex) => {
-            const mediaPreviewUrl = previewUrls[`${blockIndex}`];
+            const mediaPreviewUrl = getLogBlockPreviewUrl({
+              block,
+              mediaPreviewUrlsByFilename: previewUrls,
+            }).extract();
 
             return (
               <div key={blockIndex}>
@@ -68,16 +72,24 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                 )}
 
                 {block.variant === "asset" && (
-                  mediaPreviewUrl ? (
-                    <AssetPreview
-                      assetVariant={block.assetVariant}
-                      previewUrl={mediaPreviewUrl}
-                    />
-                  ) : (
-                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                      No file attached.
-                    </p>
-                  )
+                  <div className="space-y-2">
+                    {mediaPreviewUrl ? (
+                      <AssetPreview
+                        assetVariant={block.assetVariant}
+                        previewUrl={mediaPreviewUrl}
+                      />
+                    ) : (
+                      <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                        No file attached.
+                      </p>
+                    )}
+
+                    {block.assetVariant === "audio" && block.transcription?.trim() && (
+                      <div className="rounded-md border border-zinc-200 px-3 py-2 text-sm whitespace-pre-wrap text-zinc-700 dark:border-zinc-800 dark:text-zinc-200">
+                        {block.transcription}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             );

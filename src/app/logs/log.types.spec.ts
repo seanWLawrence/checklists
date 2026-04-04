@@ -15,14 +15,25 @@ test("Log decodes with all block variants", ({ expect }) => {
     blocks: [
       { variant: "shortMarkdown", value: "# Heading" },
       { variant: "longMarkdown", value: "Some longer notes here." },
-      { variant: "asset", assetVariant: "audio", filename: "audio/test.m4a" },
+      {
+        variant: "asset",
+        assetVariant: "audio",
+        filename: "audio/test.m4a",
+        transcription: "Testing one two three.",
+      },
       {
         variant: "asset",
         assetVariant: "image",
         filename: "image/test.jpg",
         fileSizeBytes: 1024,
+        transcription: undefined,
       },
-      { variant: "asset", assetVariant: "video", filename: "video/test.mp4" },
+      {
+        variant: "asset",
+        assetVariant: "video",
+        filename: "video/test.mp4",
+        transcription: undefined,
+      },
     ],
   });
 
@@ -55,7 +66,14 @@ test("Log decode fails when asset block has invalid assetVariant", ({
     updatedAtIso: nowIso,
     user: user(),
     name: "Daily Capture",
-    blocks: [{ variant: "asset", assetVariant: "pdf", filename: "doc.pdf" }],
+    blocks: [
+      {
+        variant: "asset",
+        assetVariant: "pdf",
+        filename: "doc.pdf",
+        transcription: undefined,
+      },
+    ],
   });
 
   expect(decoded.isLeft()).toBe(true);

@@ -2,6 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { Maybe } from "purify-ts/Maybe";
+
 import { Button } from "@/components/button";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
@@ -9,9 +11,9 @@ import { Label } from "@/components/label";
 import { MenuButton } from "@/components/menu-button";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
-import { Maybe } from "purify-ts/Maybe";
 import { AssetPreview } from "@/components/asset-preview";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
+import { useTranscription } from "@/hooks/use-transcription";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
 import { moveBlock } from "../lib/move-block";
@@ -25,6 +27,7 @@ const AudioRecorderInput = dynamic(
   { ssr: false },
 );
 
+type RecordingTranscriptionMode = "auto" | "skip";
 
 const MARKDOWN_BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
   { label: "Short", variant: "shortMarkdown" },
@@ -47,6 +50,41 @@ export const LogForm: React.FC<{
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
 
+  const {
+    startTranscription,
+    setTranscribeStatus,
+    clearTranscriptionState,
+    statusByFilename: transcribeStatusByFilename,
+    errorByFilename: transcribeErrorByFilename,
+    isTranscribing,
+  } = useTranscription({
+    onCompleted: ({
+      filename,
+      transcriptionStructured,
+      transcriptionRaw,
+    }) => {
+      const transcription =
+        transcriptionRaw.trim() || transcriptionStructured.trim();
+
+      setBlocks((previousBlocks) =>
+        previousBlocks.map((block) => {
+          if (
+            block.variant !== "asset" ||
+            block.assetVariant !== "audio" ||
+            block.filename !== filename
+          ) {
+            return block;
+          }
+
+          return {
+            ...block,
+            transcription,
+          };
+        }),
+      );
+    },
+  });
+
   const updateBlockValue = ({
     blockIndex,
     value,
@@ -62,6 +100,31 @@ export const LogForm: React.FC<{
     );
   };
 
+  const updateAssetBlockTranscription = ({
+    blockIndex,
+    transcription,
+  }: {
+    blockIndex: number;
+    transcription: string;
+  }) => {
+    setBlocks((previousBlocks) =>
+      previousBlocks.map((block, index) => {
+        if (
+          index !== blockIndex ||
+          block.variant !== "asset" ||
+          block.assetVariant !== "audio"
+        ) {
+          return block;
+        }
+
+        return {
+          ...block,
+          transcription,
+        };
+      }),
+    );
+  };
+
   const addMarkdownBlock = ({ variant }: { variant: BlockVariant }) => {
     setBlocks((previousBlocks) => [
       ...previousBlocks,
@@ -69,16 +132,42 @@ export const LogForm: React.FC<{
     ]);
   };
 
-  const addAssetFromFile = async (file: File) => {
+  const addAssetFromFile = async ({
+    file,
+    transcriptionMode = "auto",
+  }: {
+    file: File;
+    transcriptionMode?: RecordingTranscriptionMode;
+  }) => {
     const uploaded = await upload(file);
 
-    if (uploaded) {
-      const { filename, assetVariant, fileSizeBytes, previewUrl } = uploaded;
-      setBlocks((previousBlocks) => [
-        ...previousBlocks,
-        { variant: "asset", filename, assetVariant, fileSizeBytes },
-      ]);
-      setLocalPreviewsByFilename((prev) => ({ ...prev, [filename]: previewUrl }));
+    if (!uploaded) {
+      return;
+    }
+
+    const { filename, assetVariant, fileSizeBytes, previewUrl } = uploaded;
+
+    setBlocks((previousBlocks) => [
+      ...previousBlocks,
+      {
+        variant: "asset",
+        filename,
+        assetVariant,
+        fileSizeBytes,
+        transcription: undefined,
+      },
+    ]);
+    setLocalPreviewsByFilename((previous) => ({
+      ...previous,
+      [filename]: previewUrl,
+    }));
+
+    if (assetVariant === "audio") {
+      setTranscribeStatus({ filename, status: "idle" });
+    }
+
+    if (assetVariant === "audio" && transcriptionMode === "auto") {
+      void startTranscription({ filename });
     }
   };
 
@@ -88,7 +177,7 @@ export const LogForm: React.FC<{
     const files = Array.from(event.target.files ?? []);
 
     for (const file of files) {
-      await addAssetFromFile(file);
+      await addAssetFromFile({ file });
     }
 
     if (fileInputRef.current) {
@@ -97,6 +186,19 @@ export const LogForm: React.FC<{
   };
 
   const removeBlock = ({ blockIndex }: { blockIndex: number }) => {
+    const removedBlock = blocks[blockIndex];
+
+    if (removedBlock?.variant === "asset") {
+      const { filename } = removedBlock;
+
+      setLocalPreviewsByFilename((current) => {
+        const next = { ...current };
+        delete next[filename];
+        return next;
+      });
+      clearTranscriptionState({ filename });
+    }
+
     setBlocks((previousBlocks) =>
       previousBlocks.filter((_, index) => index !== blockIndex),
     );
@@ -193,32 +295,30 @@ export const LogForm: React.FC<{
             {blocks.map((block, blockIndex) => (
               <div key={blockIndex} className="space-y-0.5">
                 <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                  <div className="flex items-center gap-2">
-                    {blockIndex > 0 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-xs"
-                        onClick={() =>
-                          reorderBlock({ blockIndex, direction: "up" })
-                        }
-                      >
-                        Up
-                      </Button>
-                    )}
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs"
+                      disabled={blockIndex === 0}
+                      onClick={() =>
+                        reorderBlock({ blockIndex, direction: "up" })
+                      }
+                    >
+                      Up
+                    </Button>
 
-                    {blockIndex < blocks.length - 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-xs"
-                        onClick={() =>
-                          reorderBlock({ blockIndex, direction: "down" })
-                        }
-                      >
-                        Down
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs"
+                      disabled={blockIndex === blocks.length - 1}
+                      onClick={() =>
+                        reorderBlock({ blockIndex, direction: "down" })
+                      }
+                    >
+                      Down
+                    </Button>
 
                     <Button
                       type="button"
@@ -262,20 +362,47 @@ export const LogForm: React.FC<{
                   const previewUrl =
                     initialMediaPreviewUrlsByFilename[block.filename] ??
                     localPreviewsByFilename[block.filename];
-
-                  if (!previewUrl) {
-                    return (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                        {block.filename}
-                      </p>
-                    );
-                  }
+                  const transcribeStatus = transcribeStatusByFilename[block.filename];
+                  const transcribeError = transcribeErrorByFilename[block.filename];
 
                   return (
-                    <AssetPreview
-                      assetVariant={block.assetVariant}
-                      previewUrl={previewUrl}
-                    />
+                    <div className="space-y-2">
+                      {previewUrl ? (
+                        <AssetPreview
+                          assetVariant={block.assetVariant}
+                          previewUrl={previewUrl}
+                        />
+                      ) : (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                          {block.filename}
+                        </p>
+                      )}
+
+                      {block.assetVariant === "audio" && (
+                        <div className="space-y-2">
+                          <Textarea
+                            className="w-full max-w-none"
+                            value={block.transcription ?? ""}
+                            rows={4}
+                            placeholder="Transcription"
+                            onChange={(event) =>
+                              updateAssetBlockTranscription({
+                                blockIndex,
+                                transcription: event.target.value,
+                              })
+                            }
+                          />
+
+                          {transcribeStatus === "error" && transcribeError && (
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-rose-600">
+                                Transcription failed: {transcribeError}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   );
                 })()}
               </div>
@@ -294,8 +421,8 @@ export const LogForm: React.FC<{
           onChange={onFilesSelected}
         />
 
-        <div className="flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex flex-wrap gap-2 items-center">
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2 items-center justify-end">
             {MARKDOWN_BLOCK_BUTTONS.map(({ label, variant }) => (
               <Button
                 key={variant}
@@ -309,10 +436,18 @@ export const LogForm: React.FC<{
             ))}
 
             <AudioRecorderInput
-              onChangeAction={async (file) => {
-                if (file) await addAssetFromFile(file);
+              onChangeAction={async (file, options) => {
+                if (!file) {
+                  return;
+                }
+
+                await addAssetFromFile({
+                  file,
+                  transcriptionMode: options?.transcriptionMode,
+                });
               }}
-              shouldShowTranscribeOption={false}
+              shouldShowTranscribeOption
+              shouldShowRecordOnlyOption={false}
               buttonClassName={BUTTON_CLASS}
             />
 
@@ -327,13 +462,16 @@ export const LogForm: React.FC<{
             </Button>
           </div>
 
-          <SubmitButton
-            type="submit"
-            variant="primary"
-            className={BUTTON_CLASS}
-          >
-            Save
-          </SubmitButton>
+          <div className="flex items-center justify-end gap-2">
+            <SubmitButton
+              type="submit"
+              variant="primary"
+              className={BUTTON_CLASS}
+              disabled={isUploading || isTranscribing}
+            >
+              {isTranscribing ? "Transcribing..." : "Save"}
+            </SubmitButton>
+          </div>
         </div>
       </form>
     </div>

@@ -39,7 +39,7 @@ export const deleteJournalAction = async (
       })
         .chain(() => {
           const allAssetFilenames =
-            journal.assets?.map((asset) => asset.filename) ?? [];
+            journal.entry.assets?.map((asset) => asset.filename) ?? [];
 
           return EitherAsync.all(
             allAssetFilenames.map((filename) => deleteObject({ filename })),

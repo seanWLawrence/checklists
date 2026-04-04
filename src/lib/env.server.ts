@@ -4,9 +4,9 @@ import {
   getOptionalEnv,
   getRequiredEnv,
   parseRequiredNumberEnv,
-} from "@/lib/env.helpers";
+} from "./env.helpers";
 
-export * from "@/lib/env.shared";
+export * from "./env.shared";
 
 // AWS
 export const AWS_ROLE_SESSION_NAME = "checklists-session";

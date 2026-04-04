@@ -20,12 +20,14 @@ test("getLogMediaPreviewUrls keys previews by filename", async ({ expect }) => {
         assetVariant: "image",
         filename: "image/one.jpg",
         fileSizeBytes: undefined,
+        transcription: undefined,
       },
       {
         variant: "asset",
         assetVariant: "audio",
         filename: "audio/two.m4a",
         fileSizeBytes: undefined,
+        transcription: undefined,
       },
     ],
   }).run();

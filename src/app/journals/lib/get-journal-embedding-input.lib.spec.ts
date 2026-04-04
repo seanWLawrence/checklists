@@ -11,7 +11,9 @@ test("getJournalEmbeddingInput delegates to normalization and returns empty stri
 }) => {
   expect(
     getJournalEmbeddingInput({
-      content: "",
+      entry: {
+        content: "",
+      },
     } as never),
   ).toBe("");
 });

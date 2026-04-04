@@ -1,7 +1,7 @@
 import { Codec, GetType } from "purify-ts/Codec";
-import { Journal, TotalLevelsByTypeAndValue } from "../journal.types";
+import { Journal, TotalRatingsByTypeAndValue } from "../journal.types";
 import {
-  getTotalLevelsByTypeAndValue,
+  getTotalRatingsByTypeAndValue,
   maxLevel,
 } from "./journal-analytics-chart-math.lib";
 import { Left, Right } from "purify-ts/Either";
@@ -28,20 +28,17 @@ type PieChartLevel = GetType<typeof PieChartLevel>;
 
 export type PieChartData = {
   level: PieChartLevel;
-  /**
-   * @example "Energy (Level 1)"
-   */
   name: string;
   count: number;
 }[][];
 
 export const getPieChartData = (journals: Journal[]): PieChartData => {
-  const totalLevelsByTypeAndValue: TotalLevelsByTypeAndValue =
-    getTotalLevelsByTypeAndValue(journals);
+  const totalRatingsByTypeAndValue: TotalRatingsByTypeAndValue =
+    getTotalRatingsByTypeAndValue(journals);
 
   const result: PieChartData = [];
 
-  for (const level of Object.values(totalLevelsByTypeAndValue)) {
+  for (const rating of Object.values(totalRatingsByTypeAndValue)) {
     const levelData: PieChartData[0] = [];
 
     for (let i = 1; i <= maxLevel; i++) {
@@ -51,9 +48,9 @@ export const getPieChartData = (journals: Journal[]): PieChartData => {
         const pieChartLevel = pieChartLevelEither.extract();
 
         levelData.push({
-          name: level.name,
+          name: rating.name,
           level: pieChartLevel,
-          count: level[pieChartLevel],
+          count: rating[pieChartLevel],
         });
       }
     }

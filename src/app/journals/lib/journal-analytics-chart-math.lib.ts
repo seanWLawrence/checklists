@@ -1,44 +1,44 @@
 import {
   Journal,
-  JournalLevelTypeAndValueCount,
-  TotalLevelsByTypeAndValue,
+  JournalRatingTypeAndValueCount,
+  TotalRatingsByTypeAndValue,
 } from "../journal.types";
 
 const toTenthsDecimal = (num: number): number => Number(num.toFixed(2));
 
 export const average = ({
-  total,
+  count,
   num,
 }: {
-  total: number;
+  count: number;
   num: number;
-}): number => toTenthsDecimal(num / total);
+}): number => (count > 0 ? toTenthsDecimal(num / count) : 0);
 
 export const median = (
-  levels: JournalLevelTypeAndValueCount["levels"],
+  ratings: JournalRatingTypeAndValueCount["ratings"],
 ): number => {
-  const medianIndex = Math.floor(levels.length / 2);
+  const medianIndex = Math.floor(ratings.length / 2);
 
-  return [...levels.map((l) => l.level).sort()][medianIndex];
+  return [...ratings.map((l) => l.rating).sort()][medianIndex];
 };
 
 export const mode = (
-  levelTypeAndValueCount: JournalLevelTypeAndValueCount,
+  ratingTypeAndValueCount: JournalRatingTypeAndValueCount,
 ): number => {
-  let highestLevelCount = levelTypeAndValueCount[1];
-  let highestLevel = 1;
+  let highestRatingCount = ratingTypeAndValueCount[1];
+  let highestRating = 1;
 
   for (let i = 2; i <= 5; i++) {
-    const level = i as 2 | 3 | 4 | 5;
-    const count = levelTypeAndValueCount[level];
+    const rating = i as 2 | 3 | 4 | 5;
+    const count = ratingTypeAndValueCount[rating];
 
-    if (count > highestLevelCount) {
-      highestLevelCount = count;
-      highestLevel = level;
+    if (count > highestRatingCount) {
+      highestRatingCount = count;
+      highestRating = rating;
     }
   }
 
-  return highestLevel;
+  return highestRating;
 };
 
 export const percentile = ({
@@ -46,11 +46,11 @@ export const percentile = ({
   totals,
 }: {
   percentile: number;
-  totals: JournalLevelTypeAndValueCount;
+  totals: JournalRatingTypeAndValueCount;
 }) => {
   const sortedNums = [
-    ...totals.levels.sort((a, b) => (a.level < b.level ? -1 : 1)),
-  ].map((l) => l.level);
+    ...totals.ratings.sort((a, b) => (a.rating < b.rating ? -1 : 1)),
+  ].map((l) => l.rating);
 
   const rank = percentile * (sortedNums.length - 1);
   const lowerIndex = Math.floor(rank);
@@ -67,54 +67,34 @@ export const percentile = ({
   }
 };
 
-export const getTotalLevelsByTypeAndValue = (
+export const getTotalRatingsByTypeAndValue = (
   journals: Journal[],
-): TotalLevelsByTypeAndValue => {
-  const result: TotalLevelsByTypeAndValue = {
-    energyLevel: {
+): TotalRatingsByTypeAndValue => {
+  const result: TotalRatingsByTypeAndValue = {
+    energy: {
       name: "Energy",
       total: 0,
-      levels: [],
+      ratings: [],
       1: 0,
       2: 0,
       3: 0,
       4: 0,
       5: 0,
     },
-    moodLevel: {
+    mood: {
       name: "Mood",
       total: 0,
-      levels: [],
+      ratings: [],
       1: 0,
       2: 0,
       3: 0,
       4: 0,
       5: 0,
     },
-    healthLevel: {
-      name: "Health",
+    productivity: {
+      name: "Productivity",
       total: 0,
-      levels: [],
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
-    },
-    creativityLevel: {
-      name: "Creativity",
-      total: 0,
-      levels: [],
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
-    },
-    relationshipsLevel: {
-      name: "Relationships",
-      total: 0,
-      levels: [],
+      ratings: [],
       1: 0,
       2: 0,
       3: 0,
@@ -123,59 +103,33 @@ export const getTotalLevelsByTypeAndValue = (
     },
   };
 
-  for (const {
-    creativityLevel,
-    energyLevel,
-    moodLevel,
-    healthLevel,
-    relationshipsLevel,
-    updatedAtIso,
-  } of journals) {
-    if (energyLevel) {
-      const num = Number(energyLevel);
-      result.energyLevel.total += num;
-      result.energyLevel[energyLevel] += 1;
-      result.energyLevel.levels.push({
-        level: energyLevel,
+  for (const { checkIn, updatedAtIso } of journals) {
+    const energy = checkIn.ratings?.energy;
+    const mood = checkIn.ratings?.mood;
+    const productivity = checkIn.ratings?.productivity;
+
+    if (energy) {
+      result.energy.total += energy;
+      result.energy[energy] += 1;
+      result.energy.ratings.push({
+        rating: energy,
         updatedAtIso,
       });
     }
-    if (moodLevel) {
-      const num = Number(moodLevel);
-      result.moodLevel.total += num;
-      result.moodLevel[moodLevel] += 1;
-      result.moodLevel.levels.push({
-        level: moodLevel,
+    if (mood) {
+      result.mood.total += mood;
+      result.mood[mood] += 1;
+      result.mood.ratings.push({
+        rating: mood,
         updatedAtIso,
       });
     }
 
-    if (healthLevel) {
-      const num = Number(healthLevel);
-      result.healthLevel.total += num;
-      result.healthLevel[healthLevel] += 1;
-      result.healthLevel.levels.push({
-        level: healthLevel,
-        updatedAtIso,
-      });
-    }
-
-    if (creativityLevel) {
-      const num = Number(creativityLevel);
-      result.creativityLevel.total += num;
-      result.creativityLevel[creativityLevel] += 1;
-      result.creativityLevel.levels.push({
-        level: creativityLevel,
-        updatedAtIso,
-      });
-    }
-
-    if (relationshipsLevel) {
-      const num = Number(relationshipsLevel);
-      result.relationshipsLevel.total += num;
-      result.relationshipsLevel[relationshipsLevel] += 1;
-      result.relationshipsLevel.levels.push({
-        level: relationshipsLevel,
+    if (productivity) {
+      result.productivity.total += productivity;
+      result.productivity[productivity] += 1;
+      result.productivity.ratings.push({
+        rating: productivity,
         updatedAtIso,
       });
     }
@@ -184,5 +138,4 @@ export const getTotalLevelsByTypeAndValue = (
   return result;
 };
 
-// Max level, this is what it's called in the Recharts
 export const maxLevel = 5;
