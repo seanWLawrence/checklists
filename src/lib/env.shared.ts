@@ -1,7 +1,7 @@
 import { Maybe } from "purify-ts";
 import {
   getOptionalEnv,
-} from "@/lib/env.helpers";
+} from "./env.helpers";
 
 // Runtime
 export const NODE_ENV = getOptionalEnv({ key: "NODE_ENV" }) ?? "development";

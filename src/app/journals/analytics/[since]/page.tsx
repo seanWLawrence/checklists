@@ -13,11 +13,6 @@ import {
 } from "../../lib/get-sentiment-valence-info.lib";
 import { SentimentLineChart } from "./sentiment-line-chart";
 
-/**
- * Get the date range from the route, default to last week
- * Add links to change the date range route to either last 2 weeks, last month, last 3 months, last 6 months, last year and all time
- * Pass the params from the route into the function and filter the keys to only ones with the date
- */
 const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
   params,
 }) => {
@@ -63,7 +58,7 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
 
         <div className="space-y-2 text-center flex flex-col items-center">
           <div className="space-y-8">
-            <Fieldset legend="Levels" className="text-left">
+            <Fieldset legend="Ratings" className="text-left">
               <div className="space-y-8">
                 <RadarChart data={radar} />
 
@@ -128,37 +123,19 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 </div>
 
                 <div className="space-y-1">
-                  <p className="font-medium">Top habits</p>
+                  <p className="font-medium">Top tracked activities</p>
 
-                  {ai.topHabits.length === 0 ? (
+                  {ai.topActivities.length === 0 ? (
                     <p className="text-zinc-600 dark:text-zinc-300">
-                      No tracked habits yet.
+                      No tracked activities yet.
                     </p>
                   ) : (
                     <ul className="space-y-1">
-                      {ai.topHabits.map((habit) => (
-                        <li key={habit.key}>
-                          {habit.label}: <strong>{habit.count}</strong> days (
-                          {habit.percentOfEntries}%)
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <p className="font-medium">Top hobbies</p>
-
-                  {ai.topHobbies.length === 0 ? (
-                    <p className="text-zinc-600 dark:text-zinc-300">
-                      No tracked hobbies yet.
-                    </p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {ai.topHobbies.map((hobby) => (
-                        <li key={hobby.key}>
-                          {hobby.label}: <strong>{hobby.count}</strong> days (
-                          {hobby.percentOfEntries}%)
+                      {ai.topActivities.map((activity) => (
+                        <li key={activity.key}>
+                          {activity.groupLabel} / {activity.label}:{" "}
+                          <strong>{activity.count}</strong> days (
+                          {activity.percentOfEntries}%)
                         </li>
                       ))}
                     </ul>
@@ -167,23 +144,23 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
               </div>
             </Fieldset>
 
-            <Fieldset legend="Habit impact" className="text-left">
-              {ai.habitImpact.length === 0 ? (
+            <Fieldset legend="Activity impact" className="text-left">
+              {ai.activityImpact.length === 0 ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                  No habit data yet.
+                  No activity data yet.
                 </p>
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-zinc-600 dark:text-zinc-300 mb-4">
-                    Δ compares average level on days with the habit vs days
+                    Δ compares average rating on days with the activity vs days
                     without it.
                   </p>
 
                   <div className="w-full overflow-x-auto overscroll-x-contain max-w-[90vw]">
-                    <table className="min-w-[44rem] text-sm">
+                    <table className="min-w-[52rem] text-sm">
                       <thead>
                         <tr className="text-left border-b border-zinc-200 dark:border-zinc-700">
-                          <th className="py-1 pr-3 whitespace-nowrap">Habit</th>
+                          <th className="py-1 pr-3 whitespace-nowrap">Activity</th>
                           <th className="py-1 pr-3 whitespace-nowrap">Days</th>
                           <th className="py-1 pr-3 whitespace-nowrap">
                             Mood avg
@@ -198,53 +175,53 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                             Energy Δ
                           </th>
                           <th className="py-1 pr-3 whitespace-nowrap">
-                            Health avg
+                            Productivity avg
                           </th>
                           <th className="py-1 pr-3 whitespace-nowrap">
-                            Health Δ
+                            Productivity Δ
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {ai.habitImpact.map((habit) => (
+                        {ai.activityImpact.map((activity) => (
                           <tr
-                            key={habit.key}
+                            key={activity.key}
                             className="border-b border-zinc-100 dark:border-zinc-800"
                           >
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {habit.label}
+                              {activity.groupLabel} / {activity.label}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {habit.count} ({habit.percentOfEntries}%)
+                              {activity.count} ({activity.percentOfEntries}%)
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.averageMood === "number"
-                                ? habit.averageMood.toFixed(2)
+                              {typeof activity.averageMood === "number"
+                                ? activity.averageMood.toFixed(2)
                                 : "n/a"}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.moodDelta === "number"
-                                ? `${habit.moodDelta > 0 ? "+" : ""}${habit.moodDelta.toFixed(2)}`
+                              {typeof activity.moodDelta === "number"
+                                ? `${activity.moodDelta > 0 ? "+" : ""}${activity.moodDelta.toFixed(2)}`
                                 : "n/a"}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.averageEnergy === "number"
-                                ? habit.averageEnergy.toFixed(2)
+                              {typeof activity.averageEnergy === "number"
+                                ? activity.averageEnergy.toFixed(2)
                                 : "n/a"}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.energyDelta === "number"
-                                ? `${habit.energyDelta > 0 ? "+" : ""}${habit.energyDelta.toFixed(2)}`
+                              {typeof activity.energyDelta === "number"
+                                ? `${activity.energyDelta > 0 ? "+" : ""}${activity.energyDelta.toFixed(2)}`
                                 : "n/a"}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.averageHealth === "number"
-                                ? habit.averageHealth.toFixed(2)
+                              {typeof activity.averageProductivity === "number"
+                                ? activity.averageProductivity.toFixed(2)
                                 : "n/a"}
                             </td>
                             <td className="py-1 pr-3 whitespace-nowrap">
-                              {typeof habit.healthDelta === "number"
-                                ? `${habit.healthDelta > 0 ? "+" : ""}${habit.healthDelta.toFixed(2)}`
+                              {typeof activity.productivityDelta === "number"
+                                ? `${activity.productivityDelta > 0 ? "+" : ""}${activity.productivityDelta.toFixed(2)}`
                                 : "n/a"}
                             </td>
                           </tr>
@@ -257,31 +234,31 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
             </Fieldset>
 
             <Fieldset
-              legend="Most helpful habits (experimental)"
+              legend="Most helpful activities (experimental)"
               className="text-left"
             >
               <p className="text-xs text-zinc-600 dark:text-zinc-300 mb-4">
                 Ranked by positive deltas and frequency. Minimum sample size:{" "}
-                {ai.minSampleSizeForRanking} days with and without the habit.
+                {ai.minSampleSizeForRanking} days with and without the activity.
               </p>
 
-              {ai.helpfulHabits.length === 0 ? (
+              {ai.helpfulActivities.length === 0 ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-300">
                   Not enough data for a reliable ranking yet.
                 </p>
               ) : (
                 <ul className="mt-2 space-y-1 text-sm">
-                  {ai.helpfulHabits.map((habit, index) => (
-                    <li key={habit.key}>
-                      {index + 1}. <strong>{habit.label}</strong> — score{" "}
-                      {habit.score.toFixed(3)} · mood Δ{" "}
-                      {habit.moodDelta > 0 ? "+" : ""}
-                      {habit.moodDelta.toFixed(2)} · energy Δ{" "}
-                      {habit.energyDelta > 0 ? "+" : ""}
-                      {habit.energyDelta.toFixed(2)} · health Δ{" "}
-                      {habit.healthDelta > 0 ? "+" : ""}
-                      {habit.healthDelta.toFixed(2)} ({habit.count} days,{" "}
-                      {habit.percentOfEntries}%)
+                  {ai.helpfulActivities.map((activity, index) => (
+                    <li key={activity.key}>
+                      {index + 1}. <strong>{activity.groupLabel} / {activity.label}</strong> — score{" "}
+                      {activity.score.toFixed(3)} · mood Δ{" "}
+                      {activity.moodDelta > 0 ? "+" : ""}
+                      {activity.moodDelta.toFixed(2)} · energy Δ{" "}
+                      {activity.energyDelta > 0 ? "+" : ""}
+                      {activity.energyDelta.toFixed(2)} · productivity Δ{" "}
+                      {activity.productivityDelta > 0 ? "+" : ""}
+                      {activity.productivityDelta.toFixed(2)} ({activity.count} days,{" "}
+                      {activity.percentOfEntries}%)
                     </li>
                   ))}
                 </ul>

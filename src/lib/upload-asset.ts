@@ -37,7 +37,10 @@ export const uploadAsset = (
     });
 
     if (!presignResponse.ok) {
-      return throwE("Failed to get upload URL");
+      const errorBody = await presignResponse.text();
+      return throwE(
+        `Failed to get upload URL (${presignResponse.status}): ${errorBody || presignResponse.statusText}`,
+      );
     }
 
     const { uploadUrl, filename } = await liftEither(
@@ -51,7 +54,10 @@ export const uploadAsset = (
     });
 
     if (!uploadResponse.ok) {
-      return throwE("Failed to upload file");
+      const errorBody = await uploadResponse.text();
+      return throwE(
+        `Failed to upload file (${uploadResponse.status}): ${errorBody || uploadResponse.statusText}`,
+      );
     }
 
     return { filename, assetVariant };

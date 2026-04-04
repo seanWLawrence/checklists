@@ -24,7 +24,7 @@ import { SinceFilterForm } from "../../components/since-filter-form";
 import { parseSinceRange } from "../../lib/parse-since-range.lib";
 import { prettyDate } from "../../lib/pretty-date.lib";
 import { getJournalAssetResponseContentType } from "../../lib/get-journal-asset-response-content-type.lib";
-import { getAllJournalsScanKey } from "../../model/get-all-created-at-locals.model";
+import { getAllJournalsScanKeys } from "../../model/get-all-created-at-locals.model";
 import { attachOrphanedAssetAction } from "../../actions/attach-orphaned-asset.action";
 import { getAssetVariantFromFilename } from "@/lib/assets/asset-extensions";
 
@@ -212,9 +212,9 @@ const JournalAssetsPage: React.FC<{
     const { since, from, to } = await liftEither(parseSinceRange(unsafeSince));
     const user = await fromPromise(validateUserLoggedIn({}));
     const validatedKeys = await fromPromise(
-      scan({
-        key: getAllJournalsScanKey({ user }),
-      }),
+      EitherAsync.all(
+        getAllJournalsScanKeys({ user }).map((key) => scan({ key })),
+      ).map((groups) => [...new Set(groups.flat())]),
     );
     const journals = await fromPromise(
       getAllItems({ keys: validatedKeys, decoder: Journal }),
@@ -226,7 +226,7 @@ const JournalAssetsPage: React.FC<{
     });
 
     const flattenedAssets = filteredJournals.flatMap((journal) => {
-      return (journal.assets ?? []).map((asset) => ({
+      return (journal.entry.assets ?? []).map((asset) => ({
         ...asset,
         createdAtLocal: journal.createdAtLocal,
         updatedAtIso: journal.updatedAtIso,
@@ -234,7 +234,7 @@ const JournalAssetsPage: React.FC<{
     });
     const referencedAssetFilenames = new Set(
       journals.flatMap((journal) =>
-        (journal.assets ?? []).map((asset) => asset.filename),
+        (journal.entry.assets ?? []).map((asset) => asset.filename),
       ),
     );
     const orphanedAssetCandidates = allS3Objects

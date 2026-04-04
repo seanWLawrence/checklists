@@ -18,7 +18,11 @@ export const SubmitButton: React.FC<
       <button
         {...rest}
         type={rest.type ?? "submit"}
-        className={buttonClassName({ variant, className: rest.className })}
+        className={buttonClassName({
+          variant,
+          className: rest.className,
+          disabled: rest.disabled,
+        })}
         onClick={(e) => {
           rest.onClick?.(e);
         }}

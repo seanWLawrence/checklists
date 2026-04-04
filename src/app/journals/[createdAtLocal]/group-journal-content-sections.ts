@@ -1,8 +1,8 @@
 import { NonEmptyList } from "purify-ts";
-import { JournalBase } from "../journal.types";
+import { JournalEntry } from "../journal.types";
 
 export const groupJournalContentSections = (
-  content: JournalBase["content"],
+  content: JournalEntry["content"],
 ) => {
   const contentValue = content ?? "";
 

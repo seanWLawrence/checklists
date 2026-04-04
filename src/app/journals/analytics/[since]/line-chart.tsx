@@ -13,12 +13,7 @@ import {
 import { LineChartData } from "../../lib/get-line-chart-data.lib";
 import { colors } from "@/lib/chart-colors";
 
-export type AverageKey =
-  | "energyLevelAvg7"
-  | "moodLevelAvg7"
-  | "healthLevelAvg7"
-  | "creativityLevelAvg7"
-  | "relationshipsLevelAvg7";
+export type AverageKey = "energyAvg7" | "moodAvg7" | "productivityAvg7";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -74,7 +69,7 @@ export const LineChart: React.FC<{
   dataKey: string;
   averageKey: AverageKey;
   name: string;
-}> = ({ data, dataKey, averageKey: averageKey, name }) => {
+}> = ({ data, dataKey, averageKey, name }) => {
   const chartData = data.map((row) => {
     const value = row[averageKey];
 
@@ -106,86 +101,86 @@ export const LineChart: React.FC<{
               bottom: 5,
             }}
           >
-        <XAxis
-          dataKey="dateMilli"
-          name="Date"
-          angle={-90}
-          type="number"
-          height={50}
-          tick={{ fontSize: 12, fill: "var(--chart-label)" }}
-          domain={["dataMin", "dataMax"]}
-          scale="time"
-          ticks={getMonthlyTicks(data)}
-          tickFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
-        />
-
-        <YAxis
-          width="auto"
-          interval="preserveStartEnd"
-          type="number"
-          domain={[1, 5]}
-          includeHidden
-          scale="linear"
-          tick={{ fill: "var(--chart-label)" }}
-        />
-
-        <ReferenceLine
-          y={3}
-          stroke={colors.orange}
-          strokeWidth={1.5}
-          ifOverflow="extendDomain"
-        />
-
-        <Tooltip
-          labelFormatter={formatTooltipDate}
-          contentStyle={{
-            backgroundColor: "var(--chart-tooltip-bg)",
-            borderColor: "var(--chart-tooltip-border)",
-            color: "var(--chart-tooltip-text)",
-            borderRadius: 8,
-          }}
-          labelStyle={{ color: "var(--chart-tooltip-text)" }}
-          itemStyle={{ color: "var(--chart-tooltip-text)" }}
-        />
-
-        <Legend />
-
-        <Area
-          dataKey="avgAbove"
-          name={`${name} (7d avg)`}
-          type="monotone"
-          stroke="transparent"
-          fill={colors.green}
-          fillOpacity={0.25}
-          baseValue={3}
-          isAnimationActive={false}
-        />
-
-        <Area
-          dataKey="avgBelow"
-          name={`${name} (7d avg)`}
-          type="monotone"
-          stroke="transparent"
-          fill={colors.red}
-          fillOpacity={0.25}
-          baseValue={3}
-          isAnimationActive={false}
-        />
-
-        <Line
-          dataKey={dataKey}
-          stroke="transparent"
-          dot={({ cx, cy, value }) => (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={3}
-              fill={getDotColor(value as number | undefined)}
+            <XAxis
+              dataKey="dateMilli"
+              name="Date"
+              angle={-90}
+              type="number"
+              height={50}
+              tick={{ fontSize: 12, fill: "var(--chart-label)" }}
+              domain={["dataMin", "dataMax"]}
+              scale="time"
+              ticks={getMonthlyTicks(data)}
+              tickFormatter={(dateMilli) => dateFormatter.format(dateMilli)}
             />
-          )}
-          name={name}
-          isAnimationActive={false}
-        />
+
+            <YAxis
+              width="auto"
+              interval="preserveStartEnd"
+              type="number"
+              domain={[1, 5]}
+              includeHidden
+              scale="linear"
+              tick={{ fill: "var(--chart-label)" }}
+            />
+
+            <ReferenceLine
+              y={3}
+              stroke={colors.orange}
+              strokeWidth={1.5}
+              ifOverflow="extendDomain"
+            />
+
+            <Tooltip
+              labelFormatter={formatTooltipDate}
+              contentStyle={{
+                backgroundColor: "var(--chart-tooltip-bg)",
+                borderColor: "var(--chart-tooltip-border)",
+                color: "var(--chart-tooltip-text)",
+                borderRadius: 8,
+              }}
+              labelStyle={{ color: "var(--chart-tooltip-text)" }}
+              itemStyle={{ color: "var(--chart-tooltip-text)" }}
+            />
+
+            <Legend />
+
+            <Area
+              dataKey="avgAbove"
+              name={`${name} (7d avg)`}
+              type="monotone"
+              stroke="transparent"
+              fill={colors.green}
+              fillOpacity={0.25}
+              baseValue={3}
+              isAnimationActive={false}
+            />
+
+            <Area
+              dataKey="avgBelow"
+              name={`${name} (7d avg)`}
+              type="monotone"
+              stroke="transparent"
+              fill={colors.red}
+              fillOpacity={0.25}
+              baseValue={3}
+              isAnimationActive={false}
+            />
+
+            <Line
+              dataKey={dataKey}
+              stroke="transparent"
+              dot={({ cx, cy, value }) => (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={3}
+                  fill={getDotColor(value as number | undefined)}
+                />
+              )}
+              name={name}
+              isAnimationActive={false}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

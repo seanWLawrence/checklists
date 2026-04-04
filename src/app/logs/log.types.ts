@@ -78,6 +78,7 @@ const AssetBlock = Codec.interface({
   assetVariant: AssetVariant,
   filename: string,
   fileSizeBytes: optional(number),
+  transcription: optional(string),
 });
 
 export type AssetBlock = GetType<typeof AssetBlock>;

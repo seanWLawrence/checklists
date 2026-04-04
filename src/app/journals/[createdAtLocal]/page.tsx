@@ -12,11 +12,7 @@ import { RelativeTime } from "@/components/relative-time";
 import { AssetList } from "@/components/asset-list";
 import { Fieldset } from "@/components/fieldset";
 import { getPresignedGetObjectUrl } from "@/lib/aws/s3/get-presigned-get-object-url";
-import {
-  getCompletedHabitLabels,
-  getCompletedHobbyLabels,
-  getJournalHobbiesWithLegacyFallback,
-} from "../lib/journal-habits";
+import { getJournalCheckInDisplayGroups } from "../lib/journal-check-in";
 import { getJournalAssetResponseContentType } from "../lib/get-journal-asset-response-content-type.lib";
 import { LinkButton } from "@/components/link-button";
 import { getSentimentValenceInfo } from "../lib/get-sentiment-valence-info.lib";
@@ -51,6 +47,51 @@ const prettifyContent = (content: string): React.ReactNode | undefined => {
   );
 };
 
+const getActivityAmountInfo = (value: "some" | "medium" | "aLot") => {
+  switch (value) {
+    case "some":
+      return {
+        label: "Some",
+        dotsFilled: 1,
+      };
+    case "medium":
+      return {
+        label: "Medium",
+        dotsFilled: 2,
+      };
+    case "aLot":
+      return {
+        label: "A lot",
+        dotsFilled: 3,
+      };
+  }
+};
+
+const activityAmountOrder = ["some", "medium", "aLot"] as const;
+const viceAmountOrder = ["some", "medium", "aLot"] as const;
+
+const ActivityAmountDots: React.FC<{
+  value: "some" | "medium" | "aLot";
+  activeDotClassName?: string;
+}> = ({ value, activeDotClassName = "bg-emerald-600" }) => {
+  const amountInfo = getActivityAmountInfo(value);
+
+  return (
+    <div
+      className="flex items-center gap-1"
+      aria-label={`${amountInfo.label} activity amount`}
+      title={amountInfo.label}
+    >
+      {Array.from({ length: amountInfo.dotsFilled }).map((_, index) => (
+        <span
+          key={index}
+          className={`inline-block h-2.5 w-2.5 rounded-full ${activeDotClassName}`}
+        />
+      ))}
+    </div>
+  );
+};
+
 type Params = Promise<{ createdAtLocal: string }>;
 
 const Journal: React.FC<{ params: Params }> = async (props) => {
@@ -68,14 +109,17 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
         createdAtLocal: journal.createdAtLocal,
         createdAtLocals: allCreatedAtLocals,
       });
-    const assets = journal.assets ?? [];
-    const prettyContent = prettifyContent(journal.content ?? "");
-    const completedHabits = getCompletedHabitLabels(journal.habits);
-    const resolvedHobbies = getJournalHobbiesWithLegacyFallback({
-      hobbies: journal.hobbies,
-      habits: journal.habits,
+    const assets = journal.entry.assets ?? [];
+    const prettyContent = prettifyContent(journal.entry.content ?? "");
+    const activityGroups = getJournalCheckInDisplayGroups({
+      checkIn: journal.checkIn,
     });
-    const completedHobbies = getCompletedHobbyLabels(resolvedHobbies);
+    const activityItems = activityGroups
+      .filter((group) => group.key !== "vices")
+      .flatMap((group) => group.items);
+    const viceItems = activityGroups
+      .filter((group) => group.key === "vices")
+      .flatMap((group) => group.items);
 
     const assetUrls = await fromPromise(
       EitherAsync.all(
@@ -115,29 +159,29 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
 
         <Fieldset legend="AI analysis">
           <div className="space-y-2 text-sm">
-            {journal.dailySummary && (
+            {journal.analysis?.dailySummary && (
               <div>
                 <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   Daily summary
                 </p>
-                <p>{journal.dailySummary}</p>
+                <p>{journal.analysis.dailySummary}</p>
               </div>
             )}
 
-            {journal.sentiment && (
+            {journal.analysis?.sentiment && (
               <div>
                 <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   Sentiment
                 </p>
                 {(() => {
                   const valenceInfo = getSentimentValenceInfo(
-                    journal.sentiment.valence,
+                    journal.analysis.sentiment.valence,
                   );
                   const confidenceText =
-                    typeof journal.sentiment.confidence === "number"
-                      ? ` / Confidence ${Math.round(journal.sentiment.confidence * 100)}%`
+                    typeof journal.analysis.sentiment.confidence === "number"
+                      ? ` / Confidence ${Math.round(journal.analysis.sentiment.confidence * 100)}%`
                       : "";
-                  const tooltip = `Valence ${journal.sentiment.valence.toFixed(2)}${confidenceText}`;
+                  const tooltip = `Valence ${journal.analysis.sentiment.valence.toFixed(2)}${confidenceText}`;
 
                   return (
                     <p>
@@ -153,50 +197,21 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
               </div>
             )}
 
-            {!journal.dailySummary && !journal.sentiment && (
-              <p className="text-zinc-600 dark:text-zinc-300">
-                No AI analysis yet.
-              </p>
-            )}
+            {!journal.analysis?.dailySummary &&
+              !journal.analysis?.sentiment && (
+                <p className="text-zinc-600 dark:text-zinc-300">
+                  No AI analysis yet.
+                </p>
+              )}
           </div>
         </Fieldset>
 
-        {completedHabits.length > 0 && (
-          <Fieldset legend="Habits">
-            <ul className="flex flex-wrap gap-2">
-              {completedHabits.map((habit) => (
-                <li
-                  key={habit}
-                  className="rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs"
-                >
-                  {habit}
-                </li>
-              ))}
-            </ul>
-          </Fieldset>
-        )}
-
-        {completedHobbies.length > 0 && (
-          <Fieldset legend="Hobbies">
-            <ul className="flex flex-wrap gap-2">
-              {completedHobbies.map((hobby) => (
-                <li
-                  key={hobby}
-                  className="rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs"
-                >
-                  {hobby}
-                </li>
-              ))}
-            </ul>
-          </Fieldset>
-        )}
-
-        <Fieldset legend="Levels">
-          <Label label="Energy level (low to high)">
+        <Fieldset legend="Ratings">
+          <Label label="Energy (low to high)">
             <input
               type="range"
               readOnly
-              value={journal?.energyLevel}
+              value={journal.checkIn.ratings?.energy}
               min="1"
               max="5"
               className="accent-blue-500"
@@ -206,7 +221,7 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <Label label="Mood (low to high)">
             <input
               type="range"
-              value={journal?.moodLevel}
+              value={journal.checkIn.ratings?.mood}
               readOnly
               min="1"
               max="5"
@@ -214,32 +229,10 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
             />
           </Label>
 
-          <Label label="Health (low to high)">
+          <Label label="Productivity (low to high)">
             <input
               type="range"
-              value={journal?.healthLevel}
-              readOnly
-              min="1"
-              max="5"
-              className="accent-blue-500"
-            />
-          </Label>
-
-          <Label label="Creativity (low to high)">
-            <input
-              type="range"
-              value={journal?.creativityLevel}
-              readOnly
-              min="1"
-              max="5"
-              className="accent-blue-500"
-            />
-          </Label>
-
-          <Label label="Relationships (low to high)">
-            <input
-              type="range"
-              value={journal?.relationshipsLevel}
+              value={journal.checkIn.ratings?.productivity}
               readOnly
               min="1"
               max="5"
@@ -247,6 +240,94 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
             />
           </Label>
         </Fieldset>
+
+        <Fieldset legend="Activities">
+          <div className="space-y-3">
+            {activityAmountOrder.map((activityAmount) => {
+              const items = activityItems.filter(
+                (item) => item.value === activityAmount,
+              );
+
+              if (items.length === 0) {
+                return null;
+              }
+
+              return (
+                <div key={activityAmount} className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <ActivityAmountDots
+                      value={activityAmount}
+                      activeDotClassName={
+                        activityAmount === "some"
+                          ? "bg-emerald-300"
+                          : activityAmount === "medium"
+                            ? "bg-emerald-400"
+                            : "bg-emerald-600"
+                      }
+                    />
+                    <span>{getActivityAmountInfo(activityAmount).label}</span>
+                  </div>
+
+                  <ul className="flex flex-wrap gap-2">
+                    {items.map((item) => (
+                      <li
+                        key={item.key}
+                        className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-800 dark:text-zinc-100"
+                      >
+                        {item.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </Fieldset>
+
+        {viceItems.length > 0 && (
+          <Fieldset legend="Vices">
+            <div className="space-y-3">
+              {viceAmountOrder.map((activityAmount) => {
+                const items = viceItems.filter(
+                  (item) => item.value === activityAmount,
+                );
+
+                if (items.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <div key={activityAmount} className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      <ActivityAmountDots
+                        value={activityAmount}
+                        activeDotClassName={
+                          activityAmount === "aLot"
+                            ? "bg-red-600"
+                            : activityAmount === "medium"
+                              ? "bg-amber-600"
+                              : "bg-yellow-500"
+                        }
+                      />
+                      <span>{getActivityAmountInfo(activityAmount).label}</span>
+                    </div>
+
+                    <ul className="flex flex-wrap gap-2">
+                      {items.map((item) => (
+                        <li
+                          key={item.key}
+                          className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-800 dark:text-zinc-100"
+                        >
+                          {item.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </Fieldset>
+        )}
 
         {assetUrls.length > 0 && (
           <Fieldset legend="Assets">
@@ -265,23 +346,25 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           </Fieldset>
         )}
 
-        {(journal.transcriptionRaw?.trim() ||
-          (journal.assets ?? []).some((asset) => asset.transcriptionMetadata)) && (
+        {(journal.entry.transcriptionRaw?.trim() ||
+          (journal.entry.assets ?? []).some(
+            (asset) => asset.transcriptionMetadata,
+          )) && (
           <Fieldset legend="Transcription">
             <div className="space-y-2">
-              {journal.transcriptionRaw?.trim() && (
+              {journal.entry.transcriptionRaw?.trim() && (
                 <details className="text-sm">
                   <summary className="cursor-pointer select-none text-zinc-700 dark:text-zinc-300">
                     View raw transcription
                   </summary>
 
                   <pre className="mt-2 whitespace-pre-wrap break-words rounded border border-zinc-200 dark:border-zinc-700 p-2 text-xs bg-zinc-50 dark:bg-zinc-900/50">
-                    {journal.transcriptionRaw}
+                    {journal.entry.transcriptionRaw}
                   </pre>
                 </details>
               )}
 
-              {(journal.assets ?? [])
+              {(journal.entry.assets ?? [])
                 .filter((asset) => asset.transcriptionMetadata)
                 .map((asset) => (
                   <details className="text-sm" key={asset.filename}>
@@ -302,8 +385,8 @@ const Journal: React.FC<{ params: Params }> = async (props) => {
           <div className="flex items-center justify-between gap-2 pt-2">
             {previousCreatedAtLocal ? (
               <LinkButton href={`/journals/${previousCreatedAtLocal}`}>
-                Previous ({prettyDate(previousCreatedAtLocal, { withYear: false })}
-                )
+                Previous (
+                {prettyDate(previousCreatedAtLocal, { withYear: false })})
               </LinkButton>
             ) : (
               <div />

@@ -6,13 +6,13 @@ import { scan } from "@/lib/redis/scan";
 import { Key, User } from "@/lib/types";
 import { CreatedAtLocal } from "../journal.types";
 
-const getJournalScanKeyForYear = ({
+const getJournalScanKeysForYear = ({
   user,
   year,
 }: {
   user: User;
   year: string;
-}): Key => `user#${user.username}#journal#${year}-*`;
+}): Key[] => [`user#${user.username}#journal-v2#${year}-*`];
 
 export const getCreatedAtLocalsForYear = ({
   year,
@@ -23,9 +23,9 @@ export const getCreatedAtLocalsForYear = ({
     const user = await fromPromise(validateUserLoggedIn({}));
 
     const keys = await fromPromise(
-      scan({
-        key: getJournalScanKeyForYear({ user, year }),
-      }),
+      EitherAsync.all(
+        getJournalScanKeysForYear({ user, year }).map((key) => scan({ key })),
+      ).map((groups) => [...new Set(groups.flat())]),
     );
 
     return liftEither(

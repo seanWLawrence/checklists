@@ -2,26 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
-import { EitherAsync, intersect } from "purify-ts";
+import { EitherAsync } from "purify-ts";
 
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
 import {
   CreatedAtLocal,
-  Level,
-  JournalBase,
+  Journal,
   JournalAsset,
 } from "../journal.types";
 import { validateDateIsUnique } from "../lib/validate-date-is-unique.lib";
 import { createItem } from "@/lib/redis/create-item";
 import { getJournalKey } from "../model/get-journal.model";
-import { Metadata } from "@/lib/types";
 import { metadata } from "@/lib/redis/metadata.factory";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { array } from "purify-ts/Codec";
 import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
-import { getJournalHabitsAndHobbiesFromFormData } from "../lib/journal-habits";
+import { getJournalCheckInFromFormData } from "../lib/journal-check-in";
 import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const createJournalAction = async (
@@ -47,36 +45,6 @@ export const createJournalAction = async (
       getStringFromFormData({ name: "transcriptionRaw", formData }),
     );
 
-    const energyLevel = await liftEither(
-      getStringFromFormData({ name: "energyLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const moodLevel = await liftEither(
-      getStringFromFormData({ name: "moodLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const healthLevel = await liftEither(
-      getStringFromFormData({ name: "healthLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const creativityLevel = await liftEither(
-      getStringFromFormData({ name: "creativityLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const relationshipsLevel = await liftEither(
-      getStringFromFormData({ name: "relationshipsLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
     const assets = await liftEither(
       getJsonFromFormData({
         name: "assets",
@@ -85,25 +53,21 @@ export const createJournalAction = async (
       }),
     );
 
-    const { habits, hobbies } = getJournalHabitsAndHobbiesFromFormData({
-      formData,
-    });
-
-    const analysis = await getJournalAiAnalysis({ content, habits, hobbies });
+    const checkIn = await liftEither(getJournalCheckInFromFormData({ formData }));
+    const analysis = await getJournalAiAnalysis({ content });
 
     const journal = await liftEither(
-      intersect(JournalBase, Metadata).decode({
+      Journal.decode({
         ...metadata(user),
-        content,
-        transcriptionRaw,
+        schemaVersion: 2,
         createdAtLocal,
-        moodLevel,
-        energyLevel,
-        healthLevel,
-        creativityLevel,
-        relationshipsLevel,
-        assets,
-        ...analysis,
+        entry: {
+          content,
+          transcriptionRaw,
+          assets: assets.length > 0 ? assets : undefined,
+        },
+        checkIn,
+        analysis,
       }),
     );
 

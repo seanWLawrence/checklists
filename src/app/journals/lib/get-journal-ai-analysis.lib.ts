@@ -3,12 +3,7 @@ import "@nobush/server-only";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-import {
-  JournalAnalysis,
-  JournalHabits,
-  JournalHobbies,
-  SentimentLabel,
-} from "../journal.types";
+import { JournalAnalysis, SentimentLabel } from "../journal.types";
 import {
   MIN_JOURNAL_ANALYSIS_CHARS,
   OPENAI_JOURNAL_ANALYSIS_MODEL,
@@ -18,21 +13,11 @@ import { getJournalAnalysisInput } from "./get-journal-embedding-input.lib";
 
 const ANALYSIS_VERSION = 2;
 
-const emptyAnalysis = ({
-  habits,
-  hobbies,
-  now,
-}: {
-  habits: JournalHabits;
-  hobbies: JournalHobbies;
-  now: string;
-}): JournalAnalysis => ({
+const emptyAnalysis = ({ now }: { now: string }): JournalAnalysis => ({
   dailySummary: undefined,
   sentiment: undefined,
-  habits,
-  hobbies,
-  analysisUpdatedAt: now,
-  analysisVersion: ANALYSIS_VERSION,
+  updatedAt: now,
+  version: ANALYSIS_VERSION,
 });
 
 const extractJson = (text: string): string => {
@@ -54,12 +39,8 @@ const extractJson = (text: string): string => {
 
 export const getJournalAiAnalysis = async ({
   content,
-  habits,
-  hobbies,
 }: {
   content: string;
-  habits: JournalHabits;
-  hobbies: JournalHobbies;
 }): Promise<JournalAnalysis> => {
   const now = new Date().toISOString();
   const normalizedContent = getJournalAnalysisInput({ content });
@@ -68,7 +49,7 @@ export const getJournalAiAnalysis = async ({
     !normalizedContent ||
     normalizedContent.length < MIN_JOURNAL_ANALYSIS_CHARS
   ) {
-    return emptyAnalysis({ habits, hobbies, now });
+    return emptyAnalysis({ now });
   }
 
   try {
@@ -99,10 +80,8 @@ export const getJournalAiAnalysis = async ({
                   : Number(parsed.sentiment.confidence),
             }
           : undefined,
-      habits,
-      hobbies,
-      analysisUpdatedAt: now,
-      analysisVersion: ANALYSIS_VERSION,
+      updatedAt: now,
+      version: ANALYSIS_VERSION,
     });
 
     if (decoded.isRight()) {
@@ -113,9 +92,9 @@ export const getJournalAiAnalysis = async ({
       "Journal AI analysis failed codec validation",
       decoded.extract(),
     );
-    return emptyAnalysis({ habits, hobbies, now });
+    return emptyAnalysis({ now });
   } catch (error) {
     logger.warn("Failed to generate journal AI analysis", error);
-    return emptyAnalysis({ habits, hobbies, now });
+    return emptyAnalysis({ now });
   }
 };

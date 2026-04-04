@@ -1,42 +1,40 @@
 import { Journal, SentimentLabel } from "../journal.types";
-import {
-  JOURNAL_HABIT_FIELDS,
-  JOURNAL_HOBBY_FIELDS,
-  getJournalHobbiesWithLegacyFallback,
-} from "./journal-habits";
+import { getTrackedActivities } from "./journal-check-in";
 import {
   getSentimentValenceInfo,
   SentimentValenceBucket,
 } from "./get-sentiment-valence-info.lib";
 
-type LevelKey = "moodLevel" | "energyLevel" | "healthLevel";
+type RatingKey = "mood" | "energy" | "productivity";
 
-type HabitImpact = {
+type ActivityImpact = {
   key: string;
   label: string;
+  groupLabel: string;
   count: number;
   withoutCount: number;
   percentOfEntries: number;
   averageMood: number | undefined;
   averageEnergy: number | undefined;
-  averageHealth: number | undefined;
-  averageMoodWithoutHabit: number | undefined;
-  averageEnergyWithoutHabit: number | undefined;
-  averageHealthWithoutHabit: number | undefined;
+  averageProductivity: number | undefined;
+  averageMoodWithoutActivity: number | undefined;
+  averageEnergyWithoutActivity: number | undefined;
+  averageProductivityWithoutActivity: number | undefined;
   moodDelta: number | undefined;
   energyDelta: number | undefined;
-  healthDelta: number | undefined;
+  productivityDelta: number | undefined;
 };
 
-type HelpfulHabit = {
+type HelpfulActivity = {
   key: string;
   label: string;
+  groupLabel: string;
   count: number;
   percentOfEntries: number;
   score: number;
   moodDelta: number;
   energyDelta: number;
-  healthDelta: number;
+  productivityDelta: number;
 };
 
 export type JournalAiAnalytics = {
@@ -50,21 +48,16 @@ export type JournalAiAnalytics = {
     valence: number;
     valenceAvg7: number | undefined;
   }>;
-  topHabits: Array<{
+  topActivities: Array<{
     key: string;
     label: string;
+    groupLabel: string;
     count: number;
     percentOfEntries: number;
   }>;
-  topHobbies: Array<{
-    key: string;
-    label: string;
-    count: number;
-    percentOfEntries: number;
-  }>;
-  habitImpact: HabitImpact[];
+  activityImpact: ActivityImpact[];
   minSampleSizeForRanking: number;
-  helpfulHabits: HelpfulHabit[];
+  helpfulActivities: HelpfulActivity[];
 };
 
 const round = (value: number, precision = 2): number => {
@@ -72,12 +65,12 @@ const round = (value: number, precision = 2): number => {
   return Math.round(value * factor) / factor;
 };
 
-const averageLevel = (journals: Journal[], key: LevelKey): number | undefined => {
+const averageRating = (journals: Journal[], key: RatingKey): number | undefined => {
   let count = 0;
   let total = 0;
 
   for (const journal of journals) {
-    const value = journal[key];
+    const value = journal.checkIn.ratings?.[key];
 
     if (typeof value === "number") {
       total += value;
@@ -109,14 +102,14 @@ const sentimentRollingAverage = (
 };
 
 const maybeDelta = (
-  withHabit: number | undefined,
-  withoutHabit: number | undefined,
+  withActivity: number | undefined,
+  withoutActivity: number | undefined,
 ): number | undefined => {
-  if (typeof withHabit !== "number" || typeof withoutHabit !== "number") {
+  if (typeof withActivity !== "number" || typeof withoutActivity !== "number") {
     return undefined;
   }
 
-  return round(withHabit - withoutHabit);
+  return round(withActivity - withoutActivity);
 };
 
 const safePositive = (value: number | undefined): number =>
@@ -151,78 +144,53 @@ export const getJournalAiAnalytics = (
   let analyzedCount = 0;
   let sentimentValenceTotal = 0;
 
-  const habitCounts = Object.fromEntries(
-    JOURNAL_HABIT_FIELDS.map(({ key }) => [key, 0]),
-  ) as Record<string, number>;
-  const hobbyCounts = Object.fromEntries(
-    JOURNAL_HOBBY_FIELDS.map(({ key }) => [key, 0]),
-  ) as Record<string, number>;
-
+  const activityCounts = new Map<
+    string,
+    { key: string; label: string; groupLabel: string; count: number }
+  >();
   const sentimentRows: Array<{ dateMilli: number; valence: number }> = [];
 
   for (const journal of journals) {
-    if (journal.sentiment) {
+    if (journal.analysis?.sentiment) {
       analyzedCount += 1;
-      sentimentValenceTotal += journal.sentiment.valence;
-      sentimentLabelCounts[journal.sentiment.label] += 1;
-      const valenceInfo = getSentimentValenceInfo(journal.sentiment.valence);
+      sentimentValenceTotal += journal.analysis.sentiment.valence;
+      sentimentLabelCounts[journal.analysis.sentiment.label] += 1;
+      const valenceInfo = getSentimentValenceInfo(
+        journal.analysis.sentiment.valence,
+      );
       sentimentValenceBucketCounts[valenceInfo.bucket] += 1;
       sentimentRows.push({
         dateMilli: new Date(journal.createdAtLocal).getTime(),
-        valence: journal.sentiment.valence,
+        valence: journal.analysis.sentiment.valence,
       });
     }
 
-    for (const { key } of JOURNAL_HABIT_FIELDS) {
-      if (journal.habits?.[key]) {
-        habitCounts[key] = (habitCounts[key] ?? 0) + 1;
-      }
-    }
+    for (const activity of getTrackedActivities({ checkIn: journal.checkIn })) {
+      const existing = activityCounts.get(activity.key);
 
-    const hobbies = getJournalHobbiesWithLegacyFallback({
-      hobbies: journal.hobbies,
-      habits: journal.habits,
-    });
-    for (const { key } of JOURNAL_HOBBY_FIELDS) {
-      if (hobbies[key]) {
-        hobbyCounts[key] = (hobbyCounts[key] ?? 0) + 1;
+      if (existing) {
+        existing.count += 1;
+      } else {
+        activityCounts.set(activity.key, {
+          key: activity.key,
+          label: activity.label,
+          groupLabel: activity.groupLabel,
+          count: 1,
+        });
       }
     }
   }
 
   const totalEntries = journals.length;
 
-  const topHabits = JOURNAL_HABIT_FIELDS.map(({ key, label }) => {
-    const count = habitCounts[key] ?? 0;
-    const percentOfEntries =
-      totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0;
-
-    return {
-      key,
-      label,
-      count,
-      percentOfEntries,
-    };
-  })
-    .filter((habit) => habit.count > 0)
+  const topActivities = Array.from(activityCounts.values())
+    .map((activity) => ({
+      ...activity,
+      percentOfEntries:
+        totalEntries > 0 ? round((activity.count / totalEntries) * 100, 1) : 0,
+    }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-
-  const topHobbies = JOURNAL_HOBBY_FIELDS.map(({ key, label }) => {
-    const count = hobbyCounts[key] ?? 0;
-    const percentOfEntries =
-      totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0;
-
-    return {
-      key,
-      label,
-      count,
-      percentOfEntries,
-    };
-  })
-    .filter((hobby) => hobby.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
+    .slice(0, 12);
 
   const sentimentTimeline = [...sentimentRows]
     .sort((a, b) => a.dateMilli - b.dateMilli)
@@ -231,69 +199,91 @@ export const getJournalAiAnalytics = (
       valenceAvg7: sentimentRollingAverage(sorted, index),
     }));
 
-  const habitImpact = JOURNAL_HABIT_FIELDS.map(({ key, label }) => {
-    const withHabit = journals.filter((journal) => journal.habits?.[key]);
-    const withoutHabit = journals.filter((journal) => !journal.habits?.[key]);
-    const count = withHabit.length;
+  const activityImpact = Array.from(activityCounts.values())
+    .map((activity) => {
+      const withActivity = journals.filter((journal) =>
+        getTrackedActivities({ checkIn: journal.checkIn }).some(
+          (tracked) => tracked.key === activity.key,
+        ),
+      );
+      const withoutActivity = journals.filter(
+        (journal) =>
+          !getTrackedActivities({ checkIn: journal.checkIn }).some(
+            (tracked) => tracked.key === activity.key,
+          ),
+      );
+      const count = withActivity.length;
 
-    const averageMood = averageLevel(withHabit, "moodLevel");
-    const averageEnergy = averageLevel(withHabit, "energyLevel");
-    const averageHealth = averageLevel(withHabit, "healthLevel");
+      const averageMood = averageRating(withActivity, "mood");
+      const averageEnergy = averageRating(withActivity, "energy");
+      const averageProductivity = averageRating(withActivity, "productivity");
 
-    const averageMoodWithoutHabit = averageLevel(withoutHabit, "moodLevel");
-    const averageEnergyWithoutHabit = averageLevel(withoutHabit, "energyLevel");
-    const averageHealthWithoutHabit = averageLevel(withoutHabit, "healthLevel");
+      const averageMoodWithoutActivity = averageRating(withoutActivity, "mood");
+      const averageEnergyWithoutActivity = averageRating(
+        withoutActivity,
+        "energy",
+      );
+      const averageProductivityWithoutActivity = averageRating(
+        withoutActivity,
+        "productivity",
+      );
 
-    return {
-      key,
-      label,
-      count,
-      withoutCount: withoutHabit.length,
-      percentOfEntries: totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0,
-      averageMood,
-      averageEnergy,
-      averageHealth,
-      averageMoodWithoutHabit,
-      averageEnergyWithoutHabit,
-      averageHealthWithoutHabit,
-      moodDelta: maybeDelta(averageMood, averageMoodWithoutHabit),
-      energyDelta: maybeDelta(averageEnergy, averageEnergyWithoutHabit),
-      healthDelta: maybeDelta(averageHealth, averageHealthWithoutHabit),
-    };
-  })
-    .filter((habit) => habit.count > 0)
+      return {
+        key: activity.key,
+        label: activity.label,
+        groupLabel: activity.groupLabel,
+        count,
+        withoutCount: withoutActivity.length,
+        percentOfEntries:
+          totalEntries > 0 ? round((count / totalEntries) * 100, 1) : 0,
+        averageMood,
+        averageEnergy,
+        averageProductivity,
+        averageMoodWithoutActivity,
+        averageEnergyWithoutActivity,
+        averageProductivityWithoutActivity,
+        moodDelta: maybeDelta(averageMood, averageMoodWithoutActivity),
+        energyDelta: maybeDelta(averageEnergy, averageEnergyWithoutActivity),
+        productivityDelta: maybeDelta(
+          averageProductivity,
+          averageProductivityWithoutActivity,
+        ),
+      };
+    })
+    .filter((activity) => activity.count > 0)
     .sort((a, b) => b.count - a.count);
 
   const minSampleSizeForRanking = getMinSampleSizeForRanking(totalEntries);
 
-  const helpfulHabits = habitImpact
+  const helpfulActivities = activityImpact
     .filter(
-      (habit) =>
-        habit.count >= minSampleSizeForRanking &&
-        habit.withoutCount >= minSampleSizeForRanking,
+      (activity) =>
+        activity.count >= minSampleSizeForRanking &&
+        activity.withoutCount >= minSampleSizeForRanking,
     )
-    .map((habit) => {
+    .map((activity) => {
       const deltaStrength =
-        safePositive(habit.moodDelta) +
-        safePositive(habit.energyDelta) +
-        safePositive(habit.healthDelta);
+        safePositive(activity.moodDelta) +
+        safePositive(activity.energyDelta) +
+        safePositive(activity.productivityDelta);
 
       const frequencyWeight =
-        totalEntries > 0 ? Math.sqrt(habit.count / totalEntries) : 0;
+        totalEntries > 0 ? Math.sqrt(activity.count / totalEntries) : 0;
       const score = round(deltaStrength * frequencyWeight, 3);
 
       return {
-        key: habit.key,
-        label: habit.label,
-        count: habit.count,
-        percentOfEntries: habit.percentOfEntries,
+        key: activity.key,
+        label: activity.label,
+        groupLabel: activity.groupLabel,
+        count: activity.count,
+        percentOfEntries: activity.percentOfEntries,
         score,
-        moodDelta: habit.moodDelta ?? 0,
-        energyDelta: habit.energyDelta ?? 0,
-        healthDelta: habit.healthDelta ?? 0,
+        moodDelta: activity.moodDelta ?? 0,
+        energyDelta: activity.energyDelta ?? 0,
+        productivityDelta: activity.productivityDelta ?? 0,
       };
     })
-    .filter((habit) => habit.score > 0)
+    .filter((activity) => activity.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 
@@ -305,10 +295,9 @@ export const getJournalAiAnalytics = (
     sentimentLabelCounts,
     sentimentValenceBucketCounts,
     sentimentTimeline,
-    topHabits,
-    topHobbies,
-    habitImpact,
+    topActivities,
+    activityImpact,
     minSampleSizeForRanking,
-    helpfulHabits,
+    helpfulActivities,
   };
 };

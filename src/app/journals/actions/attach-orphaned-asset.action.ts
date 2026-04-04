@@ -55,7 +55,7 @@ export const attachOrphanedAssetAction = async ({
       }),
     );
 
-    const hasExistingReference = (journal.assets ?? []).some(
+    const hasExistingReference = (journal.entry.assets ?? []).some(
       (asset) => asset.filename === filename,
     );
 
@@ -73,7 +73,10 @@ export const attachOrphanedAssetAction = async ({
             ...journal,
             updatedAtIso: new Date(),
           }),
-          assets: [...(journal.assets ?? []), nextAsset],
+          entry: {
+            ...journal.entry,
+            assets: [...(journal.entry.assets ?? []), nextAsset],
+          },
         }),
       );
 

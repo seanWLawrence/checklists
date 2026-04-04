@@ -7,7 +7,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { getJsonFromFormData } from "@/lib/form-data/get-json-from-form-data";
 import { getStringFromFormData } from "@/lib/form-data/get-string-from-form-data";
 import { logger } from "@/lib/logger";
-import { Journal, CreatedAtLocal, Level, JournalAsset } from "../journal.types";
+import { Journal, CreatedAtLocal, JournalAsset } from "../journal.types";
 import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { updateItem } from "@/lib/redis/update-item";
 import { deleteAllItems } from "@/lib/redis/delete-all-items";
@@ -17,7 +17,7 @@ import { metadataToDatabaseDto } from "@/lib/codec/metadata-to-database-dto";
 import { array } from "purify-ts/Codec";
 import { Metadata } from "@/lib/types";
 import { upsertJournalEmbedding } from "../lib/upsert-journal-embedding.lib";
-import { getJournalHabitsAndHobbiesFromFormData } from "../lib/journal-habits";
+import { getJournalCheckInFromFormData } from "../lib/journal-check-in";
 import { getJournalAiAnalysis } from "../lib/get-journal-ai-analysis.lib";
 
 export const updateJournalAction = async (
@@ -51,36 +51,6 @@ export const updateJournalAction = async (
       getStringFromFormData({ name: "transcriptionRaw", formData }),
     );
 
-    const energyLevel = await liftEither(
-      getStringFromFormData({ name: "energyLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const moodLevel = await liftEither(
-      getStringFromFormData({ name: "moodLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const healthLevel = await liftEither(
-      getStringFromFormData({ name: "healthLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const creativityLevel = await liftEither(
-      getStringFromFormData({ name: "creativityLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
-    const relationshipsLevel = await liftEither(
-      getStringFromFormData({ name: "relationshipsLevel", formData })
-        .map(Number)
-        .chain(Level.decode),
-    );
-
     const assets = await liftEither(
       getJsonFromFormData({
         formData,
@@ -89,11 +59,27 @@ export const updateJournalAction = async (
       }),
     );
 
-    const { habits, hobbies } = getJournalHabitsAndHobbiesFromFormData({
-      formData,
-    });
+    const checkIn = await liftEither(getJournalCheckInFromFormData({ formData }));
+    const analysis = await getJournalAiAnalysis({ content });
 
-    const analysis = await getJournalAiAnalysis({ content, habits, hobbies });
+    const journal = await liftEither(
+      Journal.decode({
+        ...metadataToDatabaseDto({
+          ...metadata,
+          updatedAtIso: new Date(),
+        }),
+        user,
+        schemaVersion: 2,
+        createdAtLocal,
+        entry: {
+          content,
+          transcriptionRaw,
+          assets: assets.length > 0 ? assets : undefined,
+        },
+        checkIn,
+        analysis,
+      }),
+    );
 
     const dateChanged = createdAtLocal !== existingCreatedAtLocal;
 
@@ -109,29 +95,6 @@ export const updateJournalAction = async (
       );
 
       logger.debug("Deleted existing journal");
-
-      const journal = await liftEither(
-        Journal.decode({
-          ...metadataToDatabaseDto({
-            ...metadata,
-            updatedAtIso: new Date(),
-          }),
-          user,
-          createdAtLocal,
-          content,
-          transcriptionRaw,
-          energyLevel,
-          moodLevel,
-          healthLevel,
-          creativityLevel,
-          relationshipsLevel,
-          assets,
-          ...analysis,
-        }),
-      );
-
-      logger.debug("Creating new journal with the new date");
-
       logger.debug({ newJournal: journal });
 
       return fromPromise(
@@ -163,27 +126,6 @@ export const updateJournalAction = async (
     }
 
     logger.debug("Date was not changed, updating existing journal");
-
-    const journal = await liftEither(
-      Journal.decode({
-        ...metadataToDatabaseDto({
-          ...metadata,
-          updatedAtIso: new Date(),
-        }),
-        user,
-        createdAtLocal,
-        content,
-        transcriptionRaw,
-        energyLevel,
-        moodLevel,
-        healthLevel,
-        creativityLevel,
-        relationshipsLevel,
-        assets,
-        ...analysis,
-      }),
-    );
-
     logger.debug({ updatedJournal: journal });
 
     return fromPromise(
@@ -205,9 +147,7 @@ export const updateJournalAction = async (
             ),
           );
 
-          logger.error(
-            `Failed to update journal with date '${createdAtLocal}')`,
-          );
+          logger.error(`Failed to update journal with date '${createdAtLocal}')`);
           logger.error(e);
         }),
     );

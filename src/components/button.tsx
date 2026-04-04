@@ -11,7 +11,11 @@ export const Button: React.FC<
     <div>
       <button
         {...rest}
-        className={buttonClassName({ variant, className: rest.className })}
+        className={buttonClassName({
+          variant,
+          className: rest.className,
+          disabled: rest.disabled,
+        })}
         onClick={(e) => {
           rest.onClick?.(e);
         }}

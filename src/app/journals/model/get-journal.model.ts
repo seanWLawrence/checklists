@@ -12,7 +12,7 @@ export const getJournalKey = ({
 }: {
   user: User;
   createdAtLocal: CreatedAtLocal;
-}): Key => `user#${user.username}#journal#${createdAtLocal}`;
+}): Key => `user#${user.username}#journal-v2#${createdAtLocal}`;
 
 export const getJournal = (
   createdAtLocal: CreatedAtLocal,
@@ -20,9 +20,12 @@ export const getJournal = (
   return EitherAsync(async ({ fromPromise }) => {
     const user = await fromPromise(validateUserLoggedIn({}));
 
-    const key = getJournalKey({ createdAtLocal, user });
-
-    return fromPromise(getSingleItem({ key, decoder: Journal }));
+    return fromPromise(
+      getSingleItem({
+        key: getJournalKey({ createdAtLocal, user }),
+        decoder: Journal,
+      }),
+    );
   })
     .ifRight((x) => {
       const dateId = x.createdAtLocal;

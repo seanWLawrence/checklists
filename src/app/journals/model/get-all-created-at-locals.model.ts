@@ -6,8 +6,9 @@ import { scan } from "@/lib/redis/scan";
 
 import { Key, User } from "@/lib/types";
 
-export const getAllJournalsScanKey = ({ user }: { user: User }): Key =>
-  `user#${user.username}#journal#*`;
+export const getAllJournalsScanKeys = ({ user }: { user: User }): Key[] => [
+  `user#${user.username}#journal-v2#*`,
+];
 
 export const getAllCreatedAtLocals = (): EitherAsync<
   unknown,
@@ -17,9 +18,9 @@ export const getAllCreatedAtLocals = (): EitherAsync<
     const user = await fromPromise(validateUserLoggedIn({}));
 
     const validatedKeys = await fromPromise(
-      scan({
-        key: getAllJournalsScanKey({ user }),
-      }),
+      EitherAsync.all(
+        getAllJournalsScanKeys({ user }).map((key) => scan({ key })),
+      ).map((keys) => [...new Set(keys.flat())]),
     );
 
     return liftEither(

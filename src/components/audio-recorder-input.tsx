@@ -252,8 +252,14 @@ export const AudioRecorderInput: React.FC<{
     options?: { transcriptionMode: RecordingTranscriptionMode },
   ) => void;
   shouldShowTranscribeOption?: boolean;
+  shouldShowRecordOnlyOption?: boolean;
   buttonClassName?: string;
-}> = ({ onChangeAction, shouldShowTranscribeOption = true, buttonClassName }) => {
+}> = ({
+  onChangeAction,
+  shouldShowTranscribeOption = true,
+  shouldShowRecordOnlyOption = true,
+  buttonClassName,
+}) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunkBufferRef = useRef<Blob[]>([]);
@@ -545,20 +551,23 @@ export const AudioRecorderInput: React.FC<{
         >
           {(status === "idle" || status === "error") && (
             <>
-              <Button
-                type="button"
-                onClick={() => void startRecording("skip")}
-                variant="outline"
-                className={buttonClassName}
-              >
-                Record
-              </Button>
+              {shouldShowRecordOnlyOption && (
+                <Button
+                  type="button"
+                  onClick={() => void startRecording("skip")}
+                  variant="outline"
+                  className={buttonClassName}
+                >
+                  Record
+                </Button>
+              )}
 
               {shouldShowTranscribeOption && (
                 <Button
                   type="button"
                   onClick={() => void startRecording("auto")}
                   variant="outline"
+                  className={buttonClassName}
                 >
                   Record + transcribe
                 </Button>

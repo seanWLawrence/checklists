@@ -1,4 +1,4 @@
-import invariant from "@/lib/invariant";
+import invariant from "./invariant";
 
 export const getRequiredEnv = ({ key }: { key: string }): string => {
   const value = process.env[key];

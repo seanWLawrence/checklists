@@ -1,21 +1,15 @@
 import { List } from "purify-ts/List";
 import { Journal } from "../journal.types";
 
-export type LineChartData = (Pick<
-  Journal,
-  | "energyLevel"
-  | "moodLevel"
-  | "healthLevel"
-  | "creativityLevel"
-  | "relationshipsLevel"
-> & {
+export type LineChartData = Array<{
   dateMilli: number;
-  energyLevelAvg7?: number;
-  moodLevelAvg7?: number;
-  healthLevelAvg7?: number;
-  creativityLevelAvg7?: number;
-  relationshipsLevelAvg7?: number;
-})[];
+  energy?: number;
+  mood?: number;
+  productivity?: number;
+  energyAvg7?: number;
+  moodAvg7?: number;
+  productivityAvg7?: number;
+}>;
 
 const rollingAverage = ({
   index,
@@ -52,19 +46,15 @@ export const getLineChartData = (journals: Journal[]): LineChartData => {
   const data = journals
     .map((journal) => ({
       dateMilli: journal.updatedAtIso.getTime(),
-      creativityLevel: journal.creativityLevel,
-      energyLevel: journal.energyLevel,
-      healthLevel: journal.healthLevel,
-      relationshipsLevel: journal.relationshipsLevel,
-      moodLevel: journal.moodLevel,
+      energy: journal.checkIn.ratings?.energy,
+      mood: journal.checkIn.ratings?.mood,
+      productivity: journal.checkIn.ratings?.productivity,
     }))
     .filter((row) => {
       return (
-        row.creativityLevel !== undefined ||
-        row.energyLevel !== undefined ||
-        row.healthLevel !== undefined ||
-        row.relationshipsLevel !== undefined ||
-        row.moodLevel !== undefined
+        row.energy !== undefined ||
+        row.mood !== undefined ||
+        row.productivity !== undefined
       );
     })
     .sort((a, b) => a.dateMilli - b.dateMilli);
@@ -72,35 +62,23 @@ export const getLineChartData = (journals: Journal[]): LineChartData => {
   return data.map((dataPoint, index) => {
     return {
       ...dataPoint,
-      creativityLevelAvg7: rollingAverage({
+      energyAvg7: rollingAverage({
         numDays: 7,
         data,
         index,
-        dataKey: "creativityLevel",
+        dataKey: "energy",
       }),
-      energyLevelAvg7: rollingAverage({
+      moodAvg7: rollingAverage({
         numDays: 7,
         data,
         index,
-        dataKey: "energyLevel",
+        dataKey: "mood",
       }),
-      healthLevelAvg7: rollingAverage({
+      productivityAvg7: rollingAverage({
         numDays: 7,
         data,
         index,
-        dataKey: "healthLevel",
-      }),
-      relationshipsLevelAvg7: rollingAverage({
-        numDays: 7,
-        data,
-        index,
-        dataKey: "relationshipsLevel",
-      }),
-      moodLevelAvg7: rollingAverage({
-        numDays: 7,
-        data,
-        index,
-        dataKey: "moodLevel",
+        dataKey: "productivity",
       }),
     };
   });

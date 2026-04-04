@@ -41,11 +41,11 @@ export const getJournalAnalysisInput = ({
 };
 
 export const getJournalEmbeddingInput = (journal: Journal): string => {
-  if (typeof journal.content !== "string") {
+  if (typeof journal.entry.content !== "string") {
     return "";
   }
 
-  return normalizeJournalContent(journal.content);
+  return normalizeJournalContent(journal.entry.content);
 };
 
 export const getJournalEmbeddingKey = (journal: Pick<Journal, "id">): string =>

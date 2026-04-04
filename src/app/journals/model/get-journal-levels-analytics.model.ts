@@ -6,7 +6,7 @@ import { validateUserLoggedIn } from "@/lib/auth/validate-user-logged-in";
 import { scan } from "@/lib/redis/scan";
 import { getAllItems } from "@/lib/redis/get-all-items";
 import { getRadarChartData } from "../lib/get-radar-chart-data.lib";
-import { getAllJournalsScanKey } from "./get-all-created-at-locals.model";
+import { getAllJournalsScanKeys } from "./get-all-created-at-locals.model";
 import {
   getLineChartData,
   LineChartData,
@@ -35,9 +35,9 @@ export const getJournalLevelsAnalytics = ({
     const user = await fromPromise(validateUserLoggedIn({}));
 
     const validatedKeys = await fromPromise(
-      scan({
-        key: getAllJournalsScanKey({ user }),
-      }),
+      EitherAsync.all(
+        getAllJournalsScanKeys({ user }).map((key) => scan({ key })),
+      ).map((groups) => [...new Set(groups.flat())]),
     );
 
     const levels = await fromPromise(
