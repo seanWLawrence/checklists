@@ -12,6 +12,7 @@ import {
   SENTIMENT_VALENCE_BUCKET_LABELS,
 } from "../../lib/get-sentiment-valence-info.lib";
 import { SentimentLineChart } from "./sentiment-line-chart";
+import { AnalyticsAssistant } from "./analytics-assistant";
 
 const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
   params,
@@ -75,6 +76,8 @@ const AnalyticsPage: React.FC<{ params: Promise<{ since: string }> }> = async ({
                 <SentimentLineChart data={ai.sentimentTimeline} />
               )}
             </Fieldset>
+
+            <AnalyticsAssistant since={since} />
 
             <Fieldset legend="AI analytics" className="text-left">
               <div className="space-y-3 text-sm">
