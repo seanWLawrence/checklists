@@ -142,13 +142,13 @@ const SentimentConfidence = Codec.custom<number>({
   encode: (input) => input,
 });
 
-export const JournalSentiment = Codec.interface({
+const JournalSentiment = Codec.interface({
   valence: SentimentValence,
   label: SentimentLabel,
   confidence: optional(SentimentConfidence),
 });
 
-export type JournalSentiment = GetType<typeof JournalSentiment>;
+type JournalSentiment = GetType<typeof JournalSentiment>;
 
 const AnalysisUpdatedAtIso = Codec.custom<string>({
   decode: (input) => {

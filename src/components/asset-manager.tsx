@@ -82,6 +82,7 @@ export const AssetManager: React.FC<{
     },
   ) => void;
   onTranscribingChangeAction?: (isTranscribing: boolean) => void;
+  onUploadingChangeAction?: (isUploading: boolean) => void;
   shouldEnableTranscription?: boolean;
   shouldShowRecorder?: boolean;
   shouldShowCaptionField?: boolean;
@@ -94,6 +95,7 @@ export const AssetManager: React.FC<{
   onAssetsChangeAction,
   onTranscribeChangeAction,
   onTranscribingChangeAction,
+  onUploadingChangeAction,
   shouldEnableTranscription = Boolean(onTranscribeChangeAction),
   shouldShowRecorder = true,
   shouldShowCaptionField = true,
@@ -192,9 +194,17 @@ export const AssetManager: React.FC<{
     },
   });
 
+  const hasUploadingAssets = unsavedUploads.some(
+    (upload) => upload.status === "uploading",
+  );
+
   useEffect(() => {
     onTranscribingChangeAction?.(isTranscribing);
   }, [isTranscribing, onTranscribingChangeAction]);
+
+  useEffect(() => {
+    onUploadingChangeAction?.(hasUploadingAssets);
+  }, [hasUploadingAssets, onUploadingChangeAction]);
 
   const serializedAssets = useMemo(() => {
     return JSON.stringify(
@@ -209,9 +219,6 @@ export const AssetManager: React.FC<{
   }, [uploadedAssets]);
 
   const statusMessage = useMemo(() => {
-    const hasUploadingAssets = unsavedUploads.some(
-      (upload) => upload.status === "uploading",
-    );
     const hasTranscribingAssets = shouldEnableTranscription
       ? isTranscribing
       : false;
@@ -229,7 +236,7 @@ export const AssetManager: React.FC<{
     }
 
     return null;
-  }, [isTranscribing, shouldEnableTranscription, unsavedUploads]);
+  }, [hasUploadingAssets, isTranscribing, shouldEnableTranscription]);
 
   const onAddFilesClick = () => {
     inputRef.current?.click();

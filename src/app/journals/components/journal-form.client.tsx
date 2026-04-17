@@ -37,6 +37,19 @@ export const JournalFormClient: React.FC<{
   sortedAssets: SortedAssetItem[];
 }> = ({ journal, sortedAssets }) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const isBusy = isTranscribing || isUploading;
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    if (!isBusy) {
+      return;
+    }
+
+    if (!window.confirm("Are you sure?")) {
+      event.preventDefault();
+    }
+  };
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -49,6 +62,7 @@ export const JournalFormClient: React.FC<{
       <form
         action={journal ? updateJournalAction : createJournalAction}
         className="space-y-2"
+        onSubmit={onSubmit}
       >
         <Fieldset legend={"Main"}>
           <Label label="Date" className="max-w-min">
@@ -91,6 +105,7 @@ export const JournalFormClient: React.FC<{
           contentPlaceholder={DEFAULT_TEMPLATE}
           initialAssets={sortedAssets}
           onTranscribingChangeAction={setIsTranscribing}
+          onUploadingChangeAction={setIsUploading}
         />
 
         <Fieldset legend={"Ratings"}>
@@ -169,8 +184,8 @@ export const JournalFormClient: React.FC<{
         ))}
 
         <div className="flex justify-end w-full max-w-prose">
-          <SubmitButton type="submit" variant="primary" disabled={isTranscribing}>
-            {isTranscribing ? "Transcribing..." : "Save"}
+          <SubmitButton type="submit" variant="primary">
+            Save
           </SubmitButton>
         </div>
       </form>
