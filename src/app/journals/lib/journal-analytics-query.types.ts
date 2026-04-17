@@ -18,7 +18,7 @@ const JournalAnalyticsRequestKind = oneOf([
   exactly("entryRows"),
 ]);
 
-export const JournalAnalyticsEntryRowField = oneOf([
+const JournalAnalyticsEntryRowField = oneOf([
   exactly("date"),
   exactly("ratings"),
   exactly("activities"),
@@ -51,7 +51,7 @@ const JournalAnalyticsEntryRowsRequest = Codec.interface({
   fields: array(JournalAnalyticsEntryRowField),
 });
 
-export const JournalAnalyticsRequest = oneOf([
+const JournalAnalyticsRequest = oneOf([
   JournalAnalyticsOverviewRequest,
   JournalAnalyticsSentimentTimelineRequest,
   JournalAnalyticsActivityImpactRequest,
@@ -59,7 +59,7 @@ export const JournalAnalyticsRequest = oneOf([
   JournalAnalyticsEntryRowsRequest,
 ]);
 
-export type JournalAnalyticsRequest = GetType<typeof JournalAnalyticsRequest>;
+type JournalAnalyticsRequest = GetType<typeof JournalAnalyticsRequest>;
 
 export const JournalAnalyticsRequestList = array(JournalAnalyticsRequest);
 export type JournalAnalyticsRequestList = GetType<
@@ -117,16 +117,16 @@ export const JournalAnalyticsOverview = Codec.interface({
 
 export type JournalAnalyticsOverview = GetType<typeof JournalAnalyticsOverview>;
 
-export const JournalAnalyticsSentimentTimelinePoint = Codec.interface({
+const JournalAnalyticsSentimentTimelinePoint = Codec.interface({
   date: string,
   valence: number,
   valenceAvg7: optional(number),
 });
-export type JournalAnalyticsSentimentTimelinePoint = GetType<
+type JournalAnalyticsSentimentTimelinePoint = GetType<
   typeof JournalAnalyticsSentimentTimelinePoint
 >;
 
-export const JournalAnalyticsActivityImpactRow = Codec.interface({
+const JournalAnalyticsActivityImpactRow = Codec.interface({
   key: string,
   label: string,
   count: number,
@@ -138,11 +138,11 @@ export const JournalAnalyticsActivityImpactRow = Codec.interface({
   energyDelta: optional(number),
   productivityDelta: optional(number),
 });
-export type JournalAnalyticsActivityImpactRow = GetType<
+type JournalAnalyticsActivityImpactRow = GetType<
   typeof JournalAnalyticsActivityImpactRow
 >;
 
-export const JournalAnalyticsHelpfulActivityRow = Codec.interface({
+const JournalAnalyticsHelpfulActivityRow = Codec.interface({
   key: string,
   label: string,
   count: number,
@@ -151,7 +151,7 @@ export const JournalAnalyticsHelpfulActivityRow = Codec.interface({
   energyDelta: number,
   productivityDelta: number,
 });
-export type JournalAnalyticsHelpfulActivityRow = GetType<
+type JournalAnalyticsHelpfulActivityRow = GetType<
   typeof JournalAnalyticsHelpfulActivityRow
 >;
 
@@ -164,7 +164,7 @@ export const JournalAnalyticsEntryRow = Codec.custom<Record<string, unknown>>({
 });
 export type JournalAnalyticsEntryRow = GetType<typeof JournalAnalyticsEntryRow>;
 
-export const JournalAnalyticsQueryResultMeta = Codec.interface({
+const JournalAnalyticsQueryResultMeta = Codec.interface({
   since: string,
   generatedAt: string,
   version: number,
