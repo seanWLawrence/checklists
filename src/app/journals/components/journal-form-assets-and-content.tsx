@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Label } from "@/components/label";
 import { Fieldset } from "@/components/fieldset";
 import { JournalAsset } from "../journal.types";
@@ -34,6 +34,8 @@ export const JournalFormAssetsAndContent: React.FC<{
   const [transcriptionRaw, setTranscriptionRaw] = useState(
     initialTranscriptionRaw,
   );
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const contentTextareaId = useId();
 
   const onTranscribeChange = (
     asset: AssetItem,
@@ -66,17 +68,36 @@ export const JournalFormAssetsAndContent: React.FC<{
 
   return (
     <>
-      <Fieldset legend="Content">
-        <Label label="Content">
-          <textarea
-            name={contentName}
-            value={contentValue}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder={contentPlaceholder}
-            className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            rows={20}
-          />
-        </Label>
+      <Fieldset
+        legend={
+          <div className="flex items-center gap-2">
+            <span>Content</span>
+
+            <button
+              type="button"
+              className="text-xs font-medium text-zinc-700 underline-offset-2 hover:underline dark:text-zinc-300"
+              aria-expanded={isContentExpanded}
+              aria-controls={contentTextareaId}
+              onClick={() => setIsContentExpanded((current) => !current)}
+            >
+              {isContentExpanded ? "Collapse" : "Expand"}
+            </button>
+          </div>
+        }
+      >
+        <div hidden={!isContentExpanded}>
+          <Label label="Content">
+            <textarea
+              id={contentTextareaId}
+              name={contentName}
+              value={contentValue}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder={contentPlaceholder}
+              className="rounded-lg py-1 px-2 text-sm border-2 border-zinc-900 w-full bg-white text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              rows={20}
+            />
+          </Label>
+        </div>
         <input
           type="hidden"
           name={transcriptionRawName}
