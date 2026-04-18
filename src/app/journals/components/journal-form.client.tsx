@@ -183,7 +183,7 @@ export const JournalFormClient: React.FC<{
           </Fieldset>
         ))}
 
-        <div className="flex justify-end w-full max-w-prose">
+        <div className="sticky bottom-0 z-10 flex w-full max-w-prose justify-end bg-white/95 px-0 py-3 backdrop-blur dark:bg-zinc-950/95">
           <SubmitButton type="submit" variant="primary">
             Save
           </SubmitButton>
