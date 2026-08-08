@@ -40,19 +40,25 @@ export const JournalFormClient: React.FC<{
   const [isUploading, setIsUploading] = useState(false);
 
   const isBusy = isTranscribing || isUploading;
-  const busyMessage = isUploading
-    ? isTranscribing
-      ? "Wait for the recording to finish uploading and transcribing before saving."
-      : "Wait for the recording to finish uploading before saving."
-    : "Wait for the recording to finish transcribing before saving.";
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     if (!isBusy) {
       return;
     }
 
-    event.preventDefault();
-    window.alert(busyMessage);
+    const activity = isUploading
+      ? isTranscribing
+        ? "uploading and transcribing"
+        : "uploading"
+      : "transcribing";
+
+    if (
+      !window.confirm(
+        `Your recording is still ${activity}. Saving now may lose the recording or transcription. Save anyway?`,
+      )
+    ) {
+      event.preventDefault();
+    }
   };
 
   return (
@@ -187,14 +193,9 @@ export const JournalFormClient: React.FC<{
           </Fieldset>
         ))}
 
-        <div className="sticky bottom-0 z-10 flex w-full max-w-prose flex-col items-end gap-1 bg-white/95 px-0 py-3 backdrop-blur dark:bg-zinc-950/95">
-          {isBusy && (
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              {busyMessage}
-            </p>
-          )}
-          <SubmitButton type="submit" variant="primary" disabled={isBusy}>
-            {isBusy ? "Processing recording…" : "Save"}
+        <div className="sticky bottom-0 z-10 flex w-full max-w-prose justify-end bg-white/95 px-0 py-3 backdrop-blur dark:bg-zinc-950/95">
+          <SubmitButton type="submit" variant="primary">
+            Save
           </SubmitButton>
         </div>
       </form>
