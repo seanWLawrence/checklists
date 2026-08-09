@@ -1,8 +1,10 @@
 import { test } from "vitest";
 
 import {
+  getMicrophoneAccessErrorMessage,
   getBackgroundPauseStrategy,
   normalizeRecordedMimeType,
+  shouldRetryGetUserMediaWithoutConstraints,
 } from "./audio-recorder-input";
 
 test("normalizes codec-qualified mp4 recorder output to a stable audio type", ({
@@ -58,4 +60,44 @@ test("uses pause strategy on desktop chrome", ({ expect }) => {
       maxTouchPoints: 0,
     }),
   ).toBe("pause");
+});
+
+test("retries getUserMedia without constraints for overconstrained errors", ({
+  expect,
+}) => {
+  expect(
+    shouldRetryGetUserMediaWithoutConstraints(
+      new DOMException("", "OverconstrainedError"),
+    ),
+  ).toBe(true);
+});
+
+test("retries getUserMedia without constraints for type errors", ({
+  expect,
+}) => {
+  expect(shouldRetryGetUserMediaWithoutConstraints(new TypeError())).toBe(true);
+});
+
+test("does not retry getUserMedia without constraints for denied access", ({
+  expect,
+}) => {
+  expect(
+    shouldRetryGetUserMediaWithoutConstraints(
+      new DOMException("", "NotAllowedError"),
+    ),
+  ).toBe(false);
+});
+
+test("maps denied microphone errors to settings guidance", ({ expect }) => {
+  expect(
+    getMicrophoneAccessErrorMessage(new DOMException("", "NotAllowedError")),
+  ).toContain("Check browser or iOS app settings");
+});
+
+test("maps missing microphone errors to a device-specific message", ({
+  expect,
+}) => {
+  expect(
+    getMicrophoneAccessErrorMessage(new DOMException("", "NotFoundError")),
+  ).toBe("No microphone was found on this device.");
 });
