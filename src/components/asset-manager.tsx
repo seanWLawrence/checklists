@@ -83,6 +83,7 @@ export const AssetManager: React.FC<{
   ) => void;
   onTranscribingChangeAction?: (isTranscribing: boolean) => void;
   onUploadingChangeAction?: (isUploading: boolean) => void;
+  onRecordingChangeAction?: (isRecording: boolean) => void;
   shouldEnableTranscription?: boolean;
   shouldShowRecorder?: boolean;
   shouldShowCaptionField?: boolean;
@@ -96,6 +97,7 @@ export const AssetManager: React.FC<{
   onTranscribeChangeAction,
   onTranscribingChangeAction,
   onUploadingChangeAction,
+  onRecordingChangeAction,
   shouldEnableTranscription = Boolean(onTranscribeChangeAction),
   shouldShowRecorder = true,
   shouldShowCaptionField = true,
@@ -546,6 +548,7 @@ export const AssetManager: React.FC<{
             <AudioRecorderInput
               onChangeAction={onRecordAudioFinished}
               shouldShowTranscribeOption={shouldShowRecorderTranscribeOption}
+              onRecordingChangeAction={onRecordingChangeAction}
             />
           )}
 
