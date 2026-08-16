@@ -14,7 +14,7 @@ const EditLogPage: React.FC<{ params: Params }> = async ({ params }) => {
   const page = await EitherAsync(async ({ liftEither, fromPromise }) => {
     const id = await liftEither(UUID.decode(unsafeId));
     const log = await fromPromise(getLog(id));
-    const initialMediaPreviewUrlsByBlockKey = await fromPromise(
+    const initialMediaPreviewUrlsByFilename = await fromPromise(
       getLogMediaPreviewUrls({ blocks: log.blocks }),
     );
 
@@ -22,7 +22,7 @@ const EditLogPage: React.FC<{ params: Params }> = async ({ params }) => {
       <main>
         <LogForm
           log={log}
-          initialMediaPreviewUrlsByBlockKey={initialMediaPreviewUrlsByBlockKey}
+          initialMediaPreviewUrlsByFilename={initialMediaPreviewUrlsByFilename}
         />
       </main>
     );

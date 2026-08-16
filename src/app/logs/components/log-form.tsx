@@ -14,6 +14,7 @@ import { AssetPreview } from "@/components/asset-preview";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
+import { moveBlock } from "../lib/move-block";
 import { Block, BlockVariant, Log } from "../log.types";
 
 const AudioRecorderInput = dynamic(
@@ -34,8 +35,8 @@ const BUTTON_CLASS = "text-xs py-1 px-2";
 
 export const LogForm: React.FC<{
   log?: Log;
-  initialMediaPreviewUrlsByBlockKey?: Record<string, string>;
-}> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
+  initialMediaPreviewUrlsByFilename?: Record<string, string>;
+}> = ({ log, initialMediaPreviewUrlsByFilename = {} }) => {
   const isEdit = Boolean(log);
   const [blocks, setBlocks] = useState<Block[]>(log?.blocks ?? []);
   const [localPreviewsByFilename, setLocalPreviewsByFilename] = useState<
@@ -98,6 +99,22 @@ export const LogForm: React.FC<{
   const removeBlock = ({ blockIndex }: { blockIndex: number }) => {
     setBlocks((previousBlocks) =>
       previousBlocks.filter((_, index) => index !== blockIndex),
+    );
+  };
+
+  const reorderBlock = ({
+    blockIndex,
+    direction,
+  }: {
+    blockIndex: number;
+    direction: "up" | "down";
+  }) => {
+    setBlocks((previousBlocks) =>
+      moveBlock({
+        blocks: previousBlocks,
+        fromIndex: blockIndex,
+        toIndex: direction === "up" ? blockIndex - 1 : blockIndex + 1,
+      }),
     );
   };
 
@@ -172,18 +189,46 @@ export const LogForm: React.FC<{
         )}
 
         {blocks.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {blocks.map((block, blockIndex) => (
               <div key={blockIndex} className="space-y-0.5">
                 <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="text-xs"
-                    onClick={() => removeBlock({ blockIndex })}
-                  >
-                    Remove
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {blockIndex > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs"
+                        onClick={() =>
+                          reorderBlock({ blockIndex, direction: "up" })
+                        }
+                      >
+                        Up
+                      </Button>
+                    )}
+
+                    {blockIndex < blocks.length - 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs"
+                        onClick={() =>
+                          reorderBlock({ blockIndex, direction: "down" })
+                        }
+                      >
+                        Down
+                      </Button>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs"
+                      onClick={() => removeBlock({ blockIndex })}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 </div>
 
                 {block.variant === "shortMarkdown" && (
@@ -215,7 +260,7 @@ export const LogForm: React.FC<{
 
                 {block.variant === "asset" && (() => {
                   const previewUrl =
-                    initialMediaPreviewUrlsByBlockKey[`${blockIndex}`] ??
+                    initialMediaPreviewUrlsByFilename[block.filename] ??
                     localPreviewsByFilename[block.filename];
 
                   if (!previewUrl) {
@@ -282,7 +327,11 @@ export const LogForm: React.FC<{
             </Button>
           </div>
 
-          <SubmitButton type="submit" variant="primary">
+          <SubmitButton
+            type="submit"
+            variant="primary"
+            className={BUTTON_CLASS}
+          >
             Save
           </SubmitButton>
         </div>
