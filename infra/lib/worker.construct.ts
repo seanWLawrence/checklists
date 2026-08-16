@@ -17,6 +17,7 @@ import path from "node:path";
 import {
   OPENAI_TRANSCRIPTION_MODEL,
   OPENAI_TRANSCRIPTION_STRUCTURING_MODEL,
+  OPENAI_FILE_CLASSIFICATION_MODEL,
 } from "./env";
 
 const TIMEOUT_IN_MIN = 10;
@@ -147,6 +148,7 @@ export class WorkerConstruct extends Construct {
         OPENAI_TRANSCRIPTION_MODEL,
         OPENAI_TRANSCRIPTION_STRUCTURING_MODEL:
           OPENAI_TRANSCRIPTION_STRUCTURING_MODEL,
+        OPENAI_FILE_CLASSIFICATION_MODEL,
       },
     });
 

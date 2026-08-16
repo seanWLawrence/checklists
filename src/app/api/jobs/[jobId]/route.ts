@@ -7,6 +7,7 @@ import { getJob } from "@/lambda/worker/get-job";
 import {
   isEnqueueFailedJob,
   isFailedJob,
+  isJournalTranscriptionJob,
   isSucceededJob,
   type TranscriptionJobStatusResponse,
 } from "@/lambda/worker/job.types";
@@ -53,13 +54,17 @@ export async function GET(
       return liftEither(Left("Job not found"));
     }
 
-    if (isSucceededJob(job)) {
+    if (isJournalTranscriptionJob(job)) {
       return {
         status: "succeeded",
         transcriptionStructured: job.output.transcriptionStructured,
         transcriptionRaw: job.output.transcriptionRaw,
         metadata: job.output.metadata,
       } satisfies TranscriptionJobStatusResponse;
+    }
+
+    if (isSucceededJob(job)) {
+      return liftEither(Left("Job not found"));
     }
 
     if (isFailedJob(job) || isEnqueueFailedJob(job)) {

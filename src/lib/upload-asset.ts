@@ -4,6 +4,7 @@ import {
   AssetsPresignPutObjectResponse,
 } from "@/app/api/assets/presign/put/types";
 import { AssetVariant } from "@/components/assets/asset.types";
+import { uploadFileToPresignedUrl } from "./upload-file-to-presigned-url";
 
 export const getAssetVariant = (file: File): AssetVariant | null => {
   if (file.type.startsWith("image/")) return "image";
@@ -15,7 +16,7 @@ export const getAssetVariant = (file: File): AssetVariant | null => {
 export const uploadAsset = (
   file: File,
 ): EitherAsync<unknown, { filename: string; assetVariant: AssetVariant }> => {
-  return EitherAsync(async ({ liftEither, throwE }) => {
+  return EitherAsync(async ({ liftEither, throwE, fromPromise }) => {
     const assetVariant = getAssetVariant(file);
 
     if (!assetVariant) {
@@ -47,18 +48,7 @@ export const uploadAsset = (
       AssetsPresignPutObjectResponse.decode(await presignResponse.json()),
     );
 
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: file.type ? { "Content-Type": file.type } : undefined,
-      body: file,
-    });
-
-    if (!uploadResponse.ok) {
-      const errorBody = await uploadResponse.text();
-      return throwE(
-        `Failed to upload file (${uploadResponse.status}): ${errorBody || uploadResponse.statusText}`,
-      );
-    }
+    await fromPromise(uploadFileToPresignedUrl({ file, uploadUrl }));
 
     return { filename, assetVariant };
   });

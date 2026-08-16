@@ -91,6 +91,12 @@ const TopNavigation: React.FC<{ getUserFn?: typeof getUser }> = async ({
               </div>
 
               <div className="flex space-x-1 items-center">
+                <LinkButton href="/files" variant="ghost" prefetch={true}>
+                  Files
+                </LinkButton>
+              </div>
+
+              <div className="flex space-x-1 items-center">
                 {canAccessAdmin && (
                   <>
                     <LinkButton href="/admin" variant="ghost" prefetch={true}>

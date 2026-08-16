@@ -23,7 +23,9 @@ import {
 } from "./job.types";
 import { Either } from "purify-ts/Either";
 import { handler as journalTranscriptionJobHandler } from "./jobs/journal-transcription";
+import { handler as fileClassificationJobHandler } from "./jobs/file-classification";
 import { workerDynamoDbClient } from "./aws-clients";
+import { markFileFailed } from "./jobs/file-classification/update-file-record";
 
 type SqsEvent = {
   Records: Array<{
@@ -169,6 +171,27 @@ const processMessage = <
         username: message.username,
       });
 
+      if (
+        message.jobType === "fileClassification" &&
+        "fileId" in currentJob.input
+      ) {
+        const markFileFailedResult = await markFileFailed({
+          username: message.username,
+          fileId: currentJob.input.fileId,
+          error: toWorkerErrorMessage(error),
+          client: workerDynamoDbClient,
+          tableName: workerEnv.AWS_TABLE_NAME,
+        }).run();
+
+        if (markFileFailedResult.isLeft()) {
+          logger.error("Failed to mark file processing as failed", {
+            error: String(markFileFailedResult.extract()),
+            jobId: message.jobId,
+            username: message.username,
+          });
+        }
+      }
+
       const markFailedResult = await updateJob({
         jobId: message.jobId,
         username: message.username,
@@ -207,9 +230,12 @@ const getJobHandler = <TJobInput extends JobInput>(
   jobType: JobType,
 ): JobHandler<TJobInput> => {
   switch (jobType) {
+    case "fileClassification":
+      return fileClassificationJobHandler as JobHandler<TJobInput>;
     case "journalTranscription":
+      return journalTranscriptionJobHandler as JobHandler<TJobInput>;
     default:
-      return journalTranscriptionJobHandler;
+      throw new Error(`Unsupported job type: ${jobType}`);
   }
 };
 

@@ -36,6 +36,9 @@ export const workerEnv = {
   OPENAI_TRANSCRIPTION_STRUCTURING_MODEL: getRequiredProcessEnv(
     "OPENAI_TRANSCRIPTION_STRUCTURING_MODEL",
   ),
+  OPENAI_FILE_CLASSIFICATION_MODEL: getRequiredProcessEnv(
+    "OPENAI_FILE_CLASSIFICATION_MODEL",
+  ),
   MAX_RECEIVE_ATTEMPTS: getPositiveIntegerProcessEnv({
     key: "MAX_RECEIVE_ATTEMPTS",
     fallback: 3,

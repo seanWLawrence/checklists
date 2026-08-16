@@ -28,6 +28,7 @@ Add GitHub variables:
 - `AWS_JOURNAL_VECTOR_DIMENSION` (example: `1024`)
 - `OPENAI_TRANSCRIPTION_MODEL` (example: `whisper-1`)
 - `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL` (example: `gpt-4o-mini`)
+- `OPENAI_FILE_CLASSIFICATION_MODEL` (example: `gpt-4o-mini`)
 
 ## 2) AWS setup for GitHub OIDC deploy role (prod account)
 

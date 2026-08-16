@@ -20,7 +20,10 @@ const JobStatus = enumeration({
 });
 type JobStatus = GetType<typeof JobStatus>;
 
-const JobType = enumeration({ transcription: "journalTranscription" });
+const JobType = enumeration({
+  transcription: "journalTranscription",
+  fileClassification: "fileClassification",
+});
 export type JobType = GetType<typeof JobType>;
 
 export const JobQueueMessage = Codec.interface({
@@ -45,6 +48,13 @@ export const TranscriptionJobInput = Codec.interface({
 });
 export type TranscriptionJobInput = GetType<typeof TranscriptionJobInput>;
 
+export const FileClassificationJobInput = Codec.interface({
+  fileId: string,
+});
+export type FileClassificationJobInput = GetType<
+  typeof FileClassificationJobInput
+>;
+
 export const TranscriptionMetadata = Codec.interface({
   transcriptionModel: string,
   transcriptionPromptVersion: number,
@@ -60,10 +70,18 @@ export const TranscriptionJobOutput = Codec.interface({
 });
 export type TranscriptionJobOutput = GetType<typeof TranscriptionJobOutput>;
 
-export const JobInput = oneOf([TranscriptionJobInput]);
+const FileClassificationJobOutput = Codec.interface({
+  fileId: string,
+  status: oneOf([exactly("ready"), exactly("needs-review")]),
+});
+type FileClassificationJobOutput = GetType<
+  typeof FileClassificationJobOutput
+>;
+
+export const JobInput = oneOf([TranscriptionJobInput, FileClassificationJobInput]);
 export type JobInput = GetType<typeof JobInput>;
 
-const JobOutput = oneOf([TranscriptionJobOutput]);
+const JobOutput = oneOf([TranscriptionJobOutput, FileClassificationJobOutput]);
 type JobOutput = GetType<typeof JobOutput>;
 
 const BaseJob = Codec.interface({
@@ -148,6 +166,13 @@ export const isSucceededJob = (job: Job): job is SucceededJob =>
 
 export const isFailedJob = (job: Job): job is FailedJob =>
   job.status === "failed";
+
+export const isJournalTranscriptionJob = (
+  job: Job,
+): job is SucceededJob & {
+  jobType: "journalTranscription";
+  output: TranscriptionJobOutput;
+} => job.jobType === "journalTranscription" && isSucceededJob(job);
 
 export type JobHandler<TJobInput extends JobInput> = (params: {
   message: JobQueueMessage;

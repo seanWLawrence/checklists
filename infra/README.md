@@ -25,6 +25,7 @@ Required:
 - `OPENAI_TRANSCRIPTION_MODEL`
   - Passed to the worker Lambda environment.
 - `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+- `OPENAI_FILE_CLASSIFICATION_MODEL`
   - Passed to the worker Lambda environment.
 - `AWS_ACCOUNT`
   - Target AWS account ID.
@@ -66,6 +67,7 @@ GitHub `vars`:
 - `AWS_JOURNAL_VECTOR_DIMENSION`
 - `OPENAI_TRANSCRIPTION_MODEL`
 - `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+- `OPENAI_FILE_CLASSIFICATION_MODEL`
 
 The workflow resolves `AWS_ACCOUNT` dynamically from STS, so you do not need to store `AWS_ACCOUNT` in GitHub.
 
@@ -107,6 +109,7 @@ Required on the deployed function:
 - `AWS_APP_SECRET_NAME`
 - `OPENAI_TRANSCRIPTION_MODEL`
 - `OPENAI_TRANSCRIPTION_STRUCTURING_MODEL`
+- `OPENAI_FILE_CLASSIFICATION_MODEL`
 
 Optional on the deployed function:
 
