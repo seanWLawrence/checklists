@@ -6,19 +6,31 @@ import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { MenuButton } from "@/components/menu-button";
 import { Maybe } from "purify-ts/Maybe";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { deleteNoteAction } from "../actions/delete-note.action";
 import { updateNoteAction } from "../actions/update-note.action";
 import { createNoteAction } from "../actions/create-note.action";
+import { useUnsavedChangesConfirmation } from "@/hooks/use-unsaved-changes-confirmation";
 
 export const NoteForm: React.FC<{
   note?: Note;
 }> = ({ note }) => {
   const isEdit = !!note;
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const router = useRouter();
+
+  const getIsDirty = useCallback(() => {
+    return (
+      nameRef.current?.value !== (note?.name ?? "") ||
+      contentRef.current?.value !== (note?.content ?? "")
+    );
+  }, [note?.content, note?.name]);
+
+  useUnsavedChangesConfirmation({ formRef, getIsDirty });
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -83,11 +95,13 @@ export const NoteForm: React.FC<{
       </div>
 
       <form
+        ref={formRef}
         action={note ? updateNoteAction : createNoteAction}
         className="space-y-2"
       >
         <Label label="Name">
           <Input
+            ref={nameRef}
             type="text"
             name="name"
             min="1"

@@ -16,6 +16,7 @@ const stress1 = "    hello world    ";
 const stress2 = "    hello world    (    some note    )";
 const stress3 = "hello world       (    some note    ) 10m      ";
 const stress4 = "--        hello world      (    some note    ) 10m     ";
+const withContext = "Install Fireplace @Home 30m";
 
 const withTimeNoteCompletedResult = {
   name: "hello world",
@@ -149,6 +150,13 @@ test("structureChecklistContentRow", ({ expect }) => {
   expect(structureChecklistContentRow(stress4).extract()).toMatchObject(
     stress4Result,
   );
+
+  expect(structureChecklistContentRow(withContext).extract()).toMatchObject({
+    name: "Install Fireplace",
+    context: "@home",
+    completed: false,
+    timeEstimate: "30m",
+  });
 });
 
 test("structureChecklistContent", ({ expect }) => {

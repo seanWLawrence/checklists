@@ -8,11 +8,13 @@ export const useChecklistDebouncedAutosave = ({
   formRef,
   shareAccess,
   delayMs,
+  onSaveCompleted,
   saveTimeoutRef,
 }: {
   formRef: React.RefObject<HTMLFormElement | null>;
   shareAccess?: { token: string };
   delayMs: number;
+  onSaveCompleted?: () => void;
   saveTimeoutRef: React.RefObject<ReturnType<typeof setTimeout> | null>;
 }) => {
   /**
@@ -66,12 +68,15 @@ export const useChecklistDebouncedAutosave = ({
             if (queuedRef.current) {
               queuedRef.current = false;
               debouncedAutosave();
+              return;
             }
+
+            onSaveCompleted?.();
           })
           .run();
       }, delayMs);
     },
-    [delayMs, formRef, shareAccess, saveTimeoutRef],
+    [delayMs, formRef, onSaveCompleted, shareAccess, saveTimeoutRef],
   );
 
   useEffect(() => {

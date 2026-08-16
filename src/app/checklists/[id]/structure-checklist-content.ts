@@ -6,6 +6,10 @@ import {
 } from "../checklist-v2.types";
 import { Maybe, optional, string } from "purify-ts";
 import { id } from "@/factories/id.factory";
+import {
+  getContextFromItemName,
+  getItemNameWithoutContext,
+} from "./checklist-contexts";
 
 const noteRegex = /\(.*\)/g;
 const timeEstimateRegex = /\d+(m|h)/g;
@@ -15,15 +19,17 @@ export const structureChecklistContentRow = (
   contentRow: string,
 ): Maybe<ChecklistV2StructuredItem> => {
   const trimmedContentRow = contentRow.trim();
-
-  // Required
-  const name = Maybe.fromNullable(
-    trimmedContentRow
+  const context = getContextFromItemName({ name: trimmedContentRow });
+  const itemName = getItemNameWithoutContext({
+    name: trimmedContentRow
       .replace(noteRegex, "")
       .replace(timeEstimateRegex, "")
       .replace(completedRegex, "")
       .trim(),
-  )
+  });
+
+  // Required
+  const name = Maybe.fromNullable(itemName)
     .map((x) => (x.length > 0 ? x : null))
     .toEither("Name is required")
     .chain(string.decode)
@@ -50,6 +56,7 @@ export const structureChecklistContentRow = (
     name,
     note,
     timeEstimate,
+    context,
     completed,
   }));
 };

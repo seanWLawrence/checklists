@@ -26,6 +26,7 @@ const SharedChecklistPage: React.FC<{
       id: checklist.id,
       name: checklist.name,
       updatedAtIso: checklist.updatedAtIso,
+      viewMode: checklist.viewMode,
     };
 
     return (

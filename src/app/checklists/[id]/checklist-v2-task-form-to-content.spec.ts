@@ -16,6 +16,7 @@ test("converts", ({ expect }) => {
             name: "item a",
             timeEstimate: "5m",
             note: "some note",
+            context: "@home",
             completed: false,
           },
           {
@@ -23,6 +24,7 @@ test("converts", ({ expect }) => {
             name: "item b",
             timeEstimate: "5m",
             note: "some note",
+            context: undefined,
             completed: false,
           },
           {
@@ -31,6 +33,7 @@ test("converts", ({ expect }) => {
             note: "some note",
             completed: false,
             timeEstimate: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -38,6 +41,7 @@ test("converts", ({ expect }) => {
             note: "some note",
             completed: false,
             timeEstimate: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -45,6 +49,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "10m",
             completed: false,
             note: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -52,6 +57,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "10m",
             completed: false,
             note: undefined,
+            context: undefined,
           },
         ],
       },
@@ -65,6 +71,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "5m",
             note: "some note",
             completed: false,
+            context: undefined,
           },
           {
             id: id(),
@@ -72,6 +79,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "5m",
             note: "some note",
             completed: false,
+            context: undefined,
           },
           {
             id: id(),
@@ -79,6 +87,7 @@ test("converts", ({ expect }) => {
             note: "some note",
             completed: false,
             timeEstimate: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -86,6 +95,7 @@ test("converts", ({ expect }) => {
             note: "some note",
             completed: false,
             timeEstimate: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -93,6 +103,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "10m",
             completed: false,
             note: undefined,
+            context: undefined,
           },
           {
             id: id(),
@@ -100,6 +111,7 @@ test("converts", ({ expect }) => {
             timeEstimate: "10m",
             completed: false,
             note: undefined,
+            context: undefined,
           },
         ],
       },
@@ -147,7 +159,7 @@ test("converts", ({ expect }) => {
 
   expected += "section a";
   expected += "\n";
-  expected += "--item a (some note) 5m";
+  expected += "--item a @home (some note) 5m";
   expected += "\n";
   expected += "item b (some note) 5m";
   expected += "\n";

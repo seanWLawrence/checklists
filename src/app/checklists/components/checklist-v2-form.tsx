@@ -7,8 +7,9 @@ import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { MenuButton } from "@/components/menu-button";
 import { Maybe } from "purify-ts/Maybe";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedChangesConfirmation } from "@/hooks/use-unsaved-changes-confirmation";
 import { structureChecklistContent } from "../[id]/structure-checklist-content";
 import {
   checklistV2TaskFormToContent,
@@ -26,6 +27,8 @@ export const ChecklistV2Form: React.FC<{
   checklist?: ChecklistV2;
 }> = ({ checklist }) => {
   const isEdit = !!checklist;
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const [shareState, shareAction] = useActionState<
     ChecklistShareLinkState,
@@ -38,6 +41,15 @@ export const ChecklistV2Form: React.FC<{
   const [copied, setCopied] = useState(false);
 
   const router = useRouter();
+
+  const getIsDirty = useCallback(() => {
+    return (
+      nameRef.current?.value !== (checklist?.name ?? "") ||
+      contentRef.current?.value !== (checklist?.content ?? "")
+    );
+  }, [checklist?.content, checklist?.name]);
+
+  useUnsavedChangesConfirmation({ formRef, getIsDirty });
 
   return (
     <div className="space-y-2 max-w-prose">
@@ -207,11 +219,13 @@ export const ChecklistV2Form: React.FC<{
       )}
 
       <form
+        ref={formRef}
         action={checklist ? updateChecklistV2Action : createChecklistV2Action}
         className="space-y-2"
       >
         <Label label="Name">
           <Input
+            ref={nameRef}
             type="text"
             name="name"
             min="1"

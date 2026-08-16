@@ -26,6 +26,10 @@ export const checklistV2TaskFormToContent = ({
 
       row += item.name;
 
+      if (item.context) {
+        row += ` ${item.context}`;
+      }
+
       if (item.note) {
         row += ` (${item.note})`;
       }

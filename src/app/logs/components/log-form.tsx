@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Maybe } from "purify-ts/Maybe";
 
@@ -18,6 +18,7 @@ import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
 import { moveBlock } from "../lib/move-block";
 import { Block, BlockVariant, Log } from "../log.types";
+import { useUnsavedChangesConfirmation } from "@/hooks/use-unsaved-changes-confirmation";
 
 const AudioRecorderInput = dynamic(
   () =>
@@ -46,9 +47,24 @@ export const LogForm: React.FC<{
     Record<string, string>
   >({});
   const { upload, isUploading } = useAssetUpload();
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
+  const initialBlocksJson = useMemo(
+    () => JSON.stringify(log?.blocks ?? []),
+    [log?.blocks],
+  );
+
+  const getIsDirty = useCallback(() => {
+    return (
+      nameRef.current?.value !== (log?.name ?? "") ||
+      blocksJson !== initialBlocksJson
+    );
+  }, [blocksJson, initialBlocksJson, log?.name]);
+
+  useUnsavedChangesConfirmation({ formRef, getIsDirty });
 
   const {
     startTranscription,
@@ -262,11 +278,13 @@ export const LogForm: React.FC<{
       </div>
 
       <form
+        ref={formRef}
         action={isEdit ? updateLogAction : createLogAction}
         className="space-y-3"
       >
         <Label label="Name">
           <Input
+            ref={nameRef}
             type="text"
             name="name"
             required

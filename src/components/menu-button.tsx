@@ -11,8 +11,15 @@ export const MenuButton: React.FC<
     menu: React.ReactNode;
     children?: React.ReactNode;
     variant?: "outline" | "primary" | "ghost";
+    icon?: React.ReactNode;
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
-> = ({ children, variant = "outline", menu, ...rest }) => {
+> = ({
+  children,
+  variant = "ghost",
+  menu,
+  icon = <MenuButtonIcon />,
+  ...rest
+}) => {
   const { pending } = useFormStatus();
   const [, startTransition] = useTransition();
   const [visible, setVisible] = useState<boolean>(false);
@@ -37,7 +44,7 @@ export const MenuButton: React.FC<
     <div className="relative" ref={ref}>
       <Button
         {...rest}
-        variant="ghost"
+        variant={variant}
         className={cn("p-.5", rest.className)}
         onClick={() => {
           startTransition(() => {
@@ -46,10 +53,10 @@ export const MenuButton: React.FC<
         }}
         type="button"
       >
-        <span className="flex space-x-1">
-          <MenuButtonIcon />
-
+        <span className="flex items-center space-x-1">
           {children && <span>{children}</span>}
+
+          {icon}
 
           {pending && (
             <Spinner

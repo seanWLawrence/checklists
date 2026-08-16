@@ -24,7 +24,8 @@ export const useChecklistPolling = ({
   saveTimeoutRef: React.RefObject<ReturnType<typeof setTimeout> | null>;
   setCurrentChecklist: React.Dispatch<
     React.SetStateAction<
-      ChecklistV2Structured & Pick<ChecklistV2, "id" | "name" | "updatedAtIso">
+      ChecklistV2Structured &
+        Pick<ChecklistV2, "id" | "name" | "updatedAtIso" | "viewMode">
     >
   >;
 }) => {

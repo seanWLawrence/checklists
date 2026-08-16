@@ -22,9 +22,34 @@ export const TimeEstimate = Codec.custom<TimeEstimateValue>({
 
 export type TimeEstimate = GetType<typeof TimeEstimate>;
 
+export type ChecklistContext = `@${string}`;
+
+export const ChecklistContext = Codec.custom<ChecklistContext>({
+  decode: (input) =>
+    typeof input === "string" && /^@[a-z0-9][a-z0-9_-]*$/.test(input)
+      ? Right(input as ChecklistContext)
+      : Left(`Invalid ChecklistContext. Received: '${String(input)}'`),
+  encode: (input) => input,
+});
+
+export const ChecklistViewMode = Codec.custom<
+  "group-by-section" | "group-by-context" | "group-by-next-action"
+>({
+  decode: (input) =>
+    input === "group-by-section" ||
+    input === "group-by-context" ||
+    input === "group-by-next-action"
+      ? Right(input)
+      : Left(`Invalid ChecklistViewMode. Received: '${String(input)}'`),
+  encode: (input) => input,
+});
+
+export type ChecklistViewMode = GetType<typeof ChecklistViewMode>;
+
 export const ChecklistV2Base = Codec.interface({
   name: string,
   content: string,
+  viewMode: optional(ChecklistViewMode),
 });
 
 export type ChecklistV2Base = GetType<typeof ChecklistV2Base>;
@@ -39,6 +64,7 @@ export const ChecklistV2StructuredItem = Codec.interface({
   completed: boolean,
   note: optional(string),
   timeEstimate: optional(TimeEstimate),
+  context: optional(ChecklistContext),
 });
 
 export type ChecklistV2StructuredItem = GetType<

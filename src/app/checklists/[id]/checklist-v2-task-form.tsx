@@ -1,12 +1,11 @@
 "use client";
 import { Button } from "@/components/button";
 import { SubmitButton } from "@/components/submit-button";
-import { Checkbox } from "@/components/checkbox";
 import { Heading } from "@/components/heading";
 import {
   ChecklistV2,
   ChecklistV2Structured,
-  ChecklistV2StructuredItem,
+  ChecklistViewMode,
   TimeEstimate,
 } from "../checklist-v2.types";
 import { Maybe } from "purify-ts/Maybe";
@@ -19,28 +18,26 @@ import { LinkButton } from "@/components/link-button";
 import { updateChecklistV2SharedAction } from "../actions/update-checklist-v2-shared.action";
 import { useChecklistPolling } from "./hooks/useChecklistPolling";
 import { useChecklistDebouncedAutosave } from "./hooks/useChecklistDebouncedAutosave";
-import { Fieldset } from "@/components/fieldset";
+import {
+  groupItemsByContext,
+  groupNextActionsByContext,
+} from "./checklist-contexts";
+import { updateChecklistViewModeAction } from "../actions/update-checklist-view-mode.action";
+import { ChecklistItemGroup } from "../components/checklist-item-group";
+import { useUnsavedChangesConfirmation } from "@/hooks/use-unsaved-changes-confirmation";
+import { ChevronDownIcon } from "@/components/icons/chevron-down-icon";
 
 const POLLING_INTERVAL_IN_MILLI = 5000;
 const AUTO_SAVE_DELAY_IN_MILLI = 1000;
-
-const filterCompletedItemsIfHidden = ({
-  items,
-  showCompleted,
-}: {
-  showCompleted: boolean;
-  items: ChecklistV2StructuredItem[];
-}): ChecklistV2StructuredItem[] => {
-  if (!showCompleted) {
-    return items.filter((x) => !x.completed);
-  }
-
-  return items;
+const GROUP_BY_LABELS: Record<ChecklistViewMode, string> = {
+  "group-by-section": "Section",
+  "group-by-context": "Context",
+  "group-by-next-action": "Next action",
 };
 
 export const ChecklistV2TaskForm: React.FC<{
   structuredChecklist: ChecklistV2Structured &
-    Pick<ChecklistV2, "id" | "name" | "updatedAtIso">;
+    Pick<ChecklistV2, "id" | "name" | "updatedAtIso" | "viewMode">;
   shareAccess?: { token: string };
   pollingIntervalMs?: number;
 }> = ({ structuredChecklist, shareAccess }) => {
@@ -51,13 +48,45 @@ export const ChecklistV2TaskForm: React.FC<{
   });
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<ChecklistViewMode>(
+    structuredChecklist.viewMode ?? "group-by-section",
+  );
 
   const toggleShowCompleted = useCallback(
     () => setShowCompleted((prev) => !prev),
     [],
   );
 
+  const changeViewMode = useCallback(
+    (nextViewMode: ChecklistViewMode) => {
+      setViewMode(nextViewMode);
+      setCurrentChecklist((previousChecklist) => ({
+        ...previousChecklist,
+        viewMode: nextViewMode,
+      }));
+
+      if (!shareAccess) {
+        void updateChecklistViewModeAction({
+          checklistId: currentChecklist.id,
+          viewMode: nextViewMode,
+        });
+      }
+    },
+    [currentChecklist.id, shareAccess],
+  );
+
+  const contextSections = groupItemsByContext({
+    sections: currentChecklist.sections,
+  });
+  const nextActionContextSections = groupNextActionsByContext({
+    sections: currentChecklist.sections,
+  });
+
   const formRef = useRef<HTMLFormElement | null>(null);
+  const hasPendingSaveRef = useRef(false);
+  const onSaveCompleted = useCallback(() => {
+    hasPendingSaveRef.current = false;
+  }, []);
   /**
    * Holds the active debounce timer.
    * If it’s non‑null, it means “a save is scheduled but hasn’t started yet.”
@@ -67,8 +96,24 @@ export const ChecklistV2TaskForm: React.FC<{
   const { debouncedAutosave } = useChecklistDebouncedAutosave({
     delayMs: AUTO_SAVE_DELAY_IN_MILLI,
     formRef,
+    onSaveCompleted,
     saveTimeoutRef,
     shareAccess,
+  });
+
+  const onChecklistChange = useCallback(() => {
+    hasPendingSaveRef.current = true;
+    debouncedAutosave();
+  }, [debouncedAutosave]);
+
+  const getHasPendingSave = useCallback(
+    () => hasPendingSaveRef.current,
+    [],
+  );
+
+  useUnsavedChangesConfirmation({
+    formRef,
+    getIsDirty: getHasPendingSave,
   });
 
   useChecklistPolling({
@@ -180,92 +225,91 @@ export const ChecklistV2TaskForm: React.FC<{
             </>
           )}
 
-          {currentChecklist.sections.map(({ id, name, items }) => {
-            const filteredItems = filterCompletedItemsIfHidden({
-              showCompleted,
-              items,
-            });
+          <div aria-label="Checklist grouping">
+            <MenuButton
+              icon={<ChevronDownIcon />}
+              variant="ghost"
+              className="px-2 py-1"
+              menu={
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    type="button"
+                    variant={
+                      viewMode === "group-by-section" ? "primary" : "ghost"
+                    }
+                    aria-pressed={viewMode === "group-by-section"}
+                    onClick={() => changeViewMode("group-by-section")}
+                  >
+                    Section
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      viewMode === "group-by-context" ? "primary" : "ghost"
+                    }
+                    aria-pressed={viewMode === "group-by-context"}
+                    onClick={() => changeViewMode("group-by-context")}
+                  >
+                    Context
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      viewMode === "group-by-next-action" ? "primary" : "ghost"
+                    }
+                    aria-pressed={viewMode === "group-by-next-action"}
+                    onClick={() => changeViewMode("group-by-next-action")}
+                  >
+                    Next action
+                  </Button>
+                </div>
+              }
+            >
+              {`Group by: ${GROUP_BY_LABELS[viewMode]}`}
+            </MenuButton>
+          </div>
 
-            return (
-              <div key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}>
-                <Fieldset
-                  legend={
-                    <>
-                      <span className="mr-1">{name}</span>
+          {viewMode === "group-by-section" &&
+            currentChecklist.sections.map(({ id, name, items }) => (
+              <ChecklistItemGroup
+                key={id}
+                groupId={id}
+                name={name}
+                items={items}
+                groupBy="section"
+                showCompleted={showCompleted}
+                updatedAtIso={currentChecklist.updatedAtIso}
+                onChange={onChecklistChange}
+              />
+            ))}
 
-                      <div className="text-xs font-normal">
-                        <TimeEstimateBadge
-                          timeEstimates={items.reduce((acc, x) => {
-                            if (!x.completed && x.timeEstimate) {
-                              acc.push(x.timeEstimate);
-                            }
-                            return acc;
-                          }, [] as TimeEstimate[])}
-                        />
-                      </div>
-                    </>
-                  }
-                >
-                  <div>
-                    <ul className="space-y-3">
-                      {items.map(
-                        ({ id, name, completed, note, timeEstimate }) => {
-                          // Hidden so they won't appear, but will get submitted
-                          if (completed && !showCompleted) {
-                            return (
-                              <div
-                                className="hidden"
-                                key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}
-                              >
-                                <Checkbox
-                                  defaultChecked={completed}
-                                  name={`item__${id}`}
-                                  note={note}
-                                  onChange={debouncedAutosave}
-                                >
-                                  {"This is hidden"}
-                                </Checkbox>
-                              </div>
-                            );
-                          }
+          {viewMode === "group-by-next-action" &&
+            nextActionContextSections.map(({ name, items }) => (
+              <ChecklistItemGroup
+                key={name}
+                groupId={name}
+                name={name}
+                items={items}
+                groupBy="context"
+                showCompleted={showCompleted}
+                updatedAtIso={currentChecklist.updatedAtIso}
+                onChange={onChecklistChange}
+              />
+            ))}
 
-                          return (
-                            <li
-                              key={`${id}-${currentChecklist.updatedAtIso.toISOString()}`}
-                              className="flex flex-col space-y-.5"
-                            >
-                              <Checkbox
-                                defaultChecked={completed}
-                                name={`item__${id}`}
-                                note={note}
-                                onChange={debouncedAutosave}
-                              >
-                                <div className="flex justify-between w-full">
-                                  <span>{name}</span>
-
-                                  {timeEstimate && (
-                                    <TimeEstimateBadge
-                                      timeEstimates={[timeEstimate]}
-                                    />
-                                  )}
-                                </div>
-                              </Checkbox>
-                            </li>
-                          );
-                        },
-                      )}
-                    </ul>
-                  </div>
-
-                  {filteredItems.length === 0 && (
-                    <p className="text-xs text-zinc-700 dark:text-zinc-300">
-                      (No items)
-                    </p>
-                  )}
-                </Fieldset>
-              </div>
-            );
-          })}
+          {viewMode === "group-by-context" &&
+            contextSections.map(({ name, items }) => (
+              <ChecklistItemGroup
+                key={name}
+                groupId={name}
+                name={name}
+                items={items}
+                groupBy="context"
+                showCompleted={showCompleted}
+                updatedAtIso={currentChecklist.updatedAtIso}
+                onChange={onChecklistChange}
+              />
+            ))}
 
           <input
             name="metadata"
@@ -275,6 +319,7 @@ export const ChecklistV2TaskForm: React.FC<{
             required
           />
         </form>
+
       </div>
     </div>
   );
