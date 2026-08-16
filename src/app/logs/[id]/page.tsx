@@ -1,30 +1,13 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
 import Link from "next/link";
 
-import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { RelativeTime } from "@/components/relative-time";
-import { Audio } from "@/components/audio";
-import { Image } from "@/components/image";
-import { Video } from "@/components/video";
+import { AssetPreview } from "@/components/asset-preview";
 import { UUID } from "@/lib/types";
 import { getLog } from "../model/get-log.model";
-import { Block } from "../log.types";
 import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
-
-const isMediaBlock = (
-  block: Block,
-): block is Extract<Block, { variant: "audio" | "image" | "video" }> => {
-  return (
-    block.variant === "audio" ||
-    block.variant === "image" ||
-    block.variant === "video"
-  );
-};
-
-const EmptyValue: React.FC = () => {
-  return <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>;
-};
+import { PrettyContent } from "@/app/notes/[id]/pretty-content.client";
 
 type Params = Promise<{ id: string }>;
 
@@ -36,9 +19,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
     const log = await fromPromise(getLog(id));
 
     const previewUrls = await fromPromise(
-      getLogMediaPreviewUrls({
-        sections: log.sections,
-      }),
+      getLogMediaPreviewUrls({ blocks: log.blocks }),
     );
 
     return (
@@ -58,92 +39,50 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
           <RelativeTime date={log.updatedAtIso} />
         </div>
 
-        {log.sections.length === 0 && (
+        {log.blocks.length === 0 && (
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            No sections yet.
+            No blocks yet.
           </p>
         )}
 
-        {log.sections.map((section, sectionIndex) => (
-          <Fieldset key={`${section.name}-${sectionIndex}`} legend={section.name}>
-            <div className="space-y-4">
-              {section.blocks.map((block, blockIndex) => {
-                const mediaPreviewUrl =
-                  previewUrls[`${sectionIndex}-${blockIndex}`];
+        <div className="space-y-4">
+          {log.blocks.map((block, blockIndex) => {
+            const mediaPreviewUrl = previewUrls[`${blockIndex}`];
 
-                return (
-                  <div key={`${block.name}-${blockIndex}`} className="space-y-1">
-                    <div className="text-xs text-zinc-600 dark:text-zinc-300">
-                      {block.name}
-                    </div>
+            return (
+              <div key={blockIndex}>
+                {block.variant === "shortMarkdown" && (
+                  block.value.trim() !== "" ? (
+                    <PrettyContent content={block.value} />
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
+                  )
+                )}
 
-                    {block.variant === "checkbox" && (
-                      <label className="flex w-full items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={block.value}
-                          readOnly
-                          className="accent-blue-500"
-                        />
-                        <span>{block.value ? "Checked" : "Not checked"}</span>
-                      </label>
-                    )}
+                {block.variant === "longMarkdown" && (
+                  block.value.trim() !== "" ? (
+                    <PrettyContent content={block.value} />
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Empty</p>
+                  )
+                )}
 
-                    {block.variant === "shortText" && (
-                      block.value.trim() !== "" ? (
-                        <p className="text-sm">{block.value}</p>
-                      ) : (
-                        <EmptyValue />
-                      )
-                    )}
-
-                    {block.variant === "longText" && (
-                      block.value.trim() !== "" ? (
-                        <p className="whitespace-pre-wrap break-words text-sm">
-                          {block.value}
-                        </p>
-                      ) : (
-                        <EmptyValue />
-                      )
-                    )}
-
-                    {block.variant === "number" && (
-                      Number.isFinite(block.value) ? (
-                        <p className="text-sm">{block.value}</p>
-                      ) : (
-                        <EmptyValue />
-                      )
-                    )}
-
-                    {isMediaBlock(block) && (
-                      <div className="space-y-2">
-                        {block.value.trim() === "" ? (
-                          <EmptyValue />
-                        ) : mediaPreviewUrl ? (
-                          <div className="space-y-1">
-                            {block.variant === "image" && (
-                              <Image src={mediaPreviewUrl} alt={block.name} />
-                            )}
-                            {block.variant === "audio" && (
-                              <Audio src={mediaPreviewUrl} />
-                            )}
-                            {block.variant === "video" && (
-                              <Video src={mediaPreviewUrl} />
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                            No file attached.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Fieldset>
-        ))}
+                {block.variant === "asset" && (
+                  mediaPreviewUrl ? (
+                    <AssetPreview
+                      assetVariant={block.assetVariant}
+                      previewUrl={mediaPreviewUrl}
+                    />
+                  ) : (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                      No file attached.
+                    </p>
+                  )
+                )}
+              </div>
+            );
+          })}
+        </div>
       </main>
     );
   })

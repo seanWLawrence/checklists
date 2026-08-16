@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/button";
-import { AssetItemWithPreview } from "@/components/assets/asset.types";
-import { Fieldset } from "@/components/fieldset";
 import { Heading } from "@/components/heading";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
@@ -11,175 +10,94 @@ import { MenuButton } from "@/components/menu-button";
 import { SubmitButton } from "@/components/submit-button";
 import { Textarea } from "@/components/textarea";
 import { Maybe } from "purify-ts/Maybe";
+import { AssetPreview } from "@/components/asset-preview";
+import { useAssetUpload } from "@/hooks/use-asset-upload";
 import { createLogAction } from "../actions/create-log.action";
 import { updateLogAction } from "../actions/update-log.action";
-import { Block, BlockVariant, Log, LogSection } from "../log.types";
-import { LogMediaAssetInput } from "./log-media-asset-input";
+import { Block, BlockVariant, Log } from "../log.types";
 
-const BLOCK_BUTTONS: {
-  label: string;
-  variant: BlockVariant;
-}[] = [
-  { label: "Short", variant: "shortText" },
-  { label: "Long", variant: "longText" },
-  { label: "Audio", variant: "audio" },
-  { label: "Image", variant: "image" },
-  { label: "Video", variant: "video" },
-  { label: "Number", variant: "number" },
-  { label: "Checkbox", variant: "checkbox" },
+const AudioRecorderInput = dynamic(
+  () =>
+    import("@/components/audio-recorder-input").then(
+      (module) => module.AudioRecorderInput,
+    ),
+  { ssr: false },
+);
+
+
+const MARKDOWN_BLOCK_BUTTONS: { label: string; variant: BlockVariant }[] = [
+  { label: "Short", variant: "shortMarkdown" },
+  { label: "Long", variant: "longMarkdown" },
 ];
 
-const isMediaVariant = (
-  variant: BlockVariant,
-): variant is "audio" | "image" | "video" => {
-  return variant === "audio" || variant === "image" || variant === "video";
-};
-
-const isMediaBlock = (
-  block: Block,
-): block is Extract<Block, { variant: "audio" | "image" | "video" }> => {
-  return isMediaVariant(block.variant);
-};
-
-const createDefaultBlock = ({ variant }: { variant: BlockVariant }): Block => {
-  if (variant === "checkbox") {
-    return { name: "", variant, value: false };
-  }
-
-  if (variant === "number") {
-    return { name: "", variant, value: 0 };
-  }
-
-  return { name: "", variant, value: "" };
-};
-
-const createEmptySection = ({ index }: { index: number }): LogSection => {
-  return {
-    name: `Section ${index + 1}`,
-    blocks: [],
-  };
-};
+const BUTTON_CLASS = "text-xs py-1 px-2";
 
 export const LogForm: React.FC<{
   log?: Log;
   initialMediaPreviewUrlsByBlockKey?: Record<string, string>;
 }> = ({ log, initialMediaPreviewUrlsByBlockKey = {} }) => {
   const isEdit = Boolean(log);
-  const [sections, setSections] = useState<LogSection[]>(log?.sections ?? []);
+  const [blocks, setBlocks] = useState<Block[]>(log?.blocks ?? []);
+  const [localPreviewsByFilename, setLocalPreviewsByFilename] = useState<
+    Record<string, string>
+  >({});
+  const { upload, isUploading } = useAssetUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const sectionsJson = useMemo(() => JSON.stringify(sections), [sections]);
+  const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
 
   const updateBlockValue = ({
-    sectionIndex,
     blockIndex,
     value,
   }: {
-    sectionIndex: number;
     blockIndex: number;
-    value: string | number | boolean;
+    value: string;
   }) => {
-    setSections((previousSections) =>
-      previousSections.map((section, index) => {
-        if (index !== sectionIndex) {
-          return section;
-        }
-
-        return {
-          ...section,
-          blocks: section.blocks.map((block, currentBlockIndex) => {
-            if (currentBlockIndex !== blockIndex) {
-              return block;
-            }
-
-            if (block.variant === "checkbox") {
-              return { ...block, value: Boolean(value) };
-            }
-
-            if (block.variant === "number") {
-              return { ...block, value: Number(value) };
-            }
-
-            return { ...block, value: String(value) };
-          }),
-        };
+    setBlocks((previousBlocks) =>
+      previousBlocks.map((block, index) => {
+        if (index !== blockIndex) return block;
+        return { ...block, value };
       }),
     );
   };
 
-  const removeSection = ({ sectionIndex }: { sectionIndex: number }) => {
-    setSections((previousSections) =>
-      previousSections.filter((_, index) => index !== sectionIndex),
-    );
-  };
-
-  const addSection = () => {
-    const sectionName = window.prompt("Section name?");
-    const trimmedSectionName = sectionName?.trim();
-
-    if (!trimmedSectionName) {
-      return;
-    }
-
-    setSections((previousSections) => [
-      ...previousSections,
-      {
-        ...createEmptySection({ index: previousSections.length }),
-        name: trimmedSectionName,
-      },
+  const addMarkdownBlock = ({ variant }: { variant: BlockVariant }) => {
+    setBlocks((previousBlocks) => [
+      ...previousBlocks,
+      { variant, value: "" } as Block,
     ]);
   };
 
-  const addBlock = ({
-    sectionIndex,
-    variant,
-  }: {
-    sectionIndex: number;
-    variant: BlockVariant;
-  }) => {
-    const blockName = window.prompt("Block label?");
-    const trimmedBlockName = blockName?.trim();
+  const addAssetFromFile = async (file: File) => {
+    const uploaded = await upload(file);
 
-    if (!trimmedBlockName) {
-      return;
+    if (uploaded) {
+      const { filename, assetVariant, fileSizeBytes, previewUrl } = uploaded;
+      setBlocks((previousBlocks) => [
+        ...previousBlocks,
+        { variant: "asset", filename, assetVariant, fileSizeBytes },
+      ]);
+      setLocalPreviewsByFilename((prev) => ({ ...prev, [filename]: previewUrl }));
     }
-
-    setSections((previousSections) =>
-      previousSections.map((section, index) => {
-        if (index !== sectionIndex) {
-          return section;
-        }
-
-        return {
-          ...section,
-          blocks: [
-            ...section.blocks,
-            { ...createDefaultBlock({ variant }), name: trimmedBlockName },
-          ],
-        };
-      }),
-    );
   };
 
-  const removeBlock = ({
-    sectionIndex,
-    blockIndex,
-  }: {
-    sectionIndex: number;
-    blockIndex: number;
-  }) => {
-    setSections((previousSections) =>
-      previousSections.map((section, index) => {
-        if (index !== sectionIndex) {
-          return section;
-        }
+  const onFilesSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files ?? []);
 
-        return {
-          ...section,
-          blocks: section.blocks.filter(
-            (_, currentBlockIndex) => currentBlockIndex !== blockIndex,
-          ),
-        };
-      }),
+    for (const file of files) {
+      await addAssetFromFile(file);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeBlock = ({ blockIndex }: { blockIndex: number }) => {
+    setBlocks((previousBlocks) =>
+      previousBlocks.filter((_, index) => index !== blockIndex),
     );
   };
 
@@ -199,14 +117,14 @@ export const LogForm: React.FC<{
                       .map((value) => value.trim())
                       .filter((value) => value.length > 0);
 
-                    const sections = Maybe.fromNullable(sectionsJson);
+                    const currentBlocks = Maybe.fromNullable(blocksJson);
 
-                    Maybe.sequence([name, sections]).map(
-                      async ([nextName, nextSections]) => {
+                    Maybe.sequence([name, currentBlocks]).map(
+                      async ([nextName, nextBlocks]) => {
                         const formData = new FormData();
 
                         formData.set("name", nextName);
-                        formData.set("sections", nextSections);
+                        formData.set("blocks", nextBlocks);
                         formData.set("redirectToEdit", "true");
 
                         await createLogAction(formData);
@@ -253,181 +171,116 @@ export const LogForm: React.FC<{
           />
         )}
 
-        {sections.map((section, sectionIndex) => (
-          <Fieldset
-            key={sectionIndex}
-            legend={
-              <span className="flex items-center justify-between gap-.5 w-full">
-                <span>{section.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-xs font-normal underline"
-                  onClick={() => removeSection({ sectionIndex })}
-                >
-                  Remove
-                </Button>
-              </span>
-            }
-            className="space-y-4"
-          >
-            {section.blocks.length > 0 ? (
-              <div className="space-y-2">
-                {section.blocks.map((block, blockIndex) => (
-                  <div
-                    key={`${sectionIndex}-${blockIndex}`}
-                    className="space-y-0.5"
-                  >
-                    {!isMediaBlock(block) && (
-                      <div className="flex items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
-                        <div className="min-w-0">
-                          <p className="truncate -mb-1">{block.name}</p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="text-xs"
-                          onClick={() =>
-                            removeBlock({ sectionIndex, blockIndex })
-                          }
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    )}
-
-                    {block.variant === "checkbox" && (
-                      <label className="flex w-full items-center gap-2 rounded border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(block.value)}
-                          onChange={(event) =>
-                            updateBlockValue({
-                              sectionIndex,
-                              blockIndex,
-                              value: event.target.checked,
-                            })
-                          }
-                          className="accent-blue-500"
-                        />
-                        <span>Checked</span>
-                      </label>
-                    )}
-
-                    {block.variant === "number" && (
-                      <Input
-                        type="number"
-                        className="w-full max-w-none"
-                        value={String(block.value)}
-                        onChange={(event) =>
-                          updateBlockValue({
-                            sectionIndex,
-                            blockIndex,
-                            value: Number(event.target.value || "0"),
-                          })
-                        }
-                      />
-                    )}
-
-                    {block.variant === "shortText" && (
-                      <Input
-                        className="w-full max-w-none"
-                        value={String(block.value)}
-                        onChange={(event) =>
-                          updateBlockValue({
-                            sectionIndex,
-                            blockIndex,
-                            value: event.target.value,
-                          })
-                        }
-                      />
-                    )}
-
-                    {block.variant === "longText" && (
-                      <Textarea
-                        className="w-full max-w-none"
-                        value={String(block.value)}
-                        rows={4}
-                        onChange={(event) =>
-                          updateBlockValue({
-                            sectionIndex,
-                            blockIndex,
-                            value: event.target.value,
-                          })
-                        }
-                      />
-                    )}
-
-                    {isMediaBlock(block) &&
-                      (() => {
-                        const previewUrl =
-                          initialMediaPreviewUrlsByBlockKey[
-                            `${sectionIndex}-${blockIndex}`
-                          ];
-                        const initialUploadedAssets: AssetItemWithPreview[] =
-                          block.value.trim() !== "" && previewUrl
-                            ? [
-                                {
-                                  caption: block.name,
-                                  filename: block.value,
-                                  variant: block.variant,
-                                  previewUrl,
-                                },
-                              ]
-                            : [];
-
-                        return (
-                          <LogMediaAssetInput
-                            variant={block.variant}
-                            initialUploadedAssets={initialUploadedAssets}
-                            label={block.name}
-                            onFilenameChangeAction={(filename) =>
-                              updateBlockValue({
-                                sectionIndex,
-                                blockIndex,
-                                value: filename,
-                              })
-                            }
-                          />
-                        );
-                      })()}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-2 items-center text-xs">
-              {BLOCK_BUTTONS.map(({ label, variant }) => (
-                <div
-                  key={`${sectionIndex}-${variant}`}
-                  className="flex items-center space-x-1"
-                >
+        {blocks.length > 0 && (
+          <div className="space-y-2">
+            {blocks.map((block, blockIndex) => (
+              <div key={blockIndex} className="space-y-0.5">
+                <div className="flex items-center justify-end gap-2 text-xs text-zinc-900 dark:text-zinc-100">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="text-xs py-1 px-2"
-                    onClick={() => addBlock({ sectionIndex, variant })}
+                    variant="ghost"
+                    className="text-xs"
+                    onClick={() => removeBlock({ blockIndex })}
                   >
-                    {label}
+                    Remove
                   </Button>
                 </div>
-              ))}
-            </div>
-          </Fieldset>
-        ))}
 
-        {sections.length === 0 && (
-          <p className="text-sm text-zinc-600">
-            No sections yet. Add one below.
-          </p>
+                {block.variant === "shortMarkdown" && (
+                  <Input
+                    className="w-full max-w-none"
+                    value={block.value}
+                    onChange={(event) =>
+                      updateBlockValue({
+                        blockIndex,
+                        value: event.target.value,
+                      })
+                    }
+                  />
+                )}
+
+                {block.variant === "longMarkdown" && (
+                  <Textarea
+                    className="w-full max-w-none"
+                    value={block.value}
+                    rows={4}
+                    onChange={(event) =>
+                      updateBlockValue({
+                        blockIndex,
+                        value: event.target.value,
+                      })
+                    }
+                  />
+                )}
+
+                {block.variant === "asset" && (() => {
+                  const previewUrl =
+                    initialMediaPreviewUrlsByBlockKey[`${blockIndex}`] ??
+                    localPreviewsByFilename[block.filename];
+
+                  if (!previewUrl) {
+                    return (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {block.filename}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <AssetPreview
+                      assetVariant={block.assetVariant}
+                      previewUrl={previewUrl}
+                    />
+                  );
+                })()}
+              </div>
+            ))}
+          </div>
         )}
 
-        <input type="hidden" name="sections" value={sectionsJson} readOnly />
+        <input type="hidden" name="blocks" value={blocksJson} readOnly />
 
-        <div className="flex items-center justify-between">
-          <Button type="button" variant="outline" onClick={addSection}>
-            Add section
-          </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,audio/*,video/*"
+          multiple
+          className="sr-only"
+          onChange={onFilesSelected}
+        />
+
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <div className="flex flex-wrap gap-2 items-center">
+            {MARKDOWN_BLOCK_BUTTONS.map(({ label, variant }) => (
+              <Button
+                key={variant}
+                type="button"
+                variant="outline"
+                className={BUTTON_CLASS}
+                onClick={() => addMarkdownBlock({ variant })}
+              >
+                {label}
+              </Button>
+            ))}
+
+            <AudioRecorderInput
+              onChangeAction={async (file) => {
+                if (file) await addAssetFromFile(file);
+              }}
+              shouldShowTranscribeOption={false}
+              buttonClassName={BUTTON_CLASS}
+            />
+
+            <Button
+              type="button"
+              variant="outline"
+              className={BUTTON_CLASS}
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading ? "Uploading..." : "Add files"}
+            </Button>
+          </div>
 
           <SubmitButton type="submit" variant="primary">
             Save
