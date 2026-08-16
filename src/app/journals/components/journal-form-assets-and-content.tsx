@@ -21,6 +21,7 @@ export const JournalFormAssetsAndContent: React.FC<{
   contentPlaceholder?: string;
   onTranscribingChangeAction?: (isTranscribing: boolean) => void;
   onUploadingChangeAction?: (isUploading: boolean) => void;
+  onRecordingChangeAction?: (isRecording: boolean) => void;
 }> = ({
   initialContent,
   initialTranscriptionRaw = "",
@@ -31,6 +32,7 @@ export const JournalFormAssetsAndContent: React.FC<{
   contentPlaceholder,
   onTranscribingChangeAction,
   onUploadingChangeAction,
+  onRecordingChangeAction,
 }) => {
   const [content, setContent] = useState(initialContent);
   const [transcriptionRaw, setTranscriptionRaw] = useState(
@@ -115,6 +117,7 @@ export const JournalFormAssetsAndContent: React.FC<{
           onTranscribeChangeAction={onTranscribeChange}
           onTranscribingChangeAction={onTranscribingChangeAction}
           onUploadingChangeAction={onUploadingChangeAction}
+          onRecordingChangeAction={onRecordingChangeAction}
         />
       </Fieldset>
     </>

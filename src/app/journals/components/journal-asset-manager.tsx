@@ -19,12 +19,14 @@ export const JournalAssetManager: React.FC<{
   ) => void;
   onTranscribingChangeAction?: (isTranscribing: boolean) => void;
   onUploadingChangeAction?: (isUploading: boolean) => void;
+  onRecordingChangeAction?: (isRecording: boolean) => void;
 }> = ({
   name,
   initialUploadedAssets,
   onTranscribeChangeAction,
   onTranscribingChangeAction,
   onUploadingChangeAction,
+  onRecordingChangeAction,
 }) => {
   return (
     <AssetManager
@@ -44,6 +46,7 @@ export const JournalAssetManager: React.FC<{
       multiple={true}
       onTranscribingChangeAction={onTranscribingChangeAction}
       onUploadingChangeAction={onUploadingChangeAction}
+      onRecordingChangeAction={onRecordingChangeAction}
     />
   );
 };

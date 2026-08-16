@@ -254,11 +254,13 @@ export const AudioRecorderInput: React.FC<{
   shouldShowTranscribeOption?: boolean;
   shouldShowRecordOnlyOption?: boolean;
   buttonClassName?: string;
+  onRecordingChangeAction?: (isRecording: boolean) => void;
 }> = ({
   onChangeAction,
   shouldShowTranscribeOption = true,
   shouldShowRecordOnlyOption = true,
   buttonClassName,
+  onRecordingChangeAction,
 }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -270,6 +272,10 @@ export const AudioRecorderInput: React.FC<{
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const recorderAvailable = canRecordAudio();
+
+  useEffect(() => {
+    onRecordingChangeAction?.(status === "recording" || status === "paused");
+  }, [onRecordingChangeAction, status]);
 
   // Cleanup only
   useEffect(() => {

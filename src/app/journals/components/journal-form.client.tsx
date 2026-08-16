@@ -38,8 +38,9 @@ export const JournalFormClient: React.FC<{
 }> = ({ journal, sortedAssets }) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const isBusy = isTranscribing || isUploading;
+  const isBusy = isTranscribing || isUploading || isRecording;
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     if (!isBusy) {
@@ -106,6 +107,7 @@ export const JournalFormClient: React.FC<{
           initialAssets={sortedAssets}
           onTranscribingChangeAction={setIsTranscribing}
           onUploadingChangeAction={setIsUploading}
+          onRecordingChangeAction={setIsRecording}
         />
 
         <Fieldset legend={"Ratings"}>
