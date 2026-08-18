@@ -1,4 +1,3 @@
-import { experimental_transcribe as transcribe } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { logger } from "@/lib/logger";
 import { workerEnv } from "../../env";
@@ -27,7 +26,7 @@ export const transcribeAudio = ({
 }: {
   audio: File;
 }): EitherAsync<unknown, TranscribeAudioPayload> => {
-  return EitherAsync(async ({ throwE, fromPromise }) => {
+  return EitherAsync(async ({ throwE, fromPromise, liftEither }) => {
     if (audio.size >= MAX_TRANSCRIPTION_BYTES) {
       return throwE(
         `Audio file too large to transcribe: ${audio.size} bytes. Skipping translation.`,
@@ -42,18 +41,34 @@ export const transcribeAudio = ({
       openAiClient = createOpenAI({ apiKey: secret.OPENAI_API_KEY });
     }
 
-    const transcriptResponse = await transcribe({
-      model: openAiClient.transcription(workerEnv.OPENAI_TRANSCRIPTION_MODEL),
-      audio: new Uint8Array(await audio.arrayBuffer()),
-      abortSignal: AbortSignal.timeout(TIMEOUT_IN_MILLI),
-      providerOptions: {
-        openai: {
-          prompt:
-            "Please provide a faithful transcription of the audio recording. Keep natural phrasing and detail. Do not summarize or strip conversational context.",
-          temperature: 0,
-        },
-      },
-    });
+    const transcriptionClient = openAiClient;
+
+    if (transcriptionClient === null) {
+      return throwE("Unable to initialize transcription client");
+    }
+
+    const transcriptResponse = await liftEither(
+      await EitherAsync(async ({ throwE: throwTranscriptionError }) => {
+        try {
+          return await transcriptionClient
+            .transcription(workerEnv.OPENAI_TRANSCRIPTION_MODEL)
+            .doGenerate({
+              audio: new Uint8Array(await audio.arrayBuffer()),
+              mediaType: audio.type,
+              abortSignal: AbortSignal.timeout(TIMEOUT_IN_MILLI),
+              providerOptions: {
+                openai: {
+                  prompt:
+                    "Please provide a faithful transcription of the audio recording. Keep natural phrasing and detail. Do not summarize or strip conversational context.",
+                  temperature: 0,
+                },
+              },
+            });
+        } catch (error) {
+          return throwTranscriptionError(error);
+        }
+      }).run(),
+    );
 
     const transcriptionRaw = transcriptResponse.text.trim();
 

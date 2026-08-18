@@ -85,7 +85,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                       </p>
                     )}
 
-                    {block.assetVariant === "audio" && block.transcription?.trim() && (
+                    {block.assetVariant !== "image" && block.transcription?.trim() && (
                       <CopyableTranscription transcription={block.transcription} />
                     )}
                   </div>

@@ -49,7 +49,7 @@ export const LogForm: React.FC<{
   const { upload, isUploading } = useAssetUpload();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
+  const transcriptionInputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
@@ -87,7 +87,7 @@ export const LogForm: React.FC<{
         previousBlocks.map((block) => {
           if (
             block.variant !== "asset" ||
-            block.assetVariant !== "audio" ||
+            block.assetVariant === "image" ||
             block.filename !== filename
           ) {
             return block;
@@ -129,7 +129,7 @@ export const LogForm: React.FC<{
         if (
           index !== blockIndex ||
           block.variant !== "asset" ||
-          block.assetVariant !== "audio"
+          block.assetVariant === "image"
         ) {
           return block;
         }
@@ -152,9 +152,11 @@ export const LogForm: React.FC<{
   const addAssetFromFile = async ({
     file,
     transcriptionMode = "auto",
+    shouldTranscribeVideo = false,
   }: {
     file: File;
     transcriptionMode?: RecordingTranscriptionMode;
+    shouldTranscribeVideo?: boolean;
   }) => {
     const uploaded = await upload(file);
 
@@ -179,11 +181,13 @@ export const LogForm: React.FC<{
       [filename]: previewUrl,
     }));
 
-    if (assetVariant === "audio") {
-      setTranscribeStatus({ filename, status: "idle" });
-    }
+    const shouldTranscribe =
+      transcriptionMode === "auto" &&
+      (assetVariant === "audio" ||
+        (assetVariant === "video" && shouldTranscribeVideo));
 
-    if (assetVariant === "audio" && transcriptionMode === "auto") {
+    if (shouldTranscribe) {
+      setTranscribeStatus({ filename, status: "idle" });
       void startTranscription({ filename });
     }
   };
@@ -202,17 +206,21 @@ export const LogForm: React.FC<{
     }
   };
 
-  const onAudioFileSelected = async (
+  const onTranscriptionFileSelected = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
 
-    if (file?.type.startsWith("audio/")) {
-      await addAssetFromFile({ file, transcriptionMode: "auto" });
+    if (file?.type.startsWith("audio/") || file?.type === "video/mp4") {
+      await addAssetFromFile({
+        file,
+        transcriptionMode: "auto",
+        shouldTranscribeVideo: true,
+      });
     }
 
-    if (audioInputRef.current) {
-      audioInputRef.current.value = "";
+    if (transcriptionInputRef.current) {
+      transcriptionInputRef.current.value = "";
     }
   };
 
@@ -411,7 +419,7 @@ export const LogForm: React.FC<{
                         </p>
                       )}
 
-                      {block.assetVariant === "audio" && (
+                      {block.assetVariant !== "image" && (
                         <div className="space-y-2">
                           <Textarea
                             className="w-full max-w-none"
@@ -455,11 +463,11 @@ export const LogForm: React.FC<{
         />
 
         <input
-          ref={audioInputRef}
+          ref={transcriptionInputRef}
           type="file"
-          accept="audio/*"
+          accept="audio/*,video/mp4"
           className="sr-only"
-          onChange={onAudioFileSelected}
+          onChange={onTranscriptionFileSelected}
         />
 
         <div className="space-y-2">
@@ -497,9 +505,9 @@ export const LogForm: React.FC<{
               variant="outline"
               className={BUTTON_CLASS}
               disabled={isUploading}
-              onClick={() => audioInputRef.current?.click()}
+              onClick={() => transcriptionInputRef.current?.click()}
             >
-              {isUploading ? "Uploading..." : "Upload + transcribe"}
+              {isUploading ? "Uploading..." : "Upload audio/video + transcribe"}
             </Button>
 
             <Button
