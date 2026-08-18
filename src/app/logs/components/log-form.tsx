@@ -49,6 +49,7 @@ export const LogForm: React.FC<{
   const { upload, isUploading } = useAssetUpload();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
@@ -198,6 +199,20 @@ export const LogForm: React.FC<{
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const onAudioFileSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (file?.type.startsWith("audio/")) {
+      await addAssetFromFile({ file, transcriptionMode: "auto" });
+    }
+
+    if (audioInputRef.current) {
+      audioInputRef.current.value = "";
     }
   };
 
@@ -439,6 +454,14 @@ export const LogForm: React.FC<{
           onChange={onFilesSelected}
         />
 
+        <input
+          ref={audioInputRef}
+          type="file"
+          accept="audio/*"
+          className="sr-only"
+          onChange={onAudioFileSelected}
+        />
+
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2 items-center justify-end">
             {MARKDOWN_BLOCK_BUTTONS.map(({ label, variant }) => (
@@ -468,6 +491,16 @@ export const LogForm: React.FC<{
               shouldShowRecordOnlyOption={false}
               buttonClassName={BUTTON_CLASS}
             />
+
+            <Button
+              type="button"
+              variant="outline"
+              className={BUTTON_CLASS}
+              disabled={isUploading}
+              onClick={() => audioInputRef.current?.click()}
+            >
+              {isUploading ? "Uploading..." : "Upload + transcribe"}
+            </Button>
 
             <Button
               type="button"
