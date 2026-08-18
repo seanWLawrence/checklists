@@ -5,7 +5,7 @@ import { EitherAsync } from "purify-ts/EitherAsync";
 import { TranscriptionJobOutput } from "../../job.types";
 import { getWorkerSecret } from "../../get-worker-secret";
 
-const MAX_TRANSCRIPTION_BYTES = 25 * 1024 * 1024;
+const MAX_TRANSCRIPTION_BYTES = 100 * 1024 * 1024;
 const TRANSCRIPTION_PROMPT_VERSION = 1;
 const TIMEOUT_IN_MILLI = workerEnv.TIMEOUT_IN_MIN * 60 * 1000;
 
