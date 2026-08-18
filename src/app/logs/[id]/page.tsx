@@ -9,6 +9,7 @@ import { getLog } from "../model/get-log.model";
 import { getLogBlockPreviewUrl } from "../lib/get-log-block-preview-url";
 import { getLogMediaPreviewUrls } from "../lib/get-log-media-preview-urls";
 import { PrettyContent } from "@/app/notes/[id]/pretty-content.client";
+import { CopyableTranscription } from "../components/copyable-transcription";
 
 type Params = Promise<{ id: string }>;
 
@@ -85,9 +86,7 @@ const LogPage: React.FC<{ params: Params }> = async ({ params }) => {
                     )}
 
                     {block.assetVariant === "audio" && block.transcription?.trim() && (
-                      <div className="rounded-md border border-zinc-200 px-3 py-2 text-sm whitespace-pre-wrap text-zinc-700 dark:border-zinc-800 dark:text-zinc-200">
-                        {block.transcription}
-                      </div>
+                      <CopyableTranscription transcription={block.transcription} />
                     )}
                   </div>
                 )}
