@@ -43,9 +43,19 @@ export const JobStartResponse = Codec.interface({
 });
 export type JobStartResponse = GetType<typeof JobStartResponse>;
 
-export const TranscriptionJobInput = Codec.interface({
+const TranscriptionJobInputWithoutDiscard = Codec.interface({
   filename: string,
 });
+
+const TranscriptionJobInputWithDiscard = Codec.interface({
+  filename: string,
+  discardSourceAfterTranscription: exactly("true"),
+});
+
+export const TranscriptionJobInput = oneOf([
+  TranscriptionJobInputWithDiscard,
+  TranscriptionJobInputWithoutDiscard,
+]);
 export type TranscriptionJobInput = GetType<typeof TranscriptionJobInput>;
 
 export const FileClassificationJobInput = Codec.interface({

@@ -1,4 +1,5 @@
 import { EitherAsync } from "purify-ts/EitherAsync";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import {
   JobHandler,
   SucceededJob,
@@ -8,8 +9,10 @@ import { getObject } from "@/lib/aws/s3/get-object";
 import { updateJob } from "../../updateJob";
 import { transcribeAudio } from "./transcribe-audio";
 import { structureTranscription } from "./structure-transcription";
+import { prepareTranscriptionAudio } from "./prepare-transcription-audio";
 import { workerEnv } from "../../env";
 import { workerDynamoDbClient, workerS3Client } from "../../aws-clients";
+import { logger } from "@/lib/logger";
 
 export const handler: JobHandler<TranscriptionJobInput> = ({
   message,
@@ -24,12 +27,16 @@ export const handler: JobHandler<TranscriptionJobInput> = ({
       }),
     );
 
-    const audio = new File(
+    const media = new File(
       [Buffer.from(objectResponse.body)],
       jobInput.filename,
       {
         type: objectResponse.contentType ?? "audio/mpeg",
       },
+    );
+
+    const audio = await fromPromise(
+      prepareTranscriptionAudio({ media }),
     );
 
     const transcribeAudioResult = await fromPromise(
@@ -57,5 +64,25 @@ export const handler: JobHandler<TranscriptionJobInput> = ({
         } satisfies SucceededJob,
       }),
     );
+
+    if (
+      media.type === "video/mp4" ||
+      ("discardSourceAfterTranscription" in jobInput &&
+        jobInput.discardSourceAfterTranscription === "true")
+    ) {
+      try {
+        await workerS3Client.send(
+          new DeleteObjectCommand({
+            Bucket: workerEnv.AWS_BUCKET_NAME,
+            Key: jobInput.filename,
+          }),
+        );
+      } catch (error) {
+        logger.warn("Failed to delete transcribed source asset", {
+          error,
+          filename: jobInput.filename,
+        });
+      }
+    }
   });
 };

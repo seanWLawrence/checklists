@@ -24,14 +24,18 @@ export const getTranscriptionPollDelayMs = ({
 
 export const runTranscription = async ({
   filename,
+  discardSourceAfterTranscription = false,
   fetchFn = fetch,
 }: {
   filename: string;
+  discardSourceAfterTranscription?: boolean;
   fetchFn?: typeof fetch;
 }) => {
   return EitherAsync(async ({ liftEither, throwE }) => {
     const response = await fetchFn(
-      `/api/assets/${encodeURIComponent(filename)}/transcriptions`,
+      `/api/assets/${encodeURIComponent(filename)}/transcriptions${
+        discardSourceAfterTranscription ? "?discardSourceAfterTranscription=true" : ""
+      }`,
       {
         method: "POST",
       },
@@ -167,7 +171,13 @@ export const useTranscription = ({
     });
   };
 
-  const startTranscription = async ({ filename }: { filename: string }) => {
+  const startTranscription = async ({
+    filename,
+    discardSourceAfterTranscription = false,
+  }: {
+    filename: string;
+    discardSourceAfterTranscription?: boolean;
+  }) => {
     setTranscribeStatus({ filename, status: "loading" });
     setErrorByFilename((current) => {
       const next = { ...current };
@@ -175,7 +185,10 @@ export const useTranscription = ({
       return next;
     });
 
-    const result = await runTranscription({ filename });
+    const result = await runTranscription({
+      filename,
+      discardSourceAfterTranscription,
+    });
 
     result.caseOf({
       Right: ({

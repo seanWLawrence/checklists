@@ -63,12 +63,18 @@ const getContentHash = (input: Uint8Array): string => {
 const getDeterministicJobId = ({
   username,
   contentHash,
+  discardSourceAfterTranscription,
 }: {
   username: string;
   contentHash: string;
+  discardSourceAfterTranscription: boolean;
 }): string => {
   return createHash("sha256")
-    .update(`${username}:${contentHash}`)
+    .update(
+      `${username}:${contentHash}${
+        discardSourceAfterTranscription ? ":discard-source" : ""
+      }`,
+    )
     .digest("hex");
 };
 
@@ -85,6 +91,9 @@ export async function POST(
       );
 
       const { filename } = await params;
+      const discardSourceAfterTranscription =
+        request.nextUrl.searchParams.get("discardSourceAfterTranscription") ===
+        "true";
 
       await liftEither(validateFilename(filename));
 
@@ -97,6 +106,7 @@ export async function POST(
       const jobId = getDeterministicJobId({
         username: user.username,
         contentHash: getContentHash(asset.body),
+        discardSourceAfterTranscription,
       });
 
       const existingJob = await fromPromise(
@@ -142,7 +152,9 @@ export async function POST(
         username: user.username,
         jobId,
         jobType: "journalTranscription",
-        input: { filename },
+        input: discardSourceAfterTranscription
+          ? { filename, discardSourceAfterTranscription: "true" }
+          : { filename },
       }).run();
 
       if (createJobResult.isLeft()) {

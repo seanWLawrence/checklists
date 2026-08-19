@@ -122,14 +122,26 @@ export class WorkerConstruct extends Construct {
       retention: logs.RetentionDays.ONE_WEEK,
     });
 
+    const ffmpegLayer = new lambda.LayerVersion(this, "ffmpeg-layer", {
+      code: lambda.Code.fromAsset(
+        path.join(
+          __dirname,
+          "../../node_modules/@ffmpeg-installer/linux-arm64",
+        ),
+      ),
+      compatibleArchitectures: [lambda.Architecture.ARM_64],
+    });
+
     this.worker = new lambdaNodejs.NodejsFunction(this, "worker", {
       runtime: lambda.Runtime.NODEJS_24_X,
       architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../../src/lambda/worker/index.ts"),
       handler: "handler",
       timeout: cdk.Duration.minutes(TIMEOUT_IN_MIN),
-      memorySize: 1024,
+      memorySize: 2048,
+      ephemeralStorageSize: cdk.Size.gibibytes(1),
       logGroup: workerLogGroup,
+      layers: [ffmpegLayer],
       depsLockFilePath: path.join(__dirname, "../../package-lock.json"),
       projectRoot: path.join(__dirname, "../.."),
       bundling: {
@@ -143,6 +155,7 @@ export class WorkerConstruct extends Construct {
         AWS_APP_SECRET_NAME: props.secret.secretName,
         MAX_RECEIVE_ATTEMPTS: String(maxReceiveAttempts),
         TIMEOUT_IN_MIN: String(TIMEOUT_IN_MIN),
+        FFMPEG_PATH: "/opt/ffmpeg",
 
         // Transcription job
         OPENAI_TRANSCRIPTION_MODEL,

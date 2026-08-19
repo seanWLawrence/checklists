@@ -50,6 +50,7 @@ export const LogForm: React.FC<{
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const transcriptionInputRef = useRef<HTMLInputElement>(null);
+  const discardAfterTranscriptionFilenamesRef = useRef(new Set<string>());
   const nameRef = useRef<HTMLInputElement>(null);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
@@ -82,21 +83,26 @@ export const LogForm: React.FC<{
     }) => {
       const transcription =
         transcriptionRaw.trim() || transcriptionStructured.trim();
+      const shouldDiscardAsset =
+        discardAfterTranscriptionFilenamesRef.current.has(filename);
+
+      discardAfterTranscriptionFilenamesRef.current.delete(filename);
 
       setBlocks((previousBlocks) =>
-        previousBlocks.map((block) => {
+        previousBlocks.flatMap((block) => {
           if (
             block.variant !== "asset" ||
             block.assetVariant === "image" ||
             block.filename !== filename
           ) {
-            return block;
+            return [block];
           }
 
-          return {
-            ...block,
-            transcription,
-          };
+          if (block.assetVariant === "video" || shouldDiscardAsset) {
+            return [{ variant: "longMarkdown", value: transcription }];
+          }
+
+          return [{ ...block, transcription }];
         }),
       );
     },
@@ -153,10 +159,12 @@ export const LogForm: React.FC<{
     file,
     transcriptionMode = "auto",
     shouldTranscribeVideo = false,
+    discardSourceAfterTranscription = false,
   }: {
     file: File;
     transcriptionMode?: RecordingTranscriptionMode;
     shouldTranscribeVideo?: boolean;
+    discardSourceAfterTranscription?: boolean;
   }) => {
     const uploaded = await upload(file);
 
@@ -187,8 +195,15 @@ export const LogForm: React.FC<{
         (assetVariant === "video" && shouldTranscribeVideo));
 
     if (shouldTranscribe) {
+      if (discardSourceAfterTranscription) {
+        discardAfterTranscriptionFilenamesRef.current.add(filename);
+      }
+
       setTranscribeStatus({ filename, status: "idle" });
-      void startTranscription({ filename });
+      void startTranscription({
+        filename,
+        discardSourceAfterTranscription,
+      });
     }
   };
 
@@ -216,6 +231,7 @@ export const LogForm: React.FC<{
         file,
         transcriptionMode: "auto",
         shouldTranscribeVideo: true,
+        discardSourceAfterTranscription: true,
       });
     }
 
@@ -507,7 +523,7 @@ export const LogForm: React.FC<{
               disabled={isUploading}
               onClick={() => transcriptionInputRef.current?.click()}
             >
-              {isUploading ? "Uploading..." : "Upload audio/video + transcribe"}
+              {isUploading ? "Uploading..." : "Transcribe audio/video"}
             </Button>
 
             <Button

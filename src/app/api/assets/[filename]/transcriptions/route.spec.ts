@@ -38,19 +38,31 @@ const right = <T>(value: T) => EitherAsync<unknown, T>(async () => value);
 const getExpectedJobId = ({
   username,
   body,
+  discardSourceAfterTranscription = false,
 }: {
   username: string;
   body: Uint8Array;
+  discardSourceAfterTranscription?: boolean;
 }) => {
   const contentHash = createHash("sha256").update(body).digest("hex");
   return createHash("sha256")
-    .update(`${username}:${contentHash}`)
+    .update(
+      `${username}:${contentHash}${
+        discardSourceAfterTranscription ? ":discard-source" : ""
+      }`,
+    )
     .digest("hex");
 };
 
-const createRequest = () =>
+const createRequest = ({
+  discardSourceAfterTranscription = false,
+}: {
+  discardSourceAfterTranscription?: boolean;
+} = {}) =>
   new NextRequest(
-    "http://localhost:3000/api/assets/audio.mp3/transcriptions",
+    `http://localhost:3000/api/assets/audio.mp3/transcriptions${
+      discardSourceAfterTranscription ? "?discardSourceAfterTranscription=true" : ""
+    }`,
     {
       method: "POST",
       headers: {
@@ -171,5 +183,38 @@ test("POST queues a new job using the deterministic job id when none exists", as
     jobId: expectedJobId,
     jobType: "journalTranscription",
     input: { filename: "audio.mp3" },
+  });
+});
+
+test("POST marks a job to discard its source after transcription", async ({
+  expect,
+}) => {
+  const body = new TextEncoder().encode("temporary-audio");
+  const expectedJobId = getExpectedJobId({
+    username: "sean",
+    body,
+    discardSourceAfterTranscription: true,
+  });
+
+  vi.mocked(validateUserLoggedIn).mockReturnValueOnce(
+    right({ username: "sean" }),
+  );
+  vi.mocked(getObject).mockReturnValueOnce(
+    right({ body, contentType: "audio/mpeg" }),
+  );
+  vi.mocked(getJob).mockReturnValueOnce(right(null));
+  vi.mocked(queueJob).mockReturnValueOnce(right(undefined));
+
+  const response = await POST(
+    createRequest({ discardSourceAfterTranscription: true }),
+    { params: Promise.resolve({ filename: "audio.mp3" }) },
+  );
+
+  expect(response.status).toBe(202);
+  expect(queueJob).toHaveBeenCalledWith({
+    username: "sean",
+    jobId: expectedJobId,
+    jobType: "journalTranscription",
+    input: { filename: "audio.mp3", discardSourceAfterTranscription: "true" },
   });
 });
